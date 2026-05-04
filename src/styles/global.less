@@ -1,0 +1,98 @@
+:root {
+  --abyssal-bg: #050505;
+  --abyssal-surface: #0d0d0d;
+  --abyssal-surface-2: #141414;
+  --abyssal-text: #d8d8d8;
+  --abyssal-text-strong: #f4f4f4;
+  --abyssal-text-muted: rgba(216, 216, 216, 0.54);
+  --abyssal-border: rgba(255, 255, 255, 0.1);
+  --abyssal-border-strong: rgba(255, 255, 255, 0.2);
+  --abyssal-border-soft: rgba(255, 255, 255, 0.06);
+  --abyssal-ash: #232323;
+  --abyssal-ember: #e53d3d;
+  --abyssal-violet: #6e63c7;
+  --abyssal-cyan: #65c4c8;
+
+  --color-bg: var(--abyssal-bg);
+  --color-surface: var(--abyssal-surface);
+  --color-surface-strong: var(--abyssal-surface-2);
+  --color-text: var(--abyssal-text);
+  --color-text-strong: var(--abyssal-text-strong);
+  --color-muted: var(--abyssal-text-muted);
+  --color-border: var(--abyssal-border);
+  --color-border-strong: var(--abyssal-border-strong);
+  --color-border-soft: var(--abyssal-border-soft);
+  --color-accent: var(--abyssal-ember);
+  --color-accent-strong: #f16a6a;
+  --color-accent-glow: rgba(229, 61, 61, 0.24);
+  --color-accent-soft: rgba(229, 61, 61, 0.14);
+  --color-accent-faint: rgba(229, 61, 61, 0.055);
+  --color-cyan-glow: rgba(101, 196, 200, 0.18);
+  --color-violet-glow: rgba(110, 99, 199, 0.18);
+
+  --font-sans: system-ui, sans-serif;
+  --font-display: var(--font-sans);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% 20%, var(--color-accent-faint), transparent 30%),
+    radial-gradient(circle at 78% 14%, rgba(101, 196, 200, 0.04), transparent 22%),
+    var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  overscroll-behavior: none;
+  cursor: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+a,
+input,
+textarea,
+select,
+label {
+  cursor: none;
+}
+
+img,
+svg {
+  display: block;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+}

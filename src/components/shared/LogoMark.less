@@ -1,0 +1,69 @@
+.logo-mark {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(8, 8, 8, 0.54);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 10px 28px rgba(0, 0, 0, 0.28);
+  user-select: none;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.logo-mark::before {
+  content: '';
+  position: absolute;
+  inset: -35% -55%;
+  background: linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, 0.08) 50%, transparent 58%);
+  transform: translateX(-40%);
+  animation: logo-mark-shimmer 10.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.logo-mark__icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(229, 61, 61, 0.18));
+}
+
+.logo-mark:hover {
+  background: rgba(12, 12, 12, 0.64);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.logo-mark:active {
+  transform: scale(0.96);
+}
+
+@keyframes logo-mark-shimmer {
+  0%,
+  58% {
+    transform: translateX(-48%);
+    opacity: 0;
+  }
+
+  68% {
+    opacity: 1;
+  }
+
+  82% {
+    transform: translateX(44%);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateX(56%);
+    opacity: 0;
+  }
+}

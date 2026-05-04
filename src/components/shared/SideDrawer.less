@@ -1,0 +1,115 @@
+.side-drawer__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(6px);
+}
+
+.side-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 9;
+  width: min(86vw, 26rem);
+  height: 100dvh;
+  pointer-events: auto;
+}
+
+.side-drawer__panel {
+  width: 100%;
+  height: 100%;
+  padding: 5.25rem 1.2rem 1.2rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 46, 46, 0.12), transparent 26%),
+    radial-gradient(circle at 0% 18%, rgba(0, 255, 255, 0.08), transparent 22%),
+    rgba(7, 7, 7, 0.92);
+  box-shadow: -32px 0 80px rgba(0, 0, 0, 0.42);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.side-drawer__header {
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.side-drawer__eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(224, 224, 224, 0.52);
+}
+
+.side-drawer__title {
+  margin-top: 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  color: var(--color-text-strong);
+}
+
+.side-drawer__nav {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.side-drawer__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.9rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--color-text);
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.side-drawer__item:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateX(-2px);
+}
+
+.side-drawer__item--active {
+  border-color: rgba(255, 46, 46, 0.38);
+  background:
+    linear-gradient(90deg, rgba(255, 46, 46, 0.12), transparent 48%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.side-drawer__item-index {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: rgba(224, 224, 224, 0.5);
+}
+
+.side-drawer__item-label {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.side-drawer__footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.side-drawer__hint {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(224, 224, 224, 0.46);
+}

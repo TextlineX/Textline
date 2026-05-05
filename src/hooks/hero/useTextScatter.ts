@@ -7,6 +7,7 @@ type UseTextScatterOptions = {
   dataset: readonly string[]
   durationMs?: number
   intervalMs?: number
+  enabled?: boolean
 }
 
 function pickRandomItem(dataset: readonly string[], index: number, seed: number) {
@@ -22,21 +23,22 @@ export function useTextScatter({
   dataset,
   durationMs = 1000,
   intervalMs = 40,
+  enabled = true,
 }: UseTextScatterOptions) {
   const letters = useMemo(() => text.split(''), [text])
   const [settled, setSettled] = useState(false)
   const [visibleLetters, setVisibleLetters] = useState<string[]>(letters)
 
   useEffect(() => {
-    if (!isBrowser()) {
-      setVisibleLetters(letters)
-      setSettled(true)
+    if (!isBrowser() || !enabled) {
       return
     }
 
-    setSettled(false)
     let tick = 0
     const seed = Math.floor(Math.random() * 1000)
+    const resetId = window.setTimeout(() => {
+      setSettled(false)
+    }, 0)
 
     const intervalId = window.setInterval(() => {
       tick += 1
@@ -58,13 +60,14 @@ export function useTextScatter({
     }, durationMs)
 
     return () => {
+      window.clearTimeout(resetId)
       window.clearInterval(intervalId)
       window.clearTimeout(timeoutId)
     }
-  }, [dataset, durationMs, intervalMs, letters])
+  }, [dataset, durationMs, enabled, intervalMs, letters])
 
   return {
-    letters: visibleLetters,
-    settled,
+    letters: enabled ? visibleLetters : letters,
+    settled: enabled ? settled : false,
   }
 }

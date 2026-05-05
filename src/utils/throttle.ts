@@ -1,4 +1,4 @@
-export function throttle<T extends (...args: any[]) => void>(fn: T, wait: number) {
+export function throttle<T extends (...args: unknown[]) => void>(fn: T, wait: number) {
   let lastCall = 0
   let timeoutId: number | undefined
 

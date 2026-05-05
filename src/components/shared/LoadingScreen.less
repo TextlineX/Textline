@@ -4,16 +4,17 @@
   z-index: 1000;
   display: grid;
   place-items: center;
+  overflow: hidden;
   background:
-    radial-gradient(circle at 50% 35%, rgba(255, 46, 46, 0.12), transparent 28%),
-    radial-gradient(circle at 52% 62%, rgba(0, 255, 255, 0.06), transparent 22%),
+    radial-gradient(circle at 50% 35%, rgba(255, 46, 46, 0.22), transparent 22%),
+    radial-gradient(circle at 52% 62%, rgba(0, 255, 255, 0.14), transparent 18%),
     var(--color-bg);
   opacity: 1;
   transform: scale(1);
   transition:
     opacity 420ms ease,
     transform 420ms ease;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .loading-screen:not(.loading-screen--active) {
@@ -21,25 +22,56 @@
   transform: scale(1.02);
 }
 
+.loading-screen--success {
+  background: transparent;
+}
+
+.loading-screen__curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
 .loading-screen__frame {
+  position: relative;
+  z-index: 2;
   width: min(72vw, 28rem);
-  padding: 1.75rem 1.5rem 1.5rem;
+  min-height: 13rem;
+  padding: 2rem 1.5rem 1.7rem;
   border: 1px solid var(--color-border);
   background: rgba(10, 10, 10, 0.82);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.04) inset,
     0 24px 80px rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(10px);
 }
 
+.loading-screen--success .loading-screen__frame {
+  animation: loading-screen-frame-hide 520ms ease-out forwards;
+}
+
+.loading-screen__title-wrap {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  width: 100%;
+}
+
 .loading-screen__title {
+  display: block;
+  width: 100%;
   font-family: var(--font-display);
   font-size: clamp(2rem, 6vw, 3.75rem);
   font-weight: 800;
   letter-spacing: 0.28em;
-  text-indent: 0.28em;
   color: var(--color-text-strong);
   line-height: 1;
+  text-align: center;
 }
 
 .loading-screen__subtitle {
@@ -52,8 +84,8 @@
 
 .loading-screen__track {
   position: relative;
-  margin-top: 1.3rem;
-  width: 100%;
+  margin-top: 1.45rem;
+  width: min(100%, 18rem);
   height: 0.18rem;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.08);
@@ -65,15 +97,40 @@
   width: 42%;
   background: linear-gradient(90deg, transparent, var(--color-accent), var(--color-cyan-glow));
   filter: drop-shadow(0 0 12px rgba(255, 46, 46, 0.4));
-  animation: loading-screen-slide 1.05s ease-in-out infinite;
+  animation: loading-screen-slide 1.6s ease-in-out infinite;
 }
 
 .loading-screen__hint {
-  margin-top: 0.95rem;
+  margin-top: 1.1rem;
   font-size: 0.72rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: rgba(224, 224, 224, 0.54);
+  width: 100%;
+}
+
+.loading-screen__mask {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: translateY(0);
+}
+
+.loading-screen__mask--back {
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(229, 61, 61, 0.18) 0%, rgba(229, 61, 61, 0.42) 34%, rgba(3, 3, 3, 0.995) 100%);
+  filter: blur(16px);
+  opacity: 1;
+  animation: none;
+}
+
+.loading-screen__mask--front {
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.12) 28%, rgba(2, 2, 2, 1) 100%);
+  opacity: 1;
+  animation: none;
 }
 
 @keyframes loading-screen-slide {
@@ -83,5 +140,45 @@
 
   100% {
     transform: translateX(280%);
+  }
+}
+
+.loading-screen--success .loading-screen__mask--back {
+  animation: loading-screen-mask-rise-back 3000ms cubic-bezier(0.18, 0.92, 0.18, 1) forwards;
+}
+
+.loading-screen--success .loading-screen__mask--front {
+  animation: loading-screen-mask-rise-front 2800ms cubic-bezier(0.18, 0.92, 0.18, 1) 220ms forwards;
+}
+
+@keyframes loading-screen-mask-rise-back {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(-112%);
+  }
+}
+
+@keyframes loading-screen-mask-rise-front {
+  0% {
+    transform: translateY(112%);
+  }
+
+  100% {
+    transform: translateY(-112%);
+  }
+}
+
+@keyframes loading-screen-frame-hide {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(0.5rem);
   }
 }

@@ -1,6 +1,6 @@
 .magnetic-cursor {
-  --cursor-width: 4rem;
-  --cursor-height: 4rem;
+  --cursor-width: 5rem;
+  --cursor-height: 5rem;
 
   position: fixed;
   top: calc(var(--cursor-height) / -2);
@@ -14,10 +14,13 @@
 
 .magnetic-cursor__corner {
   position: absolute;
-  width: 1rem;
-  height: 1rem;
-  border-width: 0.24rem;
-  border-color: rgba(216, 216, 216, 0.58);
+  width: 1.2rem;
+  height: 1.2rem;
+  border-width: 0.34rem;
+  border-color: rgba(255, 255, 255, 0.96);
+  filter:
+    drop-shadow(0 0 10px rgba(229, 61, 61, 0.38))
+    drop-shadow(0 0 22px rgba(229, 61, 61, 0.18));
 }
 
 .magnetic-cursor__corner--tl {
@@ -49,5 +52,9 @@
 }
 
 .magnetic-cursor--locked .magnetic-cursor__corner {
-  border-color: rgba(229, 61, 61, 0.82);
+  border-color: rgba(255, 122, 122, 1);
+  filter:
+    drop-shadow(0 0 14px rgba(229, 61, 61, 0.62))
+    drop-shadow(0 0 30px rgba(229, 61, 61, 0.3))
+    drop-shadow(0 0 54px rgba(229, 61, 61, 0.12));
 }

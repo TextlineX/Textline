@@ -13,10 +13,13 @@
 }
 
 .hero-shell__stage {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
   width: 100%;
-  min-height: 0;
+  height: 100%;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
+  padding: clamp(2rem, 4vw, 3.5rem) clamp(1rem, 2vw, 2rem) clamp(1rem, 2vw, 1.5rem);
 }

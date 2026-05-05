@@ -32,9 +32,9 @@ type Size = {
 }
 
 const glyphs = ' .,:;i1tftL0X#'
-const accentColor = 'rgba(229, 61, 61, 0.72)'
-const mutedColor = 'rgba(216, 216, 216, 0.18)'
-const textColor = 'rgba(216, 216, 216, 0.42)'
+const accentColor = 'rgba(255, 90, 90, 0.92)'
+const mutedColor = 'rgba(232, 232, 232, 0.34)'
+const textColor = 'rgba(242, 242, 242, 0.62)'
 function pickGlyph(intensity: number) {
   const clamped = Math.max(0, Math.min(1, intensity))
   const index = Math.floor(clamped * (glyphs.length - 1))
@@ -203,8 +203,8 @@ export function AsciiWavesBackdrop() {
           const drawX = point.x + point.cursor.x
           const drawY = point.y + point.cursor.y
 
-          context.fillStyle = proximity > 0.6 ? accentColor : intensity > 0.22 ? mutedColor : textColor
-          context.globalAlpha = Math.max(0.18, edgeFade)
+          context.fillStyle = proximity > 0.34 ? accentColor : intensity > 0.22 ? mutedColor : textColor
+          context.globalAlpha = Math.max(0.28, edgeFade)
           context.fillText(glyph === ' ' ? characters[glyphSeed] : glyph, drawX, drawY)
         })
       })

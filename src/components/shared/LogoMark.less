@@ -1,12 +1,22 @@
-.logo-mark {
+.logo-mark-shell {
   position: fixed;
   top: 1rem;
   left: 1rem;
   z-index: 4;
-  display: inline-flex;
-  align-items: center;
-  gap: 0;
-  padding: 0.65rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.logo-mark {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(8, 8, 8, 0.54);
   backdrop-filter: blur(10px);
@@ -14,7 +24,6 @@
     0 0 0 1px rgba(255, 255, 255, 0.04) inset,
     0 10px 28px rgba(0, 0, 0, 0.28);
   user-select: none;
-  overflow: hidden;
   cursor: pointer;
   transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
 }
@@ -30,8 +39,8 @@
 }
 
 .logo-mark__icon {
-  width: 1.45rem;
-  height: 1.45rem;
+  width: 1.6rem;
+  height: 1.6rem;
   display: block;
   object-fit: contain;
   filter: drop-shadow(0 0 6px rgba(229, 61, 61, 0.18));
@@ -40,6 +49,16 @@
 .logo-mark:hover {
   background: rgba(12, 12, 12, 0.64);
   border-color: rgba(255, 255, 255, 0.16);
+}
+
+.logo-mark.magnetic-target--active,
+.logo-mark[data-magnetic-active='true'] {
+  background: rgba(28, 8, 8, 0.82);
+  border-color: rgba(255, 122, 122, 0.78);
+  box-shadow:
+    0 0 0 1px rgba(255, 122, 122, 0.28) inset,
+    0 0 28px rgba(229, 61, 61, 0.24),
+    0 0 54px rgba(229, 61, 61, 0.12);
 }
 
 .logo-mark:active {

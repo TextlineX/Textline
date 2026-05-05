@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 
+import { useAppShellScroll } from '../../components/layout/AppShellScrollContext'
 import { heroConfig } from '../../data/heroConfig'
 import { useSphereInteraction } from '../../hooks/hero/useSphereInteraction'
 import { useViewportSize } from '../../hooks/useViewportSize'
@@ -8,6 +9,11 @@ import './CharacterSphere.less'
 
 export function CharacterSphere() {
   const viewport = useViewportSize()
+  const {
+    scrollPhysicsDirection,
+    scrollPhysicsPulseId,
+    scrollPhysicsStrength,
+  } = useAppShellScroll()
 
   const { setCursor } = useSphereInteraction({
     center: useMemo(
@@ -29,7 +35,11 @@ export function CharacterSphere() {
           setCursor({ x: event.clientX, y: event.clientY })
         }}
       >
-        <ThreeSphereScene />
+        <ThreeSphereScene
+          scrollPhysicsDirection={scrollPhysicsDirection}
+          scrollPhysicsPulseId={scrollPhysicsPulseId}
+          scrollPhysicsStrength={scrollPhysicsStrength}
+        />
       </div>
     </div>
   )

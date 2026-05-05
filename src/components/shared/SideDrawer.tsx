@@ -1,16 +1,13 @@
 import { motion, useReducedMotion } from 'motion/react'
 
-import { navItems } from '../../data/siteData'
 import './SideDrawer.less'
 
 type SideDrawerProps = {
   open: boolean
-  activeIndex: number
   onClose: () => void
-  onNavigate: (index: number) => void
 }
 
-export function SideDrawer({ open, activeIndex, onClose, onNavigate }: SideDrawerProps) {
+export function SideDrawer({ open, onClose }: SideDrawerProps) {
   const reduceMotion = useReducedMotion()
 
   return (
@@ -42,29 +39,15 @@ export function SideDrawer({ open, activeIndex, onClose, onNavigate }: SideDrawe
         <div className="side-drawer__panel">
           <div className="side-drawer__header">
             <div className="side-drawer__eyebrow">Menu</div>
-            <div className="side-drawer__title">Sections</div>
+            <div className="side-drawer__title">Panel</div>
           </div>
 
-          <nav className="side-drawer__nav" aria-label="Section navigation">
-            {navItems.map((item, index) => (
-              <button
-                key={item.id}
-                type="button"
-                className={`side-drawer__item magnetic-target${index === activeIndex ? ' side-drawer__item--active' : ''}`}
-                data-magnetic-shell="tight"
-                onClick={() => {
-                  onNavigate(index)
-                  onClose()
-                }}
-              >
-                <span className="side-drawer__item-index">0{index + 1}</span>
-                <span className="side-drawer__item-label">{item.label}</span>
-              </button>
-            ))}
-          </nav>
+          <div className="side-drawer__body">
+            <p className="side-drawer__copy">Navigation is handled by the wheel and the corner controls.</p>
+          </div>
 
           <div className="side-drawer__footer">
-            <div className="side-drawer__hint">Wheel / click / keyboard navigation</div>
+            <div className="side-drawer__hint">Wheel / click / keyboard controls</div>
           </div>
         </div>
       </motion.aside>

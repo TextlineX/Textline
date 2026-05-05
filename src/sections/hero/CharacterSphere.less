@@ -1,16 +1,19 @@
 .character-sphere {
-  position: relative;
-  z-index: 1;
-  width: min(70vw, 42rem, calc(100dvh - 10rem));
-  aspect-ratio: 1;
-  margin: 0 auto;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
   opacity: 0.95;
+  pointer-events: none;
 }
 
 .character-sphere__scene {
   position: relative;
   width: 100%;
   height: 100%;
-  transform: scale(var(--sphere-scale, 1));
+  overflow: hidden;
+  transform: scale(var(--sphere-scale, 0.74));
+  transform-origin: center center;
   transition: transform 120ms ease-out;
 }

@@ -1,10 +1,7 @@
 .name-banner {
-  position: absolute;
-  left: 50%;
-  top: 50%;
+  position: relative;
   z-index: 2;
   width: min(88vw, 40rem);
-  transform: translate(-50%, -50%);
   display: grid;
   gap: 0.45rem;
   justify-items: center;
@@ -12,6 +9,14 @@
   pointer-events: auto;
   isolation: isolate;
   cursor: none;
+  justify-self: center;
+  align-self: center;
+}
+
+.name-banner__linger {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .name-banner__mask {
@@ -45,6 +50,13 @@
   white-space: nowrap;
   text-shadow: 0 0 8px rgba(229, 61, 61, 0.08);
   overflow: visible;
+  will-change: transform, opacity, filter;
+  filter: blur(calc(var(--scroll-linger-blur-progress, 0) * var(--scroll-linger-blur-max, 7px)));
+  transition: filter 120ms linear;
+}
+
+.name-banner__label.sticky-magnetic-title__target {
+  width: fit-content;
 }
 
 .name-banner__letter {

@@ -23,14 +23,49 @@ const defaultSize: CursorSize = { width: 64, height: 64 }
 function getShellPadding(shell: string | undefined) {
   switch (shell) {
     case 'compact':
-      return { x: 10, y: 10 }
+      return { x: 16, y: 14 }
     case 'tight':
-      return { x: 18, y: 14 }
+      return { x: 26, y: 20 }
     case 'wide':
-      return { x: 28, y: 20 }
+      return { x: 38, y: 28 }
     default:
-      return { x: 24, y: 16 }
+      return { x: 30, y: 22 }
   }
+}
+
+function setMagneticActive(target: HTMLElement | null, active: boolean) {
+  if (!target) {
+    return
+  }
+
+  target.classList.toggle('magnetic-target--active', active)
+  if (active) {
+    target.setAttribute('data-magnetic-active', 'true')
+  } else {
+    target.removeAttribute('data-magnetic-active')
+  }
+}
+
+function getTargetFromPoint(point: Point, targetSelector: string) {
+  if (!isBrowser()) {
+    return null
+  }
+
+  const element = document.elementFromPoint(point.x, point.y)
+  const hitTarget = element?.closest(targetSelector) as HTMLElement | null
+  if (hitTarget) {
+    return hitTarget
+  }
+
+  const targets = Array.from(document.querySelectorAll<HTMLElement>(targetSelector))
+  for (const target of targets) {
+    const rect = target.getBoundingClientRect()
+    if (point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom) {
+      return target
+    }
+  }
+
+  return null
 }
 
 export function useMagneticCursor({
@@ -56,57 +91,36 @@ export function useMagneticCursor({
       pointerRef.current = { x: event.clientX, y: event.clientY }
     }
 
-    const bindTargets = () => {
-      const targets = Array.from(document.querySelectorAll<HTMLElement>(targetSelector))
-
-      const handleEnter = (event: Event) => {
-        const target = event.currentTarget as HTMLElement | null
-        if (!target) {
-          return
-        }
-
-        currentTargetRef.current = target
-        setLocked(true)
-        const isAvatarTarget = target.dataset.avatarTrigger === 'true'
-        setAvatarActive(isAvatarTarget)
-        const shell = target.dataset.magneticShell
-        const padding = getShellPadding(shell)
-
-        const rect = target.getBoundingClientRect()
-        const centerX = rect.left + rect.width / 2
-        const centerY = rect.top + rect.height / 2
-        cursorRef.current = { x: centerX, y: centerY }
-        setPosition({ x: centerX, y: centerY })
-        setSize({
-          width: rect.width + padding.x,
-          height: rect.height + padding.y,
-        })
-      }
-
-      const handleLeave = () => {
-        currentTargetRef.current = null
-        setLocked(false)
-        setAvatarActive(false)
-        setSize(defaultSize)
-      }
-
-      targets.forEach((target) => {
-        target.addEventListener('pointerenter', handleEnter)
-        target.addEventListener('pointerleave', handleLeave)
-      })
-
-      return () => {
-        targets.forEach((target) => {
-          target.removeEventListener('pointerenter', handleEnter)
-          target.removeEventListener('pointerleave', handleLeave)
-        })
-      }
-    }
-
-    const unbindTargets = bindTargets()
-
     const tick = () => {
       const pointer = pointerRef.current
+      const nextTarget = getTargetFromPoint(pointer, targetSelector)
+
+      if (nextTarget !== currentTargetRef.current) {
+        setMagneticActive(currentTargetRef.current, false)
+        currentTargetRef.current = nextTarget
+        setMagneticActive(nextTarget, true)
+        setLocked(Boolean(nextTarget))
+
+        const isAvatarTarget = nextTarget?.dataset.avatarTrigger === 'true'
+        setAvatarActive(isAvatarTarget)
+
+        if (nextTarget) {
+          const shell = nextTarget.dataset.magneticShell
+          const padding = getShellPadding(shell)
+          const rect = nextTarget.getBoundingClientRect()
+          const centerX = rect.left + rect.width / 2
+          const centerY = rect.top + rect.height / 2
+          cursorRef.current = { x: centerX, y: centerY }
+          setPosition({ x: centerX, y: centerY })
+          setSize({
+            width: rect.width + padding.x,
+            height: rect.height + padding.y,
+          })
+        } else {
+          setSize(defaultSize)
+        }
+      }
+
       let nextX = pointer.x
       let nextY = pointer.y
 
@@ -133,7 +147,8 @@ export function useMagneticCursor({
     return () => {
       window.cancelAnimationFrame(frameRef.current)
       window.removeEventListener('pointermove', move as unknown as EventListener)
-      unbindTargets?.()
+      setMagneticActive(currentTargetRef.current, false)
+      currentTargetRef.current = null
     }
   }, [enabled, targetSelector])
 

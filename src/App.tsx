@@ -4,6 +4,7 @@ import './App.less'
 import './styles/test.less'
 
 import { AppShell } from './components/layout/AppShell'
+import { BootProvider } from './components/layout/BootProvider'
 import { LoadingScreen } from './components/shared/LoadingScreen'
 import { AboutSection } from './sections/AboutSection'
 import { ContactSection } from './sections/ContactSection'
@@ -16,9 +17,10 @@ import { WorksSection } from './sections/WorksSection'
 function App() {
   const [hasLoaded, setHasLoaded] = useState(false)
   const [minElapsed, setMinElapsed] = useState(false)
+  const [loadingDismissed, setLoadingDismissed] = useState(false)
 
   useEffect(() => {
-    const minimumVisibleMs = 900
+    const minimumVisibleMs = 2200
     const timerId = window.setTimeout(() => {
       setMinElapsed(true)
     }, minimumVisibleMs)
@@ -39,9 +41,19 @@ function App() {
     }
   }, [])
 
+  const loadingReady = hasLoaded && minElapsed
+
   return (
-    <>
-      <LoadingScreen active={!(hasLoaded && minElapsed)} />
+    <BootProvider bootComplete={loadingReady}>
+      {!loadingDismissed ? (
+        <LoadingScreen
+          active={!loadingDismissed}
+          phase={loadingReady ? 'success' : 'loading'}
+          onRevealComplete={() => {
+            setLoadingDismissed(true)
+          }}
+        />
+      ) : null}
       <AppShell>
         <HeroSection />
         <AboutSection />
@@ -51,7 +63,7 @@ function App() {
         <PlaygroundSection />
         <ContactSection />
       </AppShell>
-    </>
+    </BootProvider>
   )
 }
 

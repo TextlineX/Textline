@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import { heroDataset } from '../../data/heroDataset'
+import { textFlowTokens } from '../../data/textFlowTokens'
 import { heroThreeConfig } from '../../data/heroThreeConfig'
 import './ThreeSphereScene.less'
 
@@ -9,6 +10,21 @@ type ThreeModule = typeof import('three')
 type RibbonToken = {
   text: string
   color: string
+}
+
+type ImpactParticle = {
+  sprite: InstanceType<ThreeModule['Sprite']>
+  velocity: InstanceType<ThreeModule['Vector3']>
+  life: number
+  maxLife: number
+  spin: number
+  drag: number
+}
+
+type ThreeSphereSceneProps = {
+  scrollPhysicsDirection?: number
+  scrollPhysicsPulseId?: number
+  scrollPhysicsStrength?: number
 }
 
 const ribbonColors = {
@@ -39,6 +55,10 @@ function classifyRibbonToken(text: string, index: number) {
   return index % 5 === 0 ? ribbonColors.text : ribbonColors.muted
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value))
+}
+
 function buildRibbonTokens() {
   const tokens: RibbonToken[] = []
 
@@ -57,8 +77,58 @@ function buildRibbonTokens() {
   return tokens
 }
 
-export function ThreeSphereScene() {
+const codeDebrisTokens = [...textFlowTokens, '=>', '{}', '[]', '()', 'const', 'let', 'fn', 'return', '++', '//']
+
+function pickDebrisToken(index: number) {
+  return codeDebrisTokens[index % codeDebrisTokens.length]
+}
+
+function pickDebrisColor(token: string, index: number) {
+  if (/^(const|let|return|fn)$/i.test(token)) {
+    return index % 2 === 0 ? 'rgba(248, 201, 116, 0.94)' : 'rgba(255, 154, 90, 0.9)'
+  }
+
+  if (/^(\{|\}|\[|\]|\(|\)|=>|\+\+)$/.test(token)) {
+    return index % 2 === 0 ? 'rgba(116, 232, 242, 0.95)' : 'rgba(171, 132, 255, 0.88)'
+  }
+
+  if (token === '//') {
+    return index % 2 === 0 ? 'rgba(145, 214, 150, 0.88)' : 'rgba(224, 224, 224, 0.62)'
+  }
+
+  const colors = [
+    'rgba(236, 236, 236, 0.92)',
+    'rgba(229, 61, 61, 0.9)',
+    'rgba(101, 196, 200, 0.88)',
+    'rgba(110, 99, 199, 0.84)',
+    'rgba(255, 183, 95, 0.9)',
+  ]
+
+  return colors[index % colors.length]
+}
+
+export function ThreeSphereScene({
+  scrollPhysicsDirection = 1,
+  scrollPhysicsPulseId = 0,
+  scrollPhysicsStrength = 0,
+}: ThreeSphereSceneProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const lastPhysicsPulseIdRef = useRef(scrollPhysicsPulseId)
+  const scrollPhysicsPulseIdRef = useRef(scrollPhysicsPulseId)
+  const scrollPhysicsDirectionRef = useRef(scrollPhysicsDirection)
+  const scrollPhysicsStrengthRef = useRef(scrollPhysicsStrength)
+
+  useEffect(() => {
+    scrollPhysicsPulseIdRef.current = scrollPhysicsPulseId
+  }, [scrollPhysicsPulseId])
+
+  useEffect(() => {
+    scrollPhysicsDirectionRef.current = scrollPhysicsDirection
+  }, [scrollPhysicsDirection])
+
+  useEffect(() => {
+    scrollPhysicsStrengthRef.current = scrollPhysicsStrength
+  }, [scrollPhysicsStrength])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -72,11 +142,28 @@ export function ThreeSphereScene() {
     let renderer: InstanceType<ThreeModule['WebGLRenderer']> | null = null
     let scene: InstanceType<ThreeModule['Scene']> | null = null
     let camera: InstanceType<ThreeModule['PerspectiveCamera']> | null = null
-    let group: InstanceType<ThreeModule['Group']> | null = null
+    let physicsGroup: InstanceType<ThreeModule['Group']> | null = null
+    let visualGroup: InstanceType<ThreeModule['Group']> | null = null
     const textures: InstanceType<ThreeModule['CanvasTexture']>[] = []
     const materials: InstanceType<ThreeModule['MeshBasicMaterial']>[] = []
     const geometries: InstanceType<ThreeModule['TubeGeometry']>[] = []
     const ribbonMeshes: InstanceType<ThreeModule['Mesh']>[] = []
+    let collisionShell: InstanceType<ThreeModule['Mesh']> | null = null
+    const impactParticles: ImpactParticle[] = []
+    const fragmentTextureCache = new Map<string, InstanceType<ThreeModule['CanvasTexture']>>()
+    const motion = {
+      x: 0,
+      y: 0,
+      vx: 0,
+      velocityY: 0,
+      detached: false,
+      returning: false,
+    }
+    let visualRotationZ = 0
+    let settleFrames = 0
+    let lastScrollImpulseAt = 0
+    let lastImpactBurstAt = 0
+    let returnStartedAt = 0
 
     void (async () => {
       const THREE = await import('three')
@@ -97,9 +184,22 @@ export function ThreeSphereScene() {
       camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100)
       camera.position.z = 5.4
 
-      group = new THREE.Group()
-      group.rotation.x = heroThreeConfig.tiltAngle
-      scene.add(group)
+      physicsGroup = new THREE.Group()
+      physicsGroup.rotation.x = heroThreeConfig.tiltAngle
+      scene.add(physicsGroup)
+
+      collisionShell = new THREE.Mesh(
+        new THREE.SphereGeometry(heroThreeConfig.sphereRadius * 1.18, 28, 20),
+        new THREE.MeshBasicMaterial({
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+        }),
+      )
+      physicsGroup.add(collisionShell)
+
+      visualGroup = new THREE.Group()
+      physicsGroup.add(visualGroup)
 
       const ribbonTokens = buildRibbonTokens()
       const ribbonTextureCanvas = document.createElement('canvas')
@@ -159,6 +259,45 @@ export function ThreeSphereScene() {
         return texture
       }
 
+      const buildDebrisTexture = (token: string, color: string) => {
+        const cacheKey = `${token}|${color}`
+        const cached = fragmentTextureCache.get(cacheKey)
+        if (cached) {
+          return cached
+        }
+
+        const debrisCanvas = document.createElement('canvas')
+        const debrisContext = debrisCanvas.getContext('2d')
+        if (!debrisContext) {
+          const emptyTexture = new THREE.CanvasTexture(debrisCanvas)
+          emptyTexture.needsUpdate = true
+          fragmentTextureCache.set(cacheKey, emptyTexture)
+          return emptyTexture
+        }
+
+        const fontSize = 28
+        debrisContext.font = `700 ${fontSize}px ui-monospace, SFMono-Regular, Consolas, monospace`
+        const width = Math.ceil(debrisContext.measureText(token).width) + 18
+        const height = 44
+        debrisCanvas.width = width * 2
+        debrisCanvas.height = height * 2
+        debrisContext.scale(2, 2)
+        debrisContext.clearRect(0, 0, width, height)
+        debrisContext.font = `700 ${fontSize}px ui-monospace, SFMono-Regular, Consolas, monospace`
+        debrisContext.textBaseline = 'middle'
+        debrisContext.textAlign = 'center'
+        debrisContext.fillStyle = color
+        debrisContext.fillText(token, width / 2, height / 2)
+
+        const debrisTexture = new THREE.CanvasTexture(debrisCanvas)
+        debrisTexture.needsUpdate = true
+        debrisTexture.colorSpace = THREE.SRGBColorSpace
+        debrisTexture.minFilter = THREE.LinearFilter
+        debrisTexture.magFilter = THREE.LinearFilter
+        fragmentTextureCache.set(cacheKey, debrisTexture)
+        return debrisTexture
+      }
+
       const normalizeVector = (vector: InstanceType<ThreeModule['Vector3']>) => {
         if (vector.lengthSq() === 0) {
           vector.set(1, 0, 0)
@@ -205,6 +344,69 @@ export function ThreeSphereScene() {
         return new THREE.CatmullRomCurve3(points, true, 'catmullrom', 0.16)
       }
 
+      const emitImpactBurst = (
+        origin: InstanceType<ThreeModule['Vector3']>,
+        impulse: number,
+        direction: number,
+      ) => {
+        if (!scene || !physicsGroup) {
+          return
+        }
+
+        const now = performance.now()
+        if (now - lastImpactBurstAt < 90) {
+          return
+        }
+
+        lastImpactBurstAt = now
+        physicsGroup.updateMatrixWorld(true)
+
+        const burstCount = clamp(Math.round(7 + impulse * 30), 7, 16)
+        const worldOrigin = physicsGroup.localToWorld(origin.clone())
+
+        for (let index = 0; index < burstCount; index += 1) {
+          const token = pickDebrisToken(index + Math.floor(now / 140))
+          const color = pickDebrisColor(token, index + Math.floor(now / 220))
+          const texture = buildDebrisTexture(token, color)
+          const material = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            opacity: 1,
+            depthWrite: false,
+            depthTest: false,
+            color: 0xffffff,
+            toneMapped: false,
+          })
+          const sprite = new THREE.Sprite(material)
+          const angle = (index / burstCount) * Math.PI * 2
+          const spread = 0.018 + Math.random() * 0.016
+          const horizontalKick = Math.cos(angle) * spread * impulse * 2.4
+          const depthKick = Math.sin(angle) * spread * impulse * 0.7
+          const downwardKick = -0.012 - Math.random() * 0.02
+
+          sprite.position.copy(worldOrigin)
+          sprite.position.x += horizontalKick + (Math.random() - 0.5) * 0.02
+          sprite.position.y += (Math.random() - 0.5) * 0.012
+          sprite.position.z += depthKick
+          sprite.scale.setScalar(0.055 + Math.random() * 0.075)
+          sprite.renderOrder = 4
+          scene.add(sprite)
+
+          impactParticles.push({
+            sprite,
+            velocity: new THREE.Vector3(
+              horizontalKick * 0.55 + (Math.random() - 0.5) * 0.01,
+              downwardKick,
+              depthKick * 0.4 + (Math.random() - 0.5) * 0.01,
+            ),
+            life: 0,
+            maxLife: 48 + Math.random() * 24,
+            spin: (Math.random() - 0.5) * 0.03 * direction,
+            drag: 0.962 + Math.random() * 0.018,
+          })
+        }
+      }
+
       const ribbonCount = heroThreeConfig.ribbonCount
       for (let index = 0; index < ribbonCount; index += 1) {
         const normal = createRibbonNormal(index, ribbonCount)
@@ -232,7 +434,7 @@ export function ThreeSphereScene() {
 
         const ribbon = new THREE.Mesh(geometry, material)
         ribbonMeshes.push(ribbon)
-        group.add(ribbon)
+        visualGroup.add(ribbon)
       }
 
       const resize = () => {
@@ -255,11 +457,140 @@ export function ThreeSphereScene() {
       resize()
 
       const loop = (time: number) => {
-        if (!renderer || !scene || !camera || !group || disposed) {
+        if (!renderer || !scene || !camera || !physicsGroup || !visualGroup || disposed) {
           return
         }
 
-        group.rotation.y = time * heroThreeConfig.rotationSpeed
+        const currentPhysicsDirection = scrollPhysicsDirectionRef.current
+        const currentPhysicsStrength = scrollPhysicsStrengthRef.current
+        const currentPhysicsPulseId = scrollPhysicsPulseIdRef.current
+
+        if (currentPhysicsPulseId !== lastPhysicsPulseIdRef.current && currentPhysicsDirection > 0) {
+          lastPhysicsPulseIdRef.current = currentPhysicsPulseId
+          motion.detached = true
+          motion.returning = false
+          lastScrollImpulseAt = time
+          const impulse = clamp(currentPhysicsStrength, 0.06, 0.22)
+          motion.velocityY -= impulse
+          motion.vx += Math.sin(time * 0.0013 + currentPhysicsPulseId * 0.41) * impulse * 0.38
+        }
+
+        const idleMs = time - lastScrollImpulseAt
+        if (motion.detached && idleMs > 1600) {
+          motion.returning = true
+          if (returnStartedAt === 0) {
+            returnStartedAt = time
+          }
+        }
+
+        const friction = motion.detached ? 0.995 : motion.returning ? 0.88 : 0.86
+        const gravity = motion.detached && !motion.returning ? 0.0011 : 0
+        const returnPull = motion.returning ? 0.06 : 0
+
+        motion.vx *= friction
+        motion.velocityY *= friction
+        motion.velocityY += gravity
+
+        if (motion.returning) {
+          motion.vx += (0 - motion.x) * returnPull
+          motion.velocityY += (0 - motion.y) * returnPull
+        } else if (!motion.detached) {
+          motion.vx += (0 - motion.x) * 0.02
+          motion.velocityY += (0 - motion.y) * 0.02
+        }
+
+        motion.x += motion.vx
+        motion.y += motion.velocityY
+
+        const horizontalBound = motion.detached ? 0.86 : 0.28
+        const verticalBound = motion.detached ? 1.08 : 0.28
+
+        let impactImpulse = 0
+        let impactDirection = 1
+        let impactOrigin: InstanceType<ThreeModule['Vector3']> | null = null
+
+        if (motion.x > horizontalBound) {
+          const preBounce = Math.abs(motion.vx)
+          motion.x = horizontalBound
+          motion.vx *= motion.detached ? -0.72 : -0.2
+          impactImpulse = Math.max(impactImpulse, preBounce)
+          impactDirection = motion.x >= 0 ? 1 : -1
+          impactOrigin = new THREE.Vector3(motion.x, motion.y, 0)
+        } else if (motion.x < -horizontalBound) {
+          const preBounce = Math.abs(motion.vx)
+          motion.x = -horizontalBound
+          motion.vx *= motion.detached ? -0.72 : -0.2
+          impactImpulse = Math.max(impactImpulse, preBounce)
+          impactDirection = motion.x >= 0 ? 1 : -1
+          impactOrigin = new THREE.Vector3(motion.x, motion.y, 0)
+        }
+
+        if (motion.y > verticalBound) {
+          const preBounce = Math.abs(motion.velocityY)
+          motion.y = verticalBound
+          motion.velocityY *= motion.detached ? -0.68 : -0.2
+          impactImpulse = Math.max(impactImpulse, preBounce)
+          impactDirection = motion.y >= 0 ? 1 : -1
+          impactOrigin = new THREE.Vector3(motion.x, motion.y, 0)
+        } else if (motion.y < -verticalBound) {
+          const preBounce = Math.abs(motion.velocityY)
+          motion.y = -verticalBound
+          motion.velocityY *= motion.detached ? -0.72 : -0.2
+          impactImpulse = Math.max(impactImpulse, preBounce)
+          impactDirection = motion.y >= 0 ? 1 : -1
+          impactOrigin = new THREE.Vector3(motion.x, motion.y, 0)
+        }
+
+        if (impactOrigin && impactImpulse > 0.04) {
+          emitImpactBurst(impactOrigin, clamp(impactImpulse, 0.04, 0.22), impactDirection)
+        }
+
+        physicsGroup.position.x = motion.x
+        physicsGroup.position.y = motion.y
+        const targetRotationZ = motion.detached ? motion.x * 0.08 : motion.returning ? 0 : motion.x * 0.024
+        visualRotationZ += (targetRotationZ - visualRotationZ) * (motion.returning ? 0.3 : 0.11)
+        physicsGroup.rotation.z = visualRotationZ
+
+        const targetScale = motion.returning ? 1 : 1 + Math.abs(motion.y) * 0.018
+        const currentScale = physicsGroup.scale.x
+        const nextScale = currentScale + (targetScale - currentScale) * (motion.returning ? 0.32 : 0.12)
+        physicsGroup.scale.set(nextScale, nextScale, 1)
+        if (motion.detached || motion.returning) {
+          visualGroup.rotation.y = time * heroThreeConfig.rotationSpeed
+        } else {
+          visualGroup.rotation.y = 0
+        }
+
+        if (motion.returning) {
+          const nearCenter =
+            Math.abs(motion.x) < 0.024 &&
+            Math.abs(motion.y) < 0.024 &&
+            Math.abs(motion.vx) < 0.03 &&
+            Math.abs(motion.velocityY) < 0.03
+          settleFrames = nearCenter ? settleFrames + 1 : 0
+
+          const returnElapsed = time - returnStartedAt
+          if (settleFrames > 4 || returnElapsed > 1000) {
+            motion.detached = false
+            motion.returning = false
+            motion.x = 0
+            motion.y = 0
+            motion.vx = 0
+            motion.velocityY = 0
+            settleFrames = 0
+            returnStartedAt = 0
+            visualRotationZ = 0
+            physicsGroup.position.set(0, 0, 0)
+            physicsGroup.rotation.z = 0
+            physicsGroup.scale.set(1, 1, 1)
+            if (visualGroup) {
+              visualGroup.rotation.y = 0
+            }
+          }
+        } else {
+          settleFrames = 0
+          returnStartedAt = 0
+        }
 
         for (let index = 0; index < textures.length; index += 1) {
           const texture = textures[index]
@@ -268,6 +599,27 @@ export function ThreeSphereScene() {
           material.opacity =
             heroThreeConfig.ribbonOpacity *
             (0.84 + Math.sin(time * 0.00065 + index * 0.82) * 0.05)
+        }
+
+        for (let index = impactParticles.length - 1; index >= 0; index -= 1) {
+          const particle = impactParticles[index]
+          particle.life += 1
+          particle.velocity.x *= particle.drag
+          particle.velocity.y *= particle.drag
+          particle.velocity.z *= particle.drag
+          particle.velocity.y -= 0.0024
+          particle.sprite.position.add(particle.velocity)
+          const opacity = Math.max(0, 1 - particle.life / particle.maxLife)
+          const material = particle.sprite.material as InstanceType<ThreeModule['SpriteMaterial']>
+          material.opacity = opacity
+          material.rotation += particle.spin
+          particle.sprite.scale.multiplyScalar(0.996)
+
+          if (particle.life >= particle.maxLife) {
+            material.dispose()
+            scene.remove(particle.sprite)
+            impactParticles.splice(index, 1)
+          }
         }
 
         renderer.render(scene, camera)
@@ -285,6 +637,17 @@ export function ThreeSphereScene() {
       materials.forEach((materialItem) => materialItem.dispose())
       textures.forEach((texture) => texture.dispose())
       ribbonMeshes.length = 0
+      impactParticles.forEach((particle) => {
+        scene?.remove(particle.sprite)
+        const material = particle.sprite.material as InstanceType<ThreeModule['SpriteMaterial']>
+        material.dispose()
+      })
+      fragmentTextureCache.forEach((texture) => texture.dispose())
+      collisionShell?.geometry.dispose()
+      const collisionMaterial = collisionShell?.material
+      if (collisionMaterial && !Array.isArray(collisionMaterial)) {
+        collisionMaterial.dispose()
+      }
       renderer?.dispose()
     }
   }, [])

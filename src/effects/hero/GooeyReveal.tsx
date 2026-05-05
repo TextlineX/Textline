@@ -15,7 +15,6 @@ export function GooeyReveal({ active, delayMs = 220, avatarSrc = '/avatar.png' }
 
   useEffect(() => {
     if (!active) {
-      setVisible(false)
       return
     }
 
@@ -25,6 +24,7 @@ export function GooeyReveal({ active, delayMs = 220, avatarSrc = '/avatar.png' }
 
     return () => {
       window.clearTimeout(timerId)
+      setVisible(false)
     }
   }, [active, delayMs])
 

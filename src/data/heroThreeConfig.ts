@@ -14,9 +14,9 @@ export type HeroThreeConfig = {
 }
 
 export const heroThreeConfig: HeroThreeConfig = {
-  sphereRadius: 1.52,
+  sphereRadius: 1.32,
   ribbonCount: 14,
-  ribbonRadius: 0.09,
+  ribbonRadius: 0.065,
   ribbonSegments: 128,
   ribbonRadialSegments: 4,
   rotationSpeed: 0.000015,
@@ -25,5 +25,5 @@ export const heroThreeConfig: HeroThreeConfig = {
   ribbonOpacity: 0.82,
   textCanvasWidth: 8192,
   textCanvasHeight: 768,
-  fontSize: 108,
+  fontSize: 155,
 }

@@ -1,0 +1,9 @@
+Recovered from JetBrains Local History
+Created at: 2026-05-05T23:32:24.377580300+08:00[Asia/Shanghai]
+
+H:/Project/gowork/Textline/src/effects/showcase/AboutShowcaseModel.tsx -> record 3173 delete @ 2026-05-05 22:56:59
+H:/Project/gowork/Textline/src/effects/showcase/AboutShowcaseModel.less -> record 3173 delete @ 2026-05-05 22:56:59
+H:/Project/gowork/Textline/src/effects/showcase/AboutShowcaseDom.tsx -> record 3174 delete @ 2026-05-05 22:57:14
+H:/Project/gowork/Textline/src/effects/showcase/AboutShowcaseDom.less -> record 3175 delete @ 2026-05-05 22:57:29
+H:/Project/gowork/Textline/src/sections/AboutSection.less -> record 3175 delete @ 2026-05-05 22:57:29
+H:/Project/gowork/Textline/src/sections/AboutSection.tsx -> record 3175 oldContent before change @ 2026-05-05 22:57:29

@@ -1,6 +1,6 @@
 import { SectionShell } from '../components/shared/SectionShell'
 import { StickyMagneticTitle } from '../components/shared/StickyMagneticTitle'
-import { AboutShowcaseModel } from '../effects/showcase/AboutShowcaseModel'
+import { AboutShowcaseModel } from './about/AboutShowcaseModel'
 
 import './AboutSection.less'
 

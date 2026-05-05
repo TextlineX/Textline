@@ -12,6 +12,21 @@
   z-index: 2147483647;
 }
 
+.magnetic-cursor--tunnel {
+  --cursor-width: 3.1rem;
+  --cursor-height: 3.1rem;
+}
+
+.magnetic-cursor--grid {
+  --cursor-width: 3rem;
+  --cursor-height: 3rem;
+}
+
+.magnetic-cursor--drag {
+  --cursor-width: 2.5rem;
+  --cursor-height: 2.5rem;
+}
+
 .magnetic-cursor__corner {
   position: absolute;
   width: 1.2rem;
@@ -85,4 +100,68 @@
   box-shadow:
     0 0 10px rgba(255, 0, 51, 0.85),
     0 0 24px rgba(255, 0, 51, 0.35);
+}
+
+.magnetic-cursor__orbital {
+  position: absolute;
+  inset: 0.32rem;
+  border-radius: 999px;
+  border: 1px solid rgba(241, 106, 106, 0.5);
+  box-shadow:
+    0 0 12px rgba(229, 61, 61, 0.28),
+    inset 0 0 12px rgba(255, 255, 255, 0.03);
+}
+
+.magnetic-cursor--tunnel .magnetic-cursor__corner {
+  width: 0.74rem;
+  height: 0.74rem;
+  border-width: 0.2rem;
+  border-color: rgba(241, 106, 106, 0.9);
+  filter:
+    drop-shadow(0 0 8px rgba(229, 61, 61, 0.5))
+    drop-shadow(0 0 18px rgba(229, 61, 61, 0.2));
+}
+
+.magnetic-cursor--tunnel .magnetic-cursor__core {
+  width: 0.34rem;
+  height: 0.34rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.7),
+    0 0 20px rgba(229, 61, 61, 0.24);
+}
+
+.magnetic-cursor--grid .magnetic-cursor__corner,
+.magnetic-cursor--drag .magnetic-cursor__corner {
+  width: 0.68rem;
+  height: 0.68rem;
+  border-width: 0.18rem;
+  border-color: rgba(207, 228, 233, 0.92);
+  filter:
+    drop-shadow(0 0 8px rgba(101, 196, 200, 0.34))
+    drop-shadow(0 0 18px rgba(101, 196, 200, 0.16));
+}
+
+.magnetic-cursor--grid .magnetic-cursor__core,
+.magnetic-cursor--drag .magnetic-cursor__core {
+  width: 0.3rem;
+  height: 0.3rem;
+  background: rgba(207, 228, 233, 0.94);
+  box-shadow:
+    0 0 8px rgba(101, 196, 200, 0.44),
+    0 0 18px rgba(101, 196, 200, 0.18);
+}
+
+.magnetic-cursor--grid .magnetic-cursor__orbital,
+.magnetic-cursor--drag .magnetic-cursor__orbital {
+  inset: 0.28rem;
+  border-color: rgba(101, 196, 200, 0.5);
+  box-shadow:
+    0 0 12px rgba(101, 196, 200, 0.18),
+    inset 0 0 10px rgba(255, 255, 255, 0.03);
+}
+
+.magnetic-cursor--drag .magnetic-cursor__orbital {
+  inset: 0.2rem;
+  border-color: rgba(207, 228, 233, 0.66);
 }

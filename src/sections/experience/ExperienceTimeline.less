@@ -1,0 +1,138 @@
+.experience-timeline {
+  --experience-pointer-x: 50%;
+  --experience-pointer-y: 50%;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at var(--experience-pointer-x) var(--experience-pointer-y), rgba(229, 61, 61, 0.1), transparent 24%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.028), transparent 42%),
+    #030303;
+}
+
+.experience-timeline__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.experience-timeline__rail-shadow {
+  fill: none;
+  stroke: rgba(229, 61, 61, 0.14);
+  stroke-width: 28;
+  stroke-linecap: round;
+  filter: blur(22px);
+}
+
+.experience-timeline__rail {
+  fill: none;
+  stroke: url(#experience-timeline-glow);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 24 18 120 24;
+}
+
+.experience-timeline__tether {
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 1.2;
+  stroke-dasharray: 6 8;
+}
+
+.experience-timeline__node {
+  fill: rgba(241, 106, 106, 0.92);
+  stroke: rgba(255, 255, 255, 0.72);
+  stroke-width: 1.4;
+  filter: drop-shadow(0 0 12px rgba(229, 61, 61, 0.36));
+}
+
+.experience-timeline__cards {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.experience-timeline__card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(18rem, 28vw);
+  min-width: 14rem;
+  padding: 0.9rem 0.95rem 1rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+    rgba(8, 8, 9, 0.72);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.022),
+    0 16px 42px rgba(0, 0, 0, 0.26);
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity, filter;
+}
+
+.experience-timeline__card-year {
+  color: rgba(241, 106, 106, 0.86);
+  font-family: 'Consolas', 'SFMono-Regular', 'Fira Code', monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.experience-timeline__card-title {
+  margin-top: 0.42rem;
+  color: var(--color-text-strong);
+  font-size: 1rem;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.experience-timeline__card-copy {
+  margin: 0.48rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  line-height: 1.58;
+}
+
+.experience-timeline__card-tags {
+  margin-top: 0.68rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.experience-timeline__tag {
+  padding: 0.18rem 0.48rem;
+  border-radius: 999px;
+  border: 1px solid rgba(241, 106, 106, 0.16);
+  color: rgba(229, 235, 240, 0.84);
+  font-family: 'Consolas', 'SFMono-Regular', 'Fira Code', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+.experience-timeline__noise {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 44%, rgba(0, 0, 0, 0.18) 62%, rgba(0, 0, 0, 0.62) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 24%);
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .experience-timeline__card {
+    width: min(15rem, 58vw);
+    min-width: 12.4rem;
+    padding: 0.82rem 0.84rem 0.9rem;
+  }
+
+  .experience-timeline__card-title {
+    font-size: 0.9rem;
+  }
+
+  .experience-timeline__card-copy {
+    font-size: 0.78rem;
+  }
+}

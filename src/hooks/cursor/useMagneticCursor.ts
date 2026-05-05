@@ -12,7 +12,7 @@ type CursorSize = {
   height: number
 }
 
-type MagneticCursorMode = 'default' | 'click'
+type MagneticCursorMode = 'default' | 'click' | 'tunnel' | 'grid' | 'drag'
 
 type UseMagneticCursorOptions = {
   enabled?: boolean
@@ -78,7 +78,8 @@ export function useMagneticCursor({
   const [size, setSize] = useState<CursorSize>(defaultSize)
   const [locked, setLocked] = useState(false)
   const [avatarActive, setAvatarActive] = useState(false)
-  const [mode, setMode] = useState<MagneticCursorMode>('default')
+  const [clickActive, setClickActive] = useState(false)
+  const [sceneMode, setSceneMode] = useState<'default' | 'tunnel' | 'grid' | 'drag'>('default')
 
   const pointerRef = useRef<Point>(defaultPoint)
   const cursorRef = useRef<Point>(defaultPoint)
@@ -96,7 +97,23 @@ export function useMagneticCursor({
 
     const hoverStateMove = (event: Event) => {
       const customEvent = event as CustomEvent<{ active: boolean }>
-      setMode(customEvent.detail.active ? 'click' : 'default')
+      setClickActive(customEvent.detail.active)
+    }
+
+    const worksTunnelStateMove = (event: Event) => {
+      const customEvent = event as CustomEvent<{ active: boolean }>
+      setSceneMode(customEvent.detail.active ? 'tunnel' : 'default')
+    }
+
+    const playgroundGridStateMove = (event: Event) => {
+      const customEvent = event as CustomEvent<{ active: boolean; dragging?: boolean }>
+
+      if (!customEvent.detail.active) {
+        setSceneMode('default')
+        return
+      }
+
+      setSceneMode(customEvent.detail.dragging ? 'drag' : 'grid')
     }
 
     const tick = () => {
@@ -151,17 +168,24 @@ export function useMagneticCursor({
 
     window.addEventListener('pointermove', move as unknown as EventListener, { passive: true })
     window.addEventListener('about-model-hover-state', hoverStateMove as EventListener)
+    window.addEventListener('works-tunnel-cursor-state', worksTunnelStateMove as EventListener)
+    window.addEventListener('playground-grid-cursor-state', playgroundGridStateMove as EventListener)
     frameRef.current = window.requestAnimationFrame(tick)
 
     return () => {
       window.cancelAnimationFrame(frameRef.current)
       window.removeEventListener('pointermove', move as unknown as EventListener)
       window.removeEventListener('about-model-hover-state', hoverStateMove as EventListener)
+      window.removeEventListener('works-tunnel-cursor-state', worksTunnelStateMove as EventListener)
+      window.removeEventListener('playground-grid-cursor-state', playgroundGridStateMove as EventListener)
       setMagneticActive(currentTargetRef.current, false)
       currentTargetRef.current = null
-      setMode('default')
+      setClickActive(false)
+      setSceneMode('default')
     }
   }, [enabled, targetSelector])
+
+  const mode: MagneticCursorMode = clickActive ? 'click' : sceneMode
 
   return useMemo(
     () => ({

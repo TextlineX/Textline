@@ -9,13 +9,13 @@ type MagneticCursorProps = {
   locked: boolean
   width: number
   height: number
-  mode?: 'default' | 'click'
+  mode?: 'default' | 'click' | 'tunnel' | 'grid' | 'drag'
 }
 
 export function MagneticCursor({ x, y, locked, width, height, mode = 'default' }: MagneticCursorProps) {
   const cursor = (
     <div
-      className={`magnetic-cursor${locked ? ' magnetic-cursor--locked' : ''}${mode === 'click' ? ' magnetic-cursor--click' : ''}`}
+      className={`magnetic-cursor${locked ? ' magnetic-cursor--locked' : ''}${mode === 'click' ? ' magnetic-cursor--click' : ''}${mode === 'tunnel' ? ' magnetic-cursor--tunnel' : ''}${mode === 'grid' ? ' magnetic-cursor--grid' : ''}${mode === 'drag' ? ' magnetic-cursor--drag' : ''}`}
       style={
         {
           '--cursor-width': `${width}px`,
@@ -29,7 +29,8 @@ export function MagneticCursor({ x, y, locked, width, height, mode = 'default' }
       <span className="magnetic-cursor__corner magnetic-cursor__corner--tr" />
       <span className="magnetic-cursor__corner magnetic-cursor__corner--bl" />
       <span className="magnetic-cursor__corner magnetic-cursor__corner--br" />
-      {mode === 'click' ? <span className="magnetic-cursor__core" /> : null}
+      {mode === 'click' || mode === 'tunnel' || mode === 'grid' || mode === 'drag' ? <span className="magnetic-cursor__core" /> : null}
+      {mode === 'tunnel' || mode === 'grid' || mode === 'drag' ? <span className="magnetic-cursor__orbital" /> : null}
     </div>
   )
 

@@ -12,6 +12,8 @@ type CursorSize = {
   height: number
 }
 
+type MagneticCursorMode = 'default' | 'click'
+
 type UseMagneticCursorOptions = {
   enabled?: boolean
   targetSelector?: string
@@ -76,6 +78,7 @@ export function useMagneticCursor({
   const [size, setSize] = useState<CursorSize>(defaultSize)
   const [locked, setLocked] = useState(false)
   const [avatarActive, setAvatarActive] = useState(false)
+  const [mode, setMode] = useState<MagneticCursorMode>('default')
 
   const pointerRef = useRef<Point>(defaultPoint)
   const cursorRef = useRef<Point>(defaultPoint)
@@ -89,6 +92,11 @@ export function useMagneticCursor({
 
     const move = (event: MouseEvent) => {
       pointerRef.current = { x: event.clientX, y: event.clientY }
+    }
+
+    const hoverStateMove = (event: Event) => {
+      const customEvent = event as CustomEvent<{ active: boolean }>
+      setMode(customEvent.detail.active ? 'click' : 'default')
     }
 
     const tick = () => {
@@ -142,13 +150,16 @@ export function useMagneticCursor({
     }
 
     window.addEventListener('pointermove', move as unknown as EventListener, { passive: true })
+    window.addEventListener('about-model-hover-state', hoverStateMove as EventListener)
     frameRef.current = window.requestAnimationFrame(tick)
 
     return () => {
       window.cancelAnimationFrame(frameRef.current)
       window.removeEventListener('pointermove', move as unknown as EventListener)
+      window.removeEventListener('about-model-hover-state', hoverStateMove as EventListener)
       setMagneticActive(currentTargetRef.current, false)
       currentTargetRef.current = null
+      setMode('default')
     }
   }, [enabled, targetSelector])
 
@@ -158,8 +169,9 @@ export function useMagneticCursor({
       locked,
       avatarActive,
       size,
+      mode,
       setLocked,
     }),
-    [avatarActive, locked, position, size],
+    [avatarActive, locked, mode, position, size],
   )
 }

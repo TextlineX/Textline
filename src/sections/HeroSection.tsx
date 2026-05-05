@@ -8,7 +8,7 @@ import { NameBanner } from './hero/NameBanner'
 import './HeroSection.less'
 
 export function HeroSection() {
-  const { position, locked, avatarActive, size } = useMagneticCursor({ enabled: true })
+  const { position, locked, avatarActive, size, mode } = useMagneticCursor({ enabled: true })
 
   return (
     <SectionShell id="hero">
@@ -26,6 +26,7 @@ export function HeroSection() {
         locked={locked}
         width={size.width}
         height={size.height}
+        mode={mode}
       />
     </SectionShell>
   )

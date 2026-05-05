@@ -58,3 +58,31 @@
     drop-shadow(0 0 30px rgba(229, 61, 61, 0.3))
     drop-shadow(0 0 54px rgba(229, 61, 61, 0.12));
 }
+
+.magnetic-cursor--click {
+  --cursor-width: 2.2rem;
+  --cursor-height: 2.2rem;
+}
+
+.magnetic-cursor--click .magnetic-cursor__corner {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-width: 0.22rem;
+  border-color: rgba(255, 62, 96, 0.96);
+  filter:
+    drop-shadow(0 0 8px rgba(255, 0, 51, 0.7))
+    drop-shadow(0 0 22px rgba(255, 0, 51, 0.26));
+}
+
+.magnetic-cursor__core {
+  position: absolute;
+  inset: 50%;
+  width: 0.48rem;
+  height: 0.48rem;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: rgba(255, 0, 51, 0.96);
+  box-shadow:
+    0 0 10px rgba(255, 0, 51, 0.85),
+    0 0 24px rgba(255, 0, 51, 0.35);
+}

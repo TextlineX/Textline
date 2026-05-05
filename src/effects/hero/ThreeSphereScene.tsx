@@ -490,6 +490,9 @@ export function ThreeSphereScene({
         motion.vx *= friction
         motion.velocityY *= friction
         motion.velocityY += gravity
+        if (motion.detached && motion.y > 0.28 && motion.velocityY <= 0) {
+          motion.velocityY += 0.0008
+        }
 
         if (motion.returning) {
           motion.vx += (0 - motion.x) * returnPull
@@ -548,15 +551,15 @@ export function ThreeSphereScene({
         physicsGroup.position.x = motion.x
         physicsGroup.position.y = motion.y
         const targetRotationZ = motion.detached ? motion.x * 0.08 : motion.returning ? 0 : motion.x * 0.024
-        visualRotationZ += (targetRotationZ - visualRotationZ) * (motion.returning ? 0.3 : 0.11)
+        visualRotationZ += (targetRotationZ - visualRotationZ) * (motion.returning ? 0.12 : 0.11)
         physicsGroup.rotation.z = visualRotationZ
 
         const targetScale = motion.returning ? 1 : 1 + Math.abs(motion.y) * 0.018
         const currentScale = physicsGroup.scale.x
-        const nextScale = currentScale + (targetScale - currentScale) * (motion.returning ? 0.32 : 0.12)
+        const nextScale = currentScale + (targetScale - currentScale) * (motion.returning ? 0.14 : 0.12)
         physicsGroup.scale.set(nextScale, nextScale, 1)
         if (motion.detached || motion.returning) {
-          visualGroup.rotation.y = time * heroThreeConfig.rotationSpeed
+          visualGroup.rotation.y = motion.returning ? 0 : time * heroThreeConfig.rotationSpeed
         } else {
           visualGroup.rotation.y = 0
         }
@@ -586,6 +589,10 @@ export function ThreeSphereScene({
             if (visualGroup) {
               visualGroup.rotation.y = 0
             }
+          }
+          if (Math.abs(motion.x) < 0.06 && Math.abs(motion.y) < 0.06) {
+            motion.vx *= 0.78
+            motion.velocityY *= 0.78
           }
         } else {
           settleFrames = 0

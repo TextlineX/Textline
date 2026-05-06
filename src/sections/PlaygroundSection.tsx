@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, type PointerEvent, useEffect, useMemo, useRef, useState } from 'react'
 
 import { SectionShell } from '../components/shared/SectionShell'
 import { useAppShellScroll } from '../components/layout/AppShellScrollContext'
@@ -7,51 +7,167 @@ import './PlaygroundSection.less'
 
 type HexVariant = 'base' | 'accent' | 'soft'
 
-type HexCell = {
-  id: string
+type ViewportSize = {
+  width: number
+  height: number
+}
+
+type CameraState = {
   x: number
   y: number
-  radius: number
+}
+
+type AxialCoord = {
+  q: number
+  r: number
+}
+
+type HoneycombCell = {
+  id: string
+  q: number
+  r: number
+  x: number
+  y: number
+  width: number
+  height: number
   variant: HexVariant
   projectIndex: number
   project: PlaygroundProject
   lane: 'title' | 'summary' | 'stack' | 'status'
 }
 
+type HoneycombLayout = {
+  cells: HoneycombCell[]
+  hexRadius: number
+  hexWidth: number
+  hexHeight: number
+  centerProjectIndex: number
+}
+
+type DragState = {
+  active: boolean
+  pointerId: number
+  startX: number
+  startY: number
+  startCameraX: number
+  startCameraY: number
+  lastX: number
+  lastY: number
+  lastTime: number
+}
+
+const SQRT3 = Math.sqrt(3)
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
 }
 
-function buildHexCells(projects: PlaygroundProject[]) {
-  const cells: HexCell[] = []
-  const cols = 6
-  const rows = 4
-  const radius = 128
-  const horizontalStep = radius * 1.5
-  const verticalStep = radius * 0.92
-  const startX = 104
-  const startY = 108
+function positiveMod(value: number, modulus: number) {
+  if (modulus <= 0) {
+    return 0
+  }
 
-  for (let row = 0; row < rows; row += 1) {
-    for (let col = 0; col < cols; col += 1) {
-      const projectIndex = (row * 2 + col + (row % 2)) % projects.length
+  return ((value % modulus) + modulus) % modulus
+}
+
+function getViewportSize(): ViewportSize {
+  if (typeof window === 'undefined') {
+    return { width: 0, height: 0 }
+  }
+
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }
+}
+
+function axialToPixel(coord: AxialCoord, radius: number) {
+  return {
+    x: radius * SQRT3 * (coord.q + coord.r / 2),
+    y: radius * 1.5 * coord.r,
+  }
+}
+
+function pixelToAxial(x: number, y: number, radius: number): AxialCoord {
+  return {
+    q: (SQRT3 / 3 * x - 1 / 3 * y) / radius,
+    r: (2 / 3 * y) / radius,
+  }
+}
+
+function buildHoneycombLayout(
+  projects: PlaygroundProject[],
+  viewport: ViewportSize,
+  camera: CameraState,
+): HoneycombLayout {
+  if (projects.length === 0) {
+    return {
+      cells: [],
+      hexRadius: 0,
+      hexWidth: 0,
+      hexHeight: 0,
+      centerProjectIndex: 0,
+    }
+  }
+
+  const hexRadius = clamp(Math.round(Math.min(viewport.width, viewport.height) * 0.22), 200, 340)
+  const hexWidth = SQRT3 * hexRadius
+  const hexHeight = hexRadius * 2
+  const rowStep = hexRadius * 1.5
+  const qSpan = Math.ceil(viewport.width / hexWidth) + 4
+  const rSpan = Math.ceil(viewport.height / rowStep) + 4
+  const center = pixelToAxial(camera.x, camera.y, hexRadius)
+  const centerQ = Math.round(center.q)
+  const centerR = Math.round(center.r)
+  const cells: HoneycombCell[] = []
+  let bestProjectIndex = 0
+  let bestDistance = Number.POSITIVE_INFINITY
+
+  for (let r = Math.floor(centerR - rSpan); r <= Math.ceil(centerR + rSpan); r += 1) {
+    for (let q = Math.floor(centerQ - qSpan); q <= Math.ceil(centerQ + qSpan); q += 1) {
+      const world = axialToPixel({ q, r }, hexRadius)
+      const screenX = viewport.width / 2 + world.x - camera.x
+      const screenY = viewport.height / 2 + world.y - camera.y
+      const projectedLeft = screenX - hexWidth / 2
+      const projectedTop = screenY - hexHeight / 2
+      const visible =
+        projectedLeft < viewport.width + hexWidth * 0.75 &&
+        projectedLeft + hexWidth > -hexWidth * 0.75 &&
+        projectedTop < viewport.height + hexHeight * 0.75 &&
+        projectedTop + hexHeight > -hexHeight * 0.75
+
+      if (!visible) {
+        continue
+      }
+
+      const projectIndex = positiveMod(q * 31 + r * 17, projects.length)
       const project = projects[projectIndex]
-      const laneIndex = (row + col) % 4
-      const lane: HexCell['lane'] = laneIndex === 0 ? 'title' : laneIndex === 1 ? 'summary' : laneIndex === 2 ? 'stack' : 'status'
+      const laneIndex = positiveMod(q + r, 4)
+      const lane: HoneycombCell['lane'] =
+        laneIndex === 0 ? 'title' : laneIndex === 1 ? 'summary' : laneIndex === 2 ? 'stack' : 'status'
       const variant: HexVariant =
         lane === 'title'
           ? 'accent'
           : lane === 'stack'
             ? 'soft'
-            : row % 3 === 0
+            : positiveMod(q * 7 + r * 5, 3) === 0
               ? 'soft'
               : 'base'
+      const distance = Math.hypot(screenX - viewport.width / 2, screenY - viewport.height / 2)
+
+      if (distance < bestDistance) {
+        bestDistance = distance
+        bestProjectIndex = projectIndex
+      }
 
       cells.push({
-        id: `hex-${row}-${col}`,
-        x: startX + col * horizontalStep + (row % 2 === 0 ? 0 : horizontalStep / 2),
-        y: startY + row * verticalStep,
-        radius,
+        id: `hex-${q}-${r}`,
+        q,
+        r,
+        x: projectedLeft,
+        y: projectedTop,
+        width: hexWidth,
+        height: hexHeight,
         variant,
         projectIndex,
         project,
@@ -60,10 +176,16 @@ function buildHexCells(projects: PlaygroundProject[]) {
     }
   }
 
-  return cells
+  return {
+    cells,
+    hexRadius,
+    hexWidth,
+    hexHeight,
+    centerProjectIndex: bestProjectIndex,
+  }
 }
 
-function getCellContent(cell: HexCell) {
+function getCellContent(cell: HoneycombCell) {
   if (cell.lane === 'title') {
     return {
       kicker: cell.project.tag,
@@ -76,7 +198,7 @@ function getCellContent(cell: HexCell) {
     return {
       kicker: 'SUMMARY',
       title: cell.project.description,
-      copy: 'Drag the surface and keep scanning the grid.',
+      copy: 'Drag the world and keep scanning.',
     }
   }
 
@@ -96,33 +218,61 @@ function getCellContent(cell: HexCell) {
 }
 
 export function PlaygroundSection() {
-  const rootRef = useRef<HTMLDivElement | null>(null)
-  const surfaceRef = useRef<HTMLDivElement | null>(null)
-  const dragStateRef = useRef({
+  const frameRef = useRef<HTMLDivElement | null>(null)
+  const dragRef = useRef<DragState>({
     active: false,
+    pointerId: -1,
     startX: 0,
     startY: 0,
-    startOffsetX: 0,
-    startOffsetY: 0,
+    startCameraX: 0,
+    startCameraY: 0,
+    lastX: 0,
+    lastY: 0,
+    lastTime: 0,
   })
-  const offsetRef = useRef({ x: 0, y: 0 })
+  const cameraRef = useRef<CameraState>({ x: 0, y: 0 })
+  const velocityRef = useRef<CameraState>({ x: 0, y: 0 })
+  const inertiaFrameRef = useRef<number>(0)
+  const [viewport, setViewport] = useState<ViewportSize>(getViewportSize)
+  const [camera, setCamera] = useState<CameraState>({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
-  const [activeProjectIndex, setActiveProjectIndex] = useState(0)
+  const [activeProjectIndex, setActiveProjectIndex] = useState(() =>
+    buildHoneycombLayout(playgroundProjects, getViewportSize(), { x: 0, y: 0 }).centerProjectIndex,
+  )
   const { activeIndex, scrollProgress } = useAppShellScroll()
 
   const engaged = activeIndex === 5
-  const cells = useMemo(() => buildHexCells(playgroundProjects), [])
+  const layout = useMemo(() => buildHoneycombLayout(playgroundProjects, viewport, camera), [viewport, camera])
   const activeProject = playgroundProjects[activeProjectIndex % playgroundProjects.length]
+
+  useEffect(() => {
+    cameraRef.current = camera
+  }, [camera])
+
+  useEffect(() => {
+    const updateViewport = () => setViewport(getViewportSize())
+    window.addEventListener('resize', updateViewport)
+
+    return () => {
+      window.removeEventListener('resize', updateViewport)
+    }
+  }, [])
 
   useEffect(() => {
     window.dispatchEvent(
       new CustomEvent('playground-grid-cursor-state', {
-        detail: { active: engaged, dragging: isDragging },
+        detail: { active: engaged, dragging: engaged && isDragging },
       }),
     )
 
     if (!engaged) {
-      setIsDragging(false)
+      dragRef.current.active = false
+      velocityRef.current.x = 0
+      velocityRef.current.y = 0
+      if (inertiaFrameRef.current !== 0) {
+        window.cancelAnimationFrame(inertiaFrameRef.current)
+        inertiaFrameRef.current = 0
+      }
     }
 
     return () => {
@@ -135,146 +285,225 @@ export function PlaygroundSection() {
   }, [engaged, isDragging])
 
   useEffect(() => {
-    const root = rootRef.current
-    const surface = surfaceRef.current
+    const stopInertia = () => {
+      if (inertiaFrameRef.current !== 0) {
+        window.cancelAnimationFrame(inertiaFrameRef.current)
+        inertiaFrameRef.current = 0
+      }
+    }
 
-    if (!root || !surface) {
+    return () => {
+      stopInertia()
+    }
+  }, [])
+
+  const applyPointer = (clientX: number, clientY: number) => {
+    const frame = frameRef.current
+    if (!frame) {
       return
     }
 
-    const applyTransform = () => {
-      surface.style.setProperty('--playground-offset-x', `${offsetRef.current.x}px`)
-      surface.style.setProperty('--playground-offset-y', `${offsetRef.current.y}px`)
+    const rect = frame.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) {
+      return
     }
 
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!engaged) {
+    const pointerX = clamp((clientX - rect.left) / rect.width, 0, 1)
+    const pointerY = clamp((clientY - rect.top) / rect.height, 0, 1)
+    frame.style.setProperty('--playground-pointer-x', `${(pointerX * 100).toFixed(2)}%`)
+    frame.style.setProperty('--playground-pointer-y', `${(pointerY * 100).toFixed(2)}%`)
+  }
+
+  const updateCamera = (next: CameraState) => {
+    cameraRef.current = next
+    setCamera(next)
+  }
+
+  const stopInertia = () => {
+    if (inertiaFrameRef.current !== 0) {
+      window.cancelAnimationFrame(inertiaFrameRef.current)
+      inertiaFrameRef.current = 0
+    }
+  }
+
+  const startInertia = () => {
+    stopInertia()
+
+    const tick = () => {
+      cameraRef.current = {
+        x: cameraRef.current.x + velocityRef.current.x,
+        y: cameraRef.current.y + velocityRef.current.y,
+      }
+      velocityRef.current = {
+        x: velocityRef.current.x * 0.9,
+        y: velocityRef.current.y * 0.9,
+      }
+      setCamera({ ...cameraRef.current })
+
+      const speed = Math.hypot(velocityRef.current.x, velocityRef.current.y)
+      if (speed < 0.08) {
+        velocityRef.current.x = 0
+        velocityRef.current.y = 0
+        inertiaFrameRef.current = 0
         return
       }
 
-      const target = event.target as HTMLElement | null
-      if (target?.closest('button')) {
+      inertiaFrameRef.current = window.requestAnimationFrame(tick)
+    }
+
+    inertiaFrameRef.current = window.requestAnimationFrame(tick)
+  }
+
+  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (!engaged) {
+      return
+    }
+
+    const target = event.target as HTMLElement | null
+    if (target?.closest('button')) {
+      return
+    }
+
+    stopInertia()
+    dragRef.current = {
+      active: true,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startCameraX: cameraRef.current.x,
+      startCameraY: cameraRef.current.y,
+      lastX: event.clientX,
+      lastY: event.clientY,
+      lastTime: performance.now(),
+    }
+    setIsDragging(true)
+    event.currentTarget.setPointerCapture(event.pointerId)
+    event.preventDefault()
+  }
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (!engaged) {
+      return
+    }
+
+    applyPointer(event.clientX, event.clientY)
+
+    if (!dragRef.current.active) {
+      return
+    }
+
+    const now = performance.now()
+    const deltaX = event.clientX - dragRef.current.startX
+    const deltaY = event.clientY - dragRef.current.startY
+    const moveX = event.clientX - dragRef.current.lastX
+    const moveY = event.clientY - dragRef.current.lastY
+    const elapsed = Math.max(now - dragRef.current.lastTime, 16)
+
+    const nextCamera = {
+      x: dragRef.current.startCameraX - deltaX,
+      y: dragRef.current.startCameraY - deltaY,
+    }
+
+    updateCamera(nextCamera)
+    velocityRef.current = {
+      x: -(moveX / elapsed) * 16,
+      y: -(moveY / elapsed) * 16,
+    }
+    dragRef.current.lastX = event.clientX
+    dragRef.current.lastY = event.clientY
+    dragRef.current.lastTime = now
+  }
+
+  const finishDrag = () => {
+    if (!dragRef.current.active) {
+      return
+    }
+
+    dragRef.current.active = false
+    setIsDragging(false)
+    startInertia()
+  }
+
+  const handlePointerUp = () => finishDrag()
+  const handlePointerCancel = () => finishDrag()
+
+  const handlePointerLeave = () => {
+    if (!dragRef.current.active) {
+      const frame = frameRef.current
+      if (!frame) {
         return
       }
 
-      dragStateRef.current = {
-        active: true,
-        startX: event.clientX,
-        startY: event.clientY,
-        startOffsetX: offsetRef.current.x,
-        startOffsetY: offsetRef.current.y,
-      }
-
-      setIsDragging(true)
-      root.setPointerCapture(event.pointerId)
-      event.preventDefault()
+      frame.style.setProperty('--playground-pointer-x', '50%')
+      frame.style.setProperty('--playground-pointer-y', '50%')
     }
+  }
 
-    const handlePointerMove = (event: PointerEvent) => {
-      if (!engaged) {
-        return
-      }
-
-      const rect = root.getBoundingClientRect()
-      const pointerX = clamp((event.clientX - rect.left) / rect.width, 0, 1)
-      const pointerY = clamp((event.clientY - rect.top) / rect.height, 0, 1)
-
-      root.style.setProperty('--playground-pointer-x', `${(pointerX * 100).toFixed(2)}%`)
-      root.style.setProperty('--playground-pointer-y', `${(pointerY * 100).toFixed(2)}%`)
-
-      if (!dragStateRef.current.active) {
-        return
-      }
-
-      const deltaX = event.clientX - dragStateRef.current.startX
-      const deltaY = event.clientY - dragStateRef.current.startY
-      offsetRef.current.x = dragStateRef.current.startOffsetX + deltaX
-      offsetRef.current.y = dragStateRef.current.startOffsetY + deltaY
-      applyTransform()
-    }
-
-    const finishDrag = () => {
-      if (!dragStateRef.current.active) {
-        return
-      }
-
-      dragStateRef.current.active = false
-      setIsDragging(false)
-    }
-
-    const handlePointerUp = () => {
-      finishDrag()
-    }
-
-    const handlePointerCancel = () => {
-      finishDrag()
-    }
-
-    const handlePointerLeave = () => {
-      if (!dragStateRef.current.active) {
-        root.style.setProperty('--playground-pointer-x', '50%')
-        root.style.setProperty('--playground-pointer-y', '50%')
-      }
-    }
-
-    const handleDoubleClick = () => {
-      offsetRef.current.x = 0
-      offsetRef.current.y = 0
-      applyTransform()
-    }
-
-    root.addEventListener('pointerdown', handlePointerDown)
-    root.addEventListener('pointermove', handlePointerMove)
-    root.addEventListener('pointerup', handlePointerUp)
-    root.addEventListener('pointercancel', handlePointerCancel)
-    root.addEventListener('pointerleave', handlePointerLeave)
-    root.addEventListener('dblclick', handleDoubleClick)
-    applyTransform()
-
-    return () => {
-      root.removeEventListener('pointerdown', handlePointerDown)
-      root.removeEventListener('pointermove', handlePointerMove)
-      root.removeEventListener('pointerup', handlePointerUp)
-      root.removeEventListener('pointercancel', handlePointerCancel)
-      root.removeEventListener('pointerleave', handlePointerLeave)
-      root.removeEventListener('dblclick', handleDoubleClick)
-    }
-  }, [engaged])
+  const handleDoubleClick = () => {
+    stopInertia()
+    cameraRef.current = { x: 0, y: 0 }
+    velocityRef.current = { x: 0, y: 0 }
+    updateCamera({ x: 0, y: 0 })
+  }
 
   return (
     <SectionShell id="playground">
-      <section className={`playground-showcase${engaged ? ' playground-showcase--engaged' : ''}`} aria-labelledby="playground-showcase-title">
-        <div ref={rootRef} className="playground-showcase__frame">
-          <div ref={surfaceRef} className="playground-showcase__surface">
-            <div className="playground-showcase__glow" />
+      <section
+        className={`playground-showcase${engaged ? ' playground-showcase--engaged' : ''}`}
+        aria-labelledby="playground-showcase-title"
+      >
+        <div ref={frameRef} className="playground-showcase__frame">
+          <div
+            className="playground-showcase__surface"
+            style={
+              {
+                '--playground-camera-x': `${camera.x}px`,
+                '--playground-camera-y': `${camera.y}px`,
+                '--playground-hex-radius': `${layout.hexRadius}px`,
+                '--playground-hex-width': `${layout.hexWidth}px`,
+                '--playground-hex-height': `${layout.hexHeight}px`,
+              } as CSSProperties
+            }
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
+            onPointerLeave={handlePointerLeave}
+            onDoubleClick={handleDoubleClick}
+          >
+            <div className="playground-showcase__atmosphere" />
+            <div className="playground-showcase__mask" />
 
-            <div className="playground-showcase__grid" aria-label="Project honeycomb grid">
-              {cells.map((cell) => {
-                const content = getCellContent(cell)
-                const isActive = cell.projectIndex === activeProjectIndex
+            <div className="playground-showcase__world">
+              <div className="playground-showcase__grid" aria-label="Project honeycomb grid">
+                {layout.cells.map((cell) => {
+                  const content = getCellContent(cell)
+                  const isActive = cell.projectIndex === activeProjectIndex
 
-                return (
-                  <button
-                    key={cell.id}
-                    type="button"
-                    className={`playground-showcase__hex playground-showcase__hex--${cell.variant}${isActive ? ' playground-showcase__hex--active' : ''}`}
-                    style={
-                      {
-                        '--hex-x': `${cell.x}px`,
-                        '--hex-y': `${cell.y}px`,
-                        '--hex-size': `${cell.radius}px`,
-                      } as CSSProperties
-                    }
-                    aria-label={`${cell.project.title} ${content.kicker} ${content.title}`}
-                    aria-pressed={isActive}
-                    onClick={() => setActiveProjectIndex(cell.projectIndex)}
-                  >
-                    <span className="playground-showcase__hex-kicker">{content.kicker}</span>
-                    <span className="playground-showcase__hex-title">{content.title}</span>
-                    <span className="playground-showcase__hex-copy">{content.copy}</span>
-                  </button>
-                )
-              })}
+                  return (
+                    <button
+                      key={cell.id}
+                      type="button"
+                      className={`playground-showcase__hex playground-showcase__hex--${cell.variant}${isActive ? ' playground-showcase__hex--active' : ''}`}
+                      style={
+                        {
+                          '--hex-left': `${cell.x}px`,
+                          '--hex-top': `${cell.y}px`,
+                          '--hex-width': `${cell.width}px`,
+                          '--hex-height': `${cell.height}px`,
+                        } as CSSProperties
+                      }
+                      aria-label={`${cell.project.title} ${content.kicker} ${content.title}`}
+                      aria-pressed={isActive}
+                      onClick={() => setActiveProjectIndex(cell.projectIndex)}
+                    >
+                      <span className="playground-showcase__hex-kicker">{content.kicker}</span>
+                      <span className="playground-showcase__hex-title">{content.title}</span>
+                      <span className="playground-showcase__hex-copy">{content.copy}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             <div className="playground-showcase__hud">
@@ -283,7 +512,7 @@ export function PlaygroundSection() {
                 Honeycomb projects
               </h2>
               <p className="playground-showcase__subtitle">
-                网格按固定节奏生成，项目标题、描述、技术栈和状态会在蜂窝中轮换显示。
+                纯数据驱动的蜂窝世界。标题固定在视口，六边形由相机采样生成，不再依赖有限大板子回卷。
               </p>
             </div>
 
@@ -303,7 +532,7 @@ export function PlaygroundSection() {
               <span className="playground-showcase__status-item">SECTION {String(activeIndex).padStart(2, '0')}</span>
               <span className="playground-showcase__status-item">PROGRESS {Math.round(scrollProgress * 100)}%</span>
               <span className="playground-showcase__status-item">PROJECT {String(activeProjectIndex + 1).padStart(2, '0')}</span>
-              <span className="playground-showcase__status-item">{isDragging ? 'DRAGGING' : 'READY'}</span>
+              <span className="playground-showcase__status-item">{engaged && isDragging ? 'DRAGGING' : 'READY'}</span>
             </div>
           </div>
         </div>

@@ -4,6 +4,19 @@ type GameDesktopSceneProps = {
   activeCardIndex: number
 }
 
+function CardBox({ shortLabel, label, active }: { shortLabel: string; label: string; active: boolean }) {
+  return (
+    <pre
+      className={active ? 'game-page__desktop-card game-page__desktop-card--active' : 'game-page__desktop-card'}
+      style={{ fontFamily: 'monospace', whiteSpace: 'pre' }}
+    >{`+----------------------+
+| ${shortLabel.padEnd(19, ' ')} |
+|                      |
+| ${label.padEnd(19, ' ')} |
++----------------------+`}</pre>
+  )
+}
+
 export function GameDesktopScene({ activeCardIndex }: GameDesktopSceneProps) {
   return (
     <section className="game-page__desktop" aria-label="desktop scene">
@@ -12,22 +25,20 @@ export function GameDesktopScene({ activeCardIndex }: GameDesktopSceneProps) {
           <button
             key={card.id}
             type="button"
-            className={[
-              'game-page__desktop-card',
-              index === activeCardIndex ? 'game-page__desktop-card--active' : null,
-            ]
-              .filter(Boolean)
-              .join(' ')}
+            className="game-page__desktop-card-btn"
           >
-            <span className="game-page__desktop-card-badge">{card.shortLabel}</span>
-            <span className="game-page__desktop-card-title">{card.label}</span>
+            <CardBox shortLabel={card.shortLabel} label={card.label} active={index === activeCardIndex} />
           </button>
         ))}
       </div>
 
-      <div className="game-page__desktop-sprite" aria-hidden="true">
-        <span />
-      </div>
+      <pre className="game-page__desktop-sprite" aria-hidden="true">{`
+    ^
+   /|\\
+  / | \\
+ /  |  \\
+      |
+  ----v----`}</pre>
     </section>
   )
 }

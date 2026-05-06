@@ -12,188 +12,207 @@ type GameCanvasSceneProps = {
 }
 
 function fitCanvas(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D) {
-  const rect = canvas.getBoundingClientRect()
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
-  const width = Math.max(1, Math.round(rect.width * dpr))
-  const height = Math.max(1, Math.round(rect.height * dpr))
+  const size = 720 * dpr
 
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width
-    canvas.height = height
+  if (canvas.width !== size || canvas.height !== size) {
+    canvas.width = size
+    canvas.height = size
   }
 
   context.setTransform(dpr, 0, 0, dpr, 0, 0)
   context.imageSmoothingEnabled = false
 }
 
-function roundedRect(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
-  const r = Math.min(radius, width / 2, height / 2)
-  context.beginPath()
-  context.moveTo(x + r, y)
-  context.arcTo(x + width, y, x + width, y + height, r)
-  context.arcTo(x + width, y + height, x, y + height, r)
-  context.arcTo(x, y + height, x, y, r)
-  context.arcTo(x, y, x + width, y, r)
-  context.closePath()
-}
-
-function drawBackground(context: CanvasRenderingContext2D, width: number, height: number, time: number) {
-  const background = context.createLinearGradient(0, 0, 0, height)
-  background.addColorStop(0, '#05050a')
-  background.addColorStop(0.58, '#0d1118')
-  background.addColorStop(1, '#131823')
-  context.fillStyle = background
+function drawBackground(context: CanvasRenderingContext2D, width: number, height: number) {
+  context.fillStyle = '#000000'
   context.fillRect(0, 0, width, height)
-
-  const glow = context.createRadialGradient(width * 0.5, height * 0.18, 20, width * 0.5, height * 0.18, Math.max(width, height) * 0.88)
-  glow.addColorStop(0, 'rgba(77,221,255,0.28)')
-  glow.addColorStop(0.45, 'rgba(255,84,170,0.08)')
-  glow.addColorStop(1, 'rgba(255,255,255,0)')
-  context.fillStyle = glow
-  context.fillRect(0, 0, width, height)
-
-  context.save()
-  context.globalAlpha = 0.14
-  context.strokeStyle = '#4dddfd'
-  context.lineWidth = 1
-  const step = 30
-  const offsetX = Math.sin(time * 0.0002) * 10
-  const offsetY = Math.cos(time * 0.00017) * 10
-  for (let x = -step; x < width + step; x += step) {
-    context.beginPath()
-    context.moveTo(x + offsetX, 0)
-    context.lineTo(x + offsetX, height)
-    context.stroke()
-  }
-  for (let y = -step; y < height + step; y += step) {
-    context.beginPath()
-    context.moveTo(0, y + offsetY)
-    context.lineTo(width, y + offsetY)
-    context.stroke()
-  }
-  context.restore()
 }
 
-function drawBoot(context: CanvasRenderingContext2D, width: number, height: number, time: number) {
-  context.fillStyle = '#f1ede6'
-  context.font = '700 15px monospace'
-  context.textAlign = 'center'
-  context.fillText('LOADING...', width / 2, height * 0.16)
+// Draw a 1-bit pixel box border at (x, y) with given pixel dimensions
+// charW/charH = pixel size of one monospace character cell
+function drawBox(
+  context: CanvasRenderingContext2D,
+  x: number, y: number,
+  w: number, h: number,
+  charW: number, charH: number,
+  fill: string, stroke: string, lineWidth: number,
+) {
+  context.strokeStyle = stroke
+  context.fillStyle = fill
+  context.lineWidth = lineWidth
 
-  const iconSize = Math.min(width, height) * 0.17
-  const x = width / 2 - iconSize / 2
-  const y = height / 2 - iconSize / 2
-  context.fillStyle = 'rgba(255,255,255,0.04)'
-  roundedRect(context, x, y, iconSize, iconSize, 10)
-  context.fill()
-  context.strokeStyle = 'rgba(241,237,230,0.22)'
-  context.stroke()
+  const cols = Math.floor(w / charW)
+  const rows = Math.floor(h / charH)
 
-  const step = Math.floor((time / 220) % 4)
-  context.save()
-  context.translate(width / 2, height / 2)
-  context.rotate((Math.PI / 2) * step)
-  context.fillStyle = '#f1ede6'
-  context.fillRect(-iconSize * 0.18, -iconSize * 0.18, iconSize * 0.36, iconSize * 0.36)
-  context.restore()
+  if (cols < 2 || rows < 2) return
 
-  const barWidth = width * 0.82
-  const barHeight = 12
-  const barX = (width - barWidth) / 2
-  const barY = height * 0.84
-  context.strokeStyle = 'rgba(241,237,230,0.2)'
-  context.strokeRect(barX, barY, barWidth, barHeight)
-  context.fillStyle = '#f1ede6'
-  context.fillRect(barX + 1, barY + 1, Math.max(0, barWidth * 0.42), barHeight - 2)
+  // Fill interior
+  const innerW = (cols - 2) * charW
+  const innerH = (rows - 2) * charH
+  context.fillRect(x + charW, y + charH, innerW, innerH)
 
-  context.fillStyle = '#f1ede6'
-  context.font = '700 24px monospace'
-  context.fillText('ABOUT SCREEN', width / 2, height * 0.06)
+  // Top and bottom borders
+  for (let c = 0; c < cols; c++) {
+    const px = x + c * charW
+    context.fillRect(px, y, charW, lineWidth)
+    context.fillRect(px, y + h - lineWidth, charW, lineWidth)
+  }
+  // Left and right borders
+  for (let r = 0; r < rows; r++) {
+    const py = y + r * charH
+    context.fillRect(x, py, lineWidth, charH)
+    context.fillRect(x + w - lineWidth, py, lineWidth, charH)
+  }
+
+  // Corner accents (solid pixel squares)
+  const cs = charW * 0.5
+  const corners = [
+    [x, y],
+    [x + w - cs, y],
+    [x, y + h - cs],
+    [x + w - cs, y + h - cs],
+  ]
+  for (const [cx, cy] of corners) {
+    context.fillRect(cx, cy, cs, cs)
+  }
 }
 
-function drawDesktop(context: CanvasRenderingContext2D, width: number, height: number, activeCardIndex: number) {
+function drawTextLine(context: CanvasRenderingContext2D, text: string, x: number, y: number, color: string, size: number) {
+  context.fillStyle = color
+  context.font = `700 ${size}px monospace`
+  context.textBaseline = 'top'
+  context.fillText(text, x, y)
+}
+
+function drawBoot(context: CanvasRenderingContext2D, width: number, height: number, time: number, charW: number, charH: number) {
+  const title = 'ABOUT SCREEN'
+  const subtitle = 'LOADING...'
+  const barCharCount = 28
+  const filled = Math.floor((time / 220) % 4)
+
+  // Title
+  const titleWidth = title.length * charW
+  drawTextLine(context, title, width / 2 - titleWidth / 2, charH, '#ffffff', 24)
+
+  // Subtitle
+  const loadingWidth = subtitle.length * charW
+  drawTextLine(context, subtitle, width / 2 - loadingWidth / 2, height * 0.38, '#ffffff', 15)
+
+  // ASCII spinner: cycle through four characters
+  const spinnerFrames = ['|', '/', '\u2014', '\\']
+  const frame = spinnerFrames[Math.floor((time / 220) % 4)]
+  const iconY = height * 0.5 - charH
+  drawTextLine(context, frame, width / 2 - charW, iconY, '#ffffff', 28)
+
+  // Progress bar: [#####-----]
+  const barBoxW = barCharCount * charW
+  const barBoxH = charH
+  const barBoxX = width / 2 - barBoxW / 2
+  const barBoxY = height * 0.78
+
+  context.fillStyle = '#000000'
+  context.fillRect(barBoxX, barBoxY, barBoxW, barBoxH)
+  context.fillStyle = '#ffffff'
+  context.fillRect(barBoxX, barBoxY, barBoxW, 1)
+  context.fillRect(barBoxX, barBoxY + barBoxH - 1, barBoxW, 1)
+  context.fillRect(barBoxX, barBoxY, 1, barBoxH)
+  context.fillRect(barBoxX + barBoxW - 1, barBoxY, 1, barBoxH)
+
+  const fillW = Math.floor((barCharCount - 2) * (filled / 4))
+  context.fillRect(barBoxX + charW, barBoxY + charH * 0.3, fillW * charW, charH * 0.4)
+
+  // Pulsing dots under spinner
+  const dots = '\u25CF'.repeat(filled + 1) + '\u25CB'.repeat(3 - filled)
+  const dotX = width / 2 - (dots.length * charW * 0.5) / 2
+  drawTextLine(context, dots, dotX, height * 0.66, '#ffffff', 12)
+}
+
+function drawDesktop(context: CanvasRenderingContext2D, width: number, height: number, activeCardIndex: number, charW: number, charH: number, time: number) {
   const cards = gameCards
-  const gridWidth = Math.min(width * 0.88, 960)
-  const cardWidth = (gridWidth - 3 * 14) / 4
-  const cardHeight = Math.max(cardWidth * 1.08, 126)
-  const startX = (width - gridWidth) / 2
+  const cardPixelW = 200
+  const cardPixelH = 120
+  const gap = 14
+  const totalW = cards.length * cardPixelW + (cards.length - 1) * gap
+  const startX = width / 2 - totalW / 2
   const startY = height * 0.28
 
   context.textBaseline = 'top'
+
   cards.forEach((card, index) => {
-    const x = startX + index * (cardWidth + 14)
+    const x = startX + index * (cardPixelW + gap)
     const y = startY
     const active = index === activeCardIndex
-    context.save()
-    context.fillStyle = active ? 'rgba(77,221,255,0.92)' : 'rgba(255,255,255,0.04)'
-    roundedRect(context, x, y, cardWidth, cardHeight, 18)
-    context.fill()
-    context.strokeStyle = active ? 'rgba(255,255,255,0.22)' : 'rgba(77,221,255,0.16)'
-    context.stroke()
-    context.fillStyle = active ? '#081018' : '#f1ede6'
-    context.font = '700 15px monospace'
-    context.fillText(card.shortLabel, x + 16, y + 14)
-    context.font = '700 20px monospace'
-    context.fillText(card.label, x + 16, y + cardHeight - 44)
-    context.fillStyle = active ? 'rgba(8,16,24,0.72)' : 'rgba(241,237,230,0.52)'
-    context.font = '600 12px monospace'
-    context.fillText(card.title, x + 16, y + cardHeight - 68)
-    context.restore()
+    const fill = active ? '#ffffff' : '#000000'
+
+    drawBox(context, x, y, cardPixelW, cardPixelH, charW, charH, fill, '#ffffff', 2)
+
+    const textColor = active ? '#000000' : '#ffffff'
+    drawTextLine(context, card.shortLabel, x + charW, y + charH, textColor, 12)
+    drawTextLine(context, card.label, x + charW, y + cardPixelH - charH * 3, textColor, 15)
+    drawTextLine(context, card.title, x + charW, y + cardPixelH - charH * 5, textColor, 20)
   })
 
-  const spriteSize = 68
-  const spriteX = width / 2 - spriteSize / 2
-  const spriteY = height * 0.68
-  context.save()
-  context.fillStyle = '#f1ede6'
-  context.beginPath()
-  context.moveTo(spriteX + spriteSize / 2, spriteY)
-  context.lineTo(spriteX + spriteSize * 0.82, spriteY + spriteSize * 0.18)
-  context.lineTo(spriteX + spriteSize, spriteY + spriteSize * 0.45)
-  context.lineTo(spriteX + spriteSize * 0.78, spriteY + spriteSize)
-  context.lineTo(spriteX + spriteSize / 2, spriteY + spriteSize * 0.82)
-  context.lineTo(spriteX + spriteSize * 0.22, spriteY + spriteSize)
-  context.lineTo(spriteX, spriteY + spriteSize * 0.45)
-  context.lineTo(spriteX + spriteSize * 0.18, spriteY + spriteSize * 0.18)
-  context.closePath()
-  context.fill()
-  context.restore()
+  // ASCII pointer sprite
+  const arrowY = height * 0.68
+  const arrowX = width / 2 - charW * 4
+  const arrowLines = [
+    '   ^   ',
+    '  /|\\  ',
+    ' / | \\ ',
+  ]
+  arrowLines.forEach((line, i) => {
+    drawTextLine(context, line, arrowX, arrowY + charH * i * 1.6, '#ffffff', 20)
+  })
+
+  // Cursor blinking line
+  const blink = Math.floor(time / 500) % 2 === 0
+  if (blink) {
+    const lineY = arrowY + charH * 5
+    context.fillRect(arrowX + charW, lineY, charW * 5, 2)
+  }
 }
 
-function drawCardPanel(context: CanvasRenderingContext2D, width: number, height: number, card: GameCardItem) {
-  const panelWidth = Math.min(width * 0.72, 620)
-  const panelHeight = Math.min(height * 0.5, 320)
-  const x = (width - panelWidth) / 2
-  const y = (height - panelHeight) / 2
+function drawCardPanel(context: CanvasRenderingContext2D, width: number, height: number, card: GameCardItem, charW: number, charH: number) {
+  const panelPixelW = Math.min(width * 0.72, 620)
+  const panelPixelH = Math.min(height * 0.5, 320)
+  const x = width / 2 - panelPixelW / 2
+  const y = height / 2 - panelPixelH / 2
 
-  context.save()
-  context.fillStyle = 'rgba(10,10,12,0.96)'
-  roundedRect(context, x, y, panelWidth, panelHeight, 18)
-  context.fill()
-  context.strokeStyle = 'rgba(77,221,255,0.24)'
-  context.stroke()
+  drawBox(context, x, y, panelPixelW, panelPixelH, charW, charH, '#000000', '#ffffff', 2)
 
-  context.fillStyle = 'rgba(77,221,255,0.72)'
-  context.font = '700 13px monospace'
-  context.fillText(card.label, x + 20, y + 20)
+  drawTextLine(context, card.label, x + charW * 2, y + charH * 1.5, '#ffffff', 13)
+  drawTextLine(context, card.title, x + charW * 2, y + charH * 4, '#ffffff', 34)
 
-  context.fillStyle = '#f1ede6'
-  context.font = '700 34px monospace'
-  context.fillText(card.title, x + 20, y + 56)
-
-  context.fillStyle = 'rgba(241,237,230,0.84)'
-  context.font = '400 16px sans-serif'
-  const lines = [card.copy]
-  let cursorY = y + 108
-  lines.forEach((line) => {
-    context.fillText(line, x + 20, cursorY)
-    cursorY += 24
+  // Body text with word wrap
+  context.fillStyle = '#ffffff'
+  context.font = `400 16px monospace`
+  const maxChars = Math.floor((panelPixelW - charW * 4) / (charW * 0.6))
+  const wrapped = wrapText(card.copy, maxChars)
+  let cursorY = y + charH * 10
+  wrapped.forEach((line) => {
+    context.fillText(line, x + charW * 2, cursorY)
+    cursorY += charH * 1.8
   })
 
-  context.fillStyle = 'rgba(77,221,255,0.72)'
-  context.font = '700 12px monospace'
-  context.fillText('[B] TO CLOSE', x + 20, y + panelHeight - 34)
-  context.restore()
+  drawTextLine(context, '[B] CLOSE', x + charW * 2, y + panelPixelH - charH * 2.5, '#ffffff', 12)
+}
+
+function wrapText(text: string, maxChars: number): string[] {
+  if (text.length <= maxChars) return [text]
+  const words = text.split(' ')
+  const lines: string[] = []
+  let line = ''
+  for (const word of words) {
+    if ((line + ' ' + word).trim().length > maxChars) {
+      if (line) lines.push(line.trim())
+      line = word
+    } else {
+      line = (line + ' ' + word).trim()
+    }
+  }
+  if (line) lines.push(line.trim())
+  return lines
 }
 
 export function GameCanvasScene({ phase, activeCardIndex, activeCard, className, onCanvasReady }: GameCanvasSceneProps) {
@@ -223,39 +242,50 @@ export function GameCanvasScene({ phase, activeCardIndex, activeCard, className,
 
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) {
-      return
-    }
+    if (!canvas) return
 
     const context = canvas.getContext('2d')
-    if (!context) {
-      return
-    }
+    if (!context) return
 
     let frameId = 0
     let observer: ResizeObserver | null = null
-    const render = (time: number) => {
-      const rect = canvas.getBoundingClientRect()
-      const width = Math.max(1, rect.width)
-      const height = Math.max(1, rect.height)
 
+    const getCharMetrics = () => {
+      context.font = '700 14px monospace'
+      const m = context.measureText('M')
+      return { charW: m.width, charH: 18 }
+    }
+
+    const render = (time: number) => {
       fitCanvas(canvas, context)
-      context.clearRect(0, 0, width, height)
-      drawBackground(context, width, height, time)
+      const size = canvas.width
+
+      context.clearRect(0, 0, size, size)
+
+      // Rotate canvas 90° CW to match mesh orientation
+      context.save()
+      context.translate(size, 0)
+      context.rotate(Math.PI / 2)
+
+      drawBackground(context, size, size)
+
+      const { charW, charH } = getCharMetrics()
 
       if (phaseRef.current === 'boot') {
-        drawBoot(context, width, height, time)
+        drawBoot(context, size, size, time, charW, charH)
       } else if (phaseRef.current === 'desktop') {
-        drawDesktop(context, width, height, activeCardIndexRef.current)
+        drawDesktop(context, size, size, activeCardIndexRef.current, charW, charH, time)
       } else {
-        drawCardPanel(context, width, height, activeCardRef.current)
+        drawCardPanel(context, size, size, activeCardRef.current, charW, charH)
       }
+
+      context.restore()
 
       frameId = window.requestAnimationFrame(render)
     }
 
     observer = new ResizeObserver(() => {
-      fitCanvas(canvas, context)
+      // fixed-size canvas, no need to re-fit
     })
     observer.observe(canvas)
     frameId = window.requestAnimationFrame(render)

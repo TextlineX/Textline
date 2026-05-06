@@ -28,11 +28,10 @@ type ThreeSphereSceneProps = {
 }
 
 const ribbonColors = {
-  text: 'rgba(224, 224, 224, 0.84)',
-  ember: 'rgba(229, 61, 61, 0.84)',
-  violet: 'rgba(110, 99, 199, 0.66)',
-  cyan: 'rgba(101, 196, 200, 0.66)',
-  muted: 'rgba(224, 224, 224, 0.36)',
+  text: 'rgba(240, 235, 228, 0.84)',
+  ember: 'rgba(214, 92, 92, 0.72)',
+  soft: 'rgba(202, 214, 224, 0.5)',
+  muted: 'rgba(202, 214, 224, 0.24)',
 }
 
 function classifyRibbonToken(text: string, index: number) {
@@ -41,18 +40,18 @@ function classifyRibbonToken(text: string, index: number) {
   }
 
   if (text === 'AI' || text === 'REACT' || text === 'TYPESCRIPT') {
-    return index % 2 === 0 ? ribbonColors.cyan : ribbonColors.muted
+    return index % 2 === 0 ? ribbonColors.soft : ribbonColors.muted
   }
 
   if (text === 'VUE' || text === 'PYTHON' || text === 'BLENDER') {
-    return index % 2 === 0 ? ribbonColors.violet : ribbonColors.muted
+    return index % 2 === 0 ? ribbonColors.text : ribbonColors.muted
   }
 
   if (text === 'AXIOS' || text === 'UNITY') {
-    return index % 2 === 0 ? ribbonColors.cyan : ribbonColors.violet
+    return index % 3 === 0 ? ribbonColors.ember : ribbonColors.soft
   }
 
-  return index % 5 === 0 ? ribbonColors.text : ribbonColors.muted
+  return index % 4 === 0 ? ribbonColors.text : ribbonColors.muted
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -85,23 +84,23 @@ function pickDebrisToken(index: number) {
 
 function pickDebrisColor(token: string, index: number) {
   if (/^(const|let|return|fn)$/i.test(token)) {
-    return index % 2 === 0 ? 'rgba(248, 201, 116, 0.94)' : 'rgba(255, 154, 90, 0.9)'
+    return index % 2 === 0 ? 'rgba(214, 92, 92, 0.66)' : 'rgba(240, 235, 228, 0.74)'
   }
 
   if (/^(\{|\}|\[|\]|\(|\)|=>|\+\+)$/.test(token)) {
-    return index % 2 === 0 ? 'rgba(116, 232, 242, 0.95)' : 'rgba(171, 132, 255, 0.88)'
+    return index % 2 === 0 ? 'rgba(202, 214, 224, 0.66)' : 'rgba(214, 92, 92, 0.58)'
   }
 
   if (token === '//') {
-    return index % 2 === 0 ? 'rgba(145, 214, 150, 0.88)' : 'rgba(224, 224, 224, 0.62)'
+    return index % 2 === 0 ? 'rgba(202, 214, 224, 0.44)' : 'rgba(214, 92, 92, 0.42)'
   }
 
   const colors = [
-    'rgba(236, 236, 236, 0.92)',
-    'rgba(229, 61, 61, 0.9)',
-    'rgba(101, 196, 200, 0.88)',
-    'rgba(110, 99, 199, 0.84)',
-    'rgba(255, 183, 95, 0.9)',
+    'rgba(240, 235, 228, 0.82)',
+    'rgba(214, 92, 92, 0.62)',
+    'rgba(202, 214, 224, 0.58)',
+    'rgba(214, 92, 92, 0.46)',
+    'rgba(232, 236, 240, 0.52)',
   ]
 
   return colors[index % colors.length]

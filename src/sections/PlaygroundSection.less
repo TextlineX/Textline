@@ -1,15 +1,18 @@
 .playground-showcase {
   width: 100%;
-  min-height: 100dvh;
+  min-height: 180dvh;
   background: #050403;
+  display: flex;
+  flex-direction: column;
 }
 
 .playground-showcase__frame {
-  position: relative;
+  position: sticky;
+  top: 0;
   width: 100%;
-  min-height: 100dvh;
-  overflow: hidden;
+  height: 100dvh;
   isolation: isolate;
+  overflow: hidden;
 }
 
 .playground-showcase__surface {
@@ -26,9 +29,9 @@
   cursor: grab;
   touch-action: none;
   background:
-    radial-gradient(circle at var(--playground-pointer-x) var(--playground-pointer-y), rgba(255, 207, 120, 0.16), transparent 22%),
-    radial-gradient(circle at 18% 18%, rgba(255, 190, 92, 0.1), transparent 30%),
-    radial-gradient(circle at 82% 74%, rgba(118, 75, 26, 0.12), transparent 34%),
+    radial-gradient(circle at var(--playground-pointer-x) var(--playground-pointer-y), rgba(229, 61, 61, 0.14), transparent 22%),
+    radial-gradient(circle at 18% 18%, rgba(101, 196, 200, 0.1), transparent 28%),
+    radial-gradient(circle at 82% 74%, rgba(229, 61, 61, 0.08), transparent 34%),
     linear-gradient(180deg, #090705 0%, #050403 38%, #030202 100%);
 }
 
@@ -47,11 +50,11 @@
     translate3d(calc(var(--playground-camera-x) * -0.035), calc(var(--playground-camera-y) * -0.035), 0)
     scale(1.08);
   background:
-    radial-gradient(circle at 50% 45%, rgba(255, 206, 118, 0.1), transparent 28%),
-    radial-gradient(circle at 10% 15%, rgba(255, 160, 76, 0.16), transparent 16%),
-    radial-gradient(circle at 88% 78%, rgba(35, 22, 8, 0.7), transparent 28%);
-  filter: blur(18px);
-  opacity: 0.92;
+    radial-gradient(circle at 50% 45%, rgba(229, 61, 61, 0.1), transparent 28%),
+    radial-gradient(circle at 10% 15%, rgba(101, 196, 200, 0.14), transparent 16%),
+    radial-gradient(circle at 88% 78%, rgba(10, 10, 10, 0.8), transparent 28%);
+  filter: blur(16px);
+  opacity: 0.88;
   pointer-events: none;
 }
 
@@ -59,10 +62,47 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(135deg, rgba(4, 3, 2, 0.995) 0%, rgba(4, 3, 2, 0.98) 18%, rgba(4, 3, 2, 0.72) 40%, transparent 68%),
-    radial-gradient(circle at 12% 12%, rgba(4, 3, 2, 0.98) 0%, rgba(4, 3, 2, 0.94) 38%, transparent 68%);
+    linear-gradient(135deg, rgba(4, 3, 2, 0.998) 0%, rgba(4, 3, 2, 0.985) 18%, rgba(4, 3, 2, 0.78) 40%, transparent 68%),
+    radial-gradient(circle at 12% 12%, rgba(4, 3, 2, 0.99) 0%, rgba(4, 3, 2, 0.96) 38%, transparent 68%);
   pointer-events: none;
   z-index: 1;
+}
+
+.playground-showcase__header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  min-height: clamp(6.8rem, 13vh, 8.8rem);
+  pointer-events: none;
+  padding: clamp(1.35rem, 2.8vw, 2rem) 1rem clamp(1rem, 2vw, 1.5rem);
+}
+
+.playground-showcase__stage-shell {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 2vw, 2rem) clamp(1rem, 2vw, 2rem);
+}
+
+.playground-showcase__stage {
+  position: relative;
+  width: var(--playground-stage-width);
+  height: var(--playground-stage-height);
+  border-radius: var(--playground-stage-radius);
+  overflow: hidden;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transform: translate3d(0, var(--playground-stage-lift, 0px), 0) scale(var(--playground-stage-scale, 1));
+  transform-origin: center center;
+  transition:
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 240ms ease;
 }
 
 .playground-showcase__world {
@@ -85,20 +125,20 @@
   height: var(--hex-height);
   transform: translate3d(var(--hex-left), var(--hex-top), 0);
   border: 0;
-  padding: 1.2rem 1.25rem 1.1rem;
+  padding: 1rem 1.05rem 0.95rem;
   clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.35rem;
+  gap: 0.24rem;
   background:
-    linear-gradient(180deg, rgba(255, 212, 126, 0.2), rgba(255, 212, 126, 0.08)),
-    linear-gradient(180deg, rgba(44, 28, 10, 0.98), rgba(23, 15, 6, 0.98));
+    linear-gradient(180deg, rgba(229, 61, 61, 0.18), rgba(101, 196, 200, 0.06)),
+    linear-gradient(180deg, rgba(18, 18, 20, 0.98), rgba(11, 11, 12, 0.98));
   box-shadow:
-    inset 0 0 0 1px rgba(255, 231, 176, 0.09),
-    0 18px 34px rgba(0, 0, 0, 0.28);
-  color: rgba(255, 243, 222, 0.95);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 16px 30px rgba(0, 0, 0, 0.3);
+  color: rgba(244, 244, 244, 0.95);
   cursor: pointer;
   text-align: left;
   transition:
@@ -110,9 +150,9 @@
 .playground-showcase__hex::before {
   content: '';
   position: absolute;
-  inset: 0.14rem;
+  inset: 0.12rem;
   clip-path: inherit;
-  border: 1px solid rgba(255, 240, 199, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   pointer-events: none;
 }
 
@@ -121,17 +161,17 @@
   position: absolute;
   inset: -1px;
   clip-path: inherit;
-  background: radial-gradient(circle at 50% 42%, rgba(255, 245, 222, 0.09), transparent 66%);
-  opacity: 0.4;
+  background: radial-gradient(circle at 50% 42%, rgba(101, 196, 200, 0.08), transparent 66%);
+  opacity: 0.55;
   pointer-events: none;
 }
 
 .playground-showcase__hex:hover {
-  filter: brightness(1.06) saturate(1.04);
+  filter: brightness(1.04) saturate(1.02);
 }
 
 .playground-showcase__hex:focus-visible {
-  outline: 2px solid rgba(255, 208, 120, 0.88);
+  outline: 2px solid rgba(229, 61, 61, 0.88);
   outline-offset: 3px;
 }
 
@@ -143,202 +183,84 @@
 
 .playground-showcase__hex--active {
   box-shadow:
-    inset 0 0 0 1px rgba(255, 231, 176, 0.14),
+    inset 0 0 0 1px rgba(229, 61, 61, 0.18),
     0 24px 42px rgba(0, 0, 0, 0.36);
 }
 
 .playground-showcase__hex--accent {
   background:
-    linear-gradient(180deg, rgba(255, 219, 143, 0.28), rgba(255, 219, 143, 0.1)),
-    linear-gradient(180deg, rgba(51, 30, 8, 0.98), rgba(24, 15, 6, 0.98));
+    linear-gradient(180deg, rgba(229, 61, 61, 0.24), rgba(229, 61, 61, 0.08)),
+    linear-gradient(180deg, rgba(22, 14, 15, 0.98), rgba(10, 10, 12, 0.98));
 }
 
 .playground-showcase__hex--soft {
   background:
-    linear-gradient(180deg, rgba(214, 154, 83, 0.2), rgba(214, 154, 83, 0.08)),
-    linear-gradient(180deg, rgba(32, 21, 10, 0.98), rgba(17, 11, 6, 0.98));
-}
-
-.playground-showcase__hex-kicker {
-  position: relative;
-  z-index: 1;
-  font-family: 'Consolas', 'SFMono-Regular', 'Fira Code', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 231, 176, 0.84);
-}
-
-.playground-showcase__hex-title {
-  position: relative;
-  z-index: 1;
-  max-width: 100%;
-  font-size: 1.14rem;
-  line-height: 1.04;
-  letter-spacing: 0.02em;
-  font-weight: 700;
-}
-
-.playground-showcase__hex-copy {
-  position: relative;
-  z-index: 1;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  color: rgba(251, 240, 220, 0.8);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.playground-showcase__hud {
-  position: absolute;
-  left: clamp(1.2rem, 2.8vw, 2.2rem);
-  top: clamp(1.2rem, 2.8vw, 2.2rem);
-  width: min(26rem, calc(100% - 2.4rem));
-  z-index: 3;
-  pointer-events: none;
-}
-
-.playground-showcase__eyebrow {
-  color: rgba(255, 204, 110, 0.92);
-  font-family: 'Consolas', 'SFMono-Regular', 'Fira Code', monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+    linear-gradient(180deg, rgba(101, 196, 200, 0.18), rgba(101, 196, 200, 0.06)),
+    linear-gradient(180deg, rgba(11, 17, 18, 0.98), rgba(8, 10, 12, 0.98));
 }
 
 .playground-showcase__title {
-  margin: 0.45rem 0 0;
-  color: rgba(255, 246, 228, 0.97);
-  font-size: clamp(2.6rem, 6.2vw, 5.8rem);
-  line-height: 0.88;
-  letter-spacing: 0.05em;
+  position: relative;
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: clamp(3.8rem, 6.8vw, 5.8rem);
+  line-height: 0.9;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  text-shadow: 0 0 28px rgba(255, 255, 255, 0.04);
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+  transform:
+    translate3d(0, calc((1 - var(--playground-title-linger, 0)) * 1.15rem), 0)
+    scale(calc(0.975 + var(--playground-title-linger, 0) * 0.03));
+  filter:
+    drop-shadow(0 0 18px rgba(229, 61, 61, 0.2))
+    drop-shadow(0 0 34px rgba(101, 196, 200, 0.1))
+    blur(calc((1 - var(--playground-title-linger, 0)) * 0.4px));
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.06);
+  transition:
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 260ms ease,
+    opacity 260ms ease;
+  opacity: calc(0.82 + var(--playground-title-linger, 0) * 0.18);
 }
 
-.playground-showcase__subtitle {
-  margin: 0.85rem 0 0;
-  max-width: 22rem;
-  color: rgba(214, 204, 189, 0.88);
-  font-size: 0.92rem;
-  line-height: 1.56;
-}
-
-.playground-showcase__detail {
+.playground-showcase__title::before {
+  content: attr(data-text);
   position: absolute;
-  right: clamp(1.2rem, 2.8vw, 2.2rem);
-  bottom: clamp(1.2rem, 2.8vw, 2.2rem);
-  z-index: 3;
-  width: min(24rem, calc(100% - 2.4rem));
-  padding: 1rem 1.05rem;
-  border: 1px solid rgba(255, 240, 199, 0.08);
-  background: rgba(12, 9, 6, 0.76);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.26);
-}
-
-.playground-showcase__detail-label {
-  color: rgba(255, 204, 110, 0.9);
-  font-family: 'Consolas', 'SFMono-Regular', 'Fira Code', monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.playground-showcase__detail-title {
-  margin-top: 0.38rem;
-  color: rgba(255, 246, 228, 0.98);
-  font-size: 1.45rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.playground-showcase__detail-copy {
-  margin: 0.72rem 0 0;
-  color: rgba(214, 204, 189, 0.88);
-  font-size: 0.92rem;
-  line-height: 1.55;
-}
-
-.playground-showcase__detail-meta {
-  margin-top: 0.8rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.playground-showcase__detail-meta span,
-.playground-showcase__detail-stack {
-  padding: 0.24rem 0.5rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 240, 199, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(251, 240, 220, 0.88);
-  font-family: 'Consolas', 'SFMono-Regular', 'Fira Code', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-}
-
-.playground-showcase__detail-stack {
-  margin-top: 0.5rem;
-  display: inline-flex;
-}
-
-.playground-showcase__status {
-  position: absolute;
-  left: clamp(1.2rem, 2.8vw, 2.2rem);
-  bottom: clamp(1.2rem, 2.8vw, 2.2rem);
-  z-index: 3;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+  inset: 0;
+  color: rgba(229, 61, 61, 0.38);
+  transform: translate3d(0.08em, 0.06em, 0);
+  filter: blur(calc(10px + (1 - var(--playground-title-linger, 0)) * 10px));
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 44%, transparent 78%);
+  mask-image: radial-gradient(circle at 50% 50%, black 44%, transparent 78%);
   pointer-events: none;
 }
 
-.playground-showcase__status-item {
-  padding: 0.28rem 0.62rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 240, 199, 0.08);
-  background: rgba(12, 9, 6, 0.68);
-  color: rgba(251, 240, 220, 0.82);
-  font-family: 'Consolas', 'SFMono-Regular', 'Fira Code', monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+.playground-showcase__title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(229, 61, 61, 0.22);
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
 @media (max-width: 900px) {
-  .playground-showcase__hud {
-    width: min(20rem, calc(100% - 2rem));
+  .playground-showcase {
+    min-height: 160dvh;
   }
 
   .playground-showcase__title {
-    font-size: clamp(2.2rem, 8vw, 4rem);
+    font-size: clamp(3rem, 11vw, 4.4rem);
   }
 
-  .playground-showcase__detail {
-    width: min(20rem, calc(100% - 2rem));
-  }
-
-  .playground-showcase__detail-title {
-    font-size: 1.2rem;
-  }
-
-  .playground-showcase__status {
-    max-width: calc(100% - 2rem);
+  .playground-showcase__stage-shell {
+    padding: clamp(0.75rem, 2vw, 1rem) 0.75rem 0.75rem;
   }
 
   .playground-showcase__hex {
-    padding: 0.95rem 1rem 0.9rem;
-  }
-
-  .playground-showcase__hex-title {
-    font-size: 0.98rem;
-  }
-
-  .playground-showcase__hex-copy {
-    font-size: 0.7rem;
+    padding: 0.88rem 0.94rem 0.84rem;
   }
 }

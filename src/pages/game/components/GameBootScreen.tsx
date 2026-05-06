@@ -9,13 +9,14 @@ export function GameBootScreen({ active }: GameBootScreenProps) {
 
   return (
     <section className="game-page__boot" aria-label="boot screen">
-      <p className="game-page__boot-title">LOADING...</p>
-      <div className="game-page__boot-icon" aria-hidden="true">
-        <span />
-      </div>
-      <div className="game-page__boot-bar" aria-hidden="true">
-        <span />
-      </div>
+      <pre className="game-page__boot-ascii" aria-hidden="true">{`
+  +----------------------------+
+  |      ABOUT SCREEN         |
+  |       LOADING...          |
+  |           |               |
+  |        [####]             |
+  +----------------------------+
+      `}</pre>
     </section>
   )
 }

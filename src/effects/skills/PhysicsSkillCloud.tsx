@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useAppShellScroll } from '../../components/layout/AppShellScrollContext'
 import { useViewportSize } from '../../hooks/useViewportSize'
@@ -126,18 +126,24 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
   const stageRef = useRef<HTMLDivElement | null>(null)
   const chipRefs = useRef<Array<HTMLDivElement | null>>([])
   const burstRef = useRef<((options: BurstOptions) => void) | null>(null)
-  const { activeIndex, scrollPhysicsDirection, scrollPhysicsPulseId, scrollPhysicsStrength } = useAppShellScroll()
+  const { activeIndex, scrollOffset, scrollPhysicsDirection, scrollPhysicsPulseId, scrollPhysicsStrength } = useAppShellScroll()
   const viewport = useViewportSize()
+  const [isRunning, setIsRunning] = useState(false)
 
   const visibleLimit = viewport.width <= 720 ? Math.min(limit, 9) : viewport.width <= 1100 ? Math.min(limit, 13) : limit
   const visibleItems = items.slice(0, visibleLimit)
   const itemSignature = visibleItems.map((item) => item.label).join('|')
 
   useEffect(() => {
+    const sectionProgress = viewport.height > 0 ? scrollOffset / viewport.height - sectionIndex : 0
+    const nextRunning = sectionProgress >= -2.15 && sectionProgress <= 1.05
+    setIsRunning((current) => (current === nextRunning ? current : nextRunning))
+  }, [scrollOffset, sectionIndex, viewport.height])
+
+  useEffect(() => {
     const stage = stageRef.current
     const activeItems = items.slice(0, visibleLimit)
-
-    if (!stage || activeItems.length === 0) {
+    if (!stage || activeItems.length === 0 || !isRunning) {
       return
     }
 
@@ -186,17 +192,22 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
       chipEntries = activeItems.map((item, index) => {
         const slot = stackSlots[index] ?? stackSlots[stackSlots.length - 1] ?? { x: centerX, y: stageHeight / 2 }
         const chipSize = resolveChipSize(item)
+        const spawnX = slot.x + randomBetween(-chipSize * 0.28, chipSize * 0.28)
+        const spawnY = slot.y + randomBetween(-chipSize * 0.2, chipSize * 0.2)
         const body = Matter.Bodies.rectangle(slot.x, slot.y, chipSize, chipSize, {
           chamfer: { radius: 14 },
           friction: 0.015,
-          frictionAir: 0.014,
-          restitution: 0.16,
+          frictionAir: 0.006,
+          restitution: 0.2,
           slop: 0.02,
         })
 
-        Matter.Body.setPosition(body, slot)
-        Matter.Body.setVelocity(body, { x: 0, y: 0 })
-        Matter.Body.setAngularVelocity(body, 0)
+        Matter.Body.setPosition(body, { x: spawnX, y: spawnY })
+        Matter.Body.setVelocity(body, {
+          x: randomBetween(-1.05, 1.05),
+          y: randomBetween(-0.68, 0.38),
+        })
+        Matter.Body.setAngularVelocity(body, randomBetween(-0.12, 0.12))
 
         return {
           body,
@@ -223,7 +234,18 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
           return
         }
 
-        matter.Engine.update(engine, 1000 / 60)
+        const Matter = matter
+        const time = performance.now() * 0.001
+
+        chipEntries.forEach((entry, index) => {
+          const wobble = 0.000016 + index * 0.0000012
+          Matter.Body.applyForce(entry.body, entry.body.position, {
+            x: Math.sin(time * 1.15 + index * 0.85) * wobble,
+            y: Math.cos(time * 0.92 + index * 0.7) * wobble * 0.72,
+          })
+        })
+
+        Matter.Engine.update(engine, 1000 / 60)
 
         chipEntries.forEach((entry, index) => {
           const node = chipRefs.current[index]
@@ -255,7 +277,7 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
         matter.Engine.clear(engine)
       }
     }
-  }, [itemSignature, items, viewport.height, viewport.width, visibleLimit])
+  }, [itemSignature, items, isRunning, viewport.height, viewport.width, visibleLimit])
 
   useEffect(() => {
     if (!burstRef.current) {

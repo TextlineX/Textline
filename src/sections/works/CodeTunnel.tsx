@@ -73,7 +73,7 @@ export function CodeTunnel({ engaged = false }: CodeTunnelProps) {
         } as CSSProperties,
       }
     })
-  }, [])
+  }, [engaged])
 
   useEffect(() => {
     engagedRef.current = engaged
@@ -89,7 +89,7 @@ export function CodeTunnel({ engaged = false }: CodeTunnelProps) {
   useEffect(() => {
     const root = rootRef.current
 
-    if (!root) {
+    if (!root || !engaged) {
       return
     }
 

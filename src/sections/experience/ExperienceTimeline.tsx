@@ -74,12 +74,12 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
   const progressRef = useRef(0)
   const engagedRef = useRef(false)
   const pointerRef = useRef({ x: 0.5, y: 0.5, energy: 0 })
-  const { scrollOffset, viewportHeight, activeIndex } = useAppShellScroll()
+  const { scrollOffset, viewportHeight } = useAppShellScroll()
 
   const sectionStart = sectionIndex * viewportHeight
   const sectionProgress = viewportHeight <= 0 ? 0 : clamp((scrollOffset - sectionStart) / viewportHeight, 0, 1)
 
-  const isEngaged = activeIndex === sectionIndex
+  const isEngaged = sectionProgress >= -0.35 && sectionProgress <= 0.85
 
   const pathD = useMemo(() => {
     return 'M 112 742 C 214 152 374 120 526 400 S 758 844 914 486 S 1188 124 1288 704'
@@ -99,7 +99,7 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
     const root = rootRef.current
     const path = pathRef.current
 
-    if (!root || !path) {
+    if (!root || !path || !isEngaged) {
       return
     }
 
@@ -185,7 +185,7 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
     return () => {
       window.cancelAnimationFrame(frameId)
     }
-  }, [])
+  }, [isEngaged])
 
   useEffect(() => {
     const root = rootRef.current

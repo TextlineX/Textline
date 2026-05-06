@@ -47,6 +47,58 @@ export const workCards = [
   },
 ]
 
+export type PlaygroundProject = {
+  title: string
+  description: string
+  stack: string[]
+  status: string
+  year: string
+  tag: string
+}
+
+export const playgroundProjects: PlaygroundProject[] = [
+  {
+    title: 'Textline',
+    description: '3D 叙事主页，负责承载滚动状态机和舞台级动效。',
+    stack: ['React', 'TypeScript', 'Three.js'],
+    status: 'LIVE',
+    year: '2026',
+    tag: 'Homepage',
+  },
+  {
+    title: 'Portfolio Lab',
+    description: '个人作品展示系统，用于验证视觉表达和模块复用。',
+    stack: ['Vite', 'Less', 'Canvas'],
+    status: 'BUILD',
+    year: '2026',
+    tag: 'Visual',
+  },
+  {
+    title: 'Realtime Feed',
+    description: '面向动态内容的 mock 数据展示入口，后续可切真实 API。',
+    stack: ['Express', 'JSON', 'API'],
+    status: 'PLAN',
+    year: '2026',
+    tag: 'Backend',
+  },
+  {
+    title: 'Motion Sandbox',
+    description: '测试物理交互、磁吸反馈和节奏型动画的小型实验场。',
+    stack: ['anime.js', 'Matter.js', 'SVG'],
+    status: 'PROTOTYPE',
+    year: '2025',
+    tag: 'Motion',
+  },
+  {
+    title: 'Works Tunnel',
+    description: '用隧道式结构组织项目卡片与切换模式的展示实验。',
+    stack: ['React', 'UI State', 'Transitions'],
+    status: 'SYNC',
+    year: '2025',
+    tag: 'Mode',
+  },
+]
+
 export const experienceItems = [
   {
     year: '2026',

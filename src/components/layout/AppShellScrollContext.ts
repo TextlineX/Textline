@@ -11,6 +11,7 @@ export type AppShellScrollContextValue = {
   scrollPhysicsPulseId: number
   scrollPhysicsDirection: number
   scrollPhysicsStrength: number
+  requestHome: () => void
 }
 
 export const AppShellScrollContext = createContext<AppShellScrollContextValue | null>(null)

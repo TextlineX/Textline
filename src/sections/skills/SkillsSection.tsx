@@ -1,7 +1,7 @@
-import { SectionShell } from '../components/shared/SectionShell'
-import { ScrollLinger } from '../effects/text/ScrollLinger'
-import { skillsCloudItems } from '../data/skillsCloudData'
-import { PhysicsSkillCloud } from '../effects/skills/PhysicsSkillCloud'
+import { SectionShell } from '../../components/shared/SectionShell'
+import { ScrollLinger } from '../../effects/text/ScrollLinger'
+import { skillsCloudItems } from '../../data/skillsCloudData'
+import { PhysicsSkillCloud } from '../../effects/skills/PhysicsSkillCloud'
 import './SkillsSection.less'
 
 export function SkillsSection() {

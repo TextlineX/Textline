@@ -1,6 +1,6 @@
-import { SectionShell } from '../components/shared/SectionShell'
-import { StickyMagneticTitle } from '../components/shared/StickyMagneticTitle'
-import { ExperienceTimeline } from './experience/ExperienceTimeline'
+import { SectionShell } from '../../components/shared/SectionShell'
+import { StickyMagneticTitle } from '../../components/shared/StickyMagneticTitle'
+import { ExperienceTimeline } from './ExperienceTimeline'
 import './ExperienceSection.less'
 
 export function ExperienceSection() {

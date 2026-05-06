@@ -90,6 +90,15 @@ export function AppShell({ children }: AppShellProps) {
     [clampOffset],
   )
 
+  const requestHome = useCallback(() => {
+    targetOffsetRef.current = 0
+    setMenuOpen(false)
+    resetScrollPhysics()
+    setScrollPhysicsDirection(1)
+    setScrollPhysicsStrength(0.42)
+    armScrollPhysics()
+  }, [armScrollPhysics, resetScrollPhysics])
+
   useEffect(() => {
     document.documentElement.style.setProperty('--app-scroll-offset', `${currentOffset}px`)
     document.documentElement.style.setProperty('--app-scroll-progress', String(scrollProgress))
@@ -257,23 +266,16 @@ export function AppShell({ children }: AppShellProps) {
         maxOffset,
         activeIndex,
         playgroundRevealProgress,
-        scrollPhysicsReady,
-        scrollPhysicsPulseId,
-        scrollPhysicsDirection,
-        scrollPhysicsStrength,
+      scrollPhysicsReady,
+      scrollPhysicsPulseId,
+      scrollPhysicsDirection,
+      scrollPhysicsStrength,
+      requestHome,
       }}
     >
       <div className="app-shell">
         <LogoMark
-          onClick={() => {
-            targetOffsetRef.current = 0
-            currentOffsetRef.current = 0
-            setCurrentOffset(0)
-            setMenuOpen(false)
-            resetScrollPhysics()
-            setScrollPhysicsDirection(1)
-            setScrollPhysicsStrength(0)
-          }}
+          onClick={requestHome}
         />
         <CornerIcon open={menuOpen} onToggle={() => setMenuOpen((current) => !current)} />
         <SideDrawer

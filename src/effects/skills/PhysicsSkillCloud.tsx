@@ -69,6 +69,14 @@ type BurstOptions = {
   strength: number
 }
 
+type DragState = {
+  active: boolean
+  index: number
+  pointerId: number
+  offsetX: number
+  offsetY: number
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
 }
@@ -125,7 +133,17 @@ function resolveStackSlots(stageWidth: number, stageHeight: number, cellSize: nu
 export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSkillCloudProps) {
   const stageRef = useRef<HTMLDivElement | null>(null)
   const chipRefs = useRef<Array<HTMLDivElement | null>>([])
+  const bodyRefs = useRef<Array<ChipBody | null>>([])
   const burstRef = useRef<((options: BurstOptions) => void) | null>(null)
+  const matterRef = useRef<MatterModule | null>(null)
+  const engineRef = useRef<MatterEngine | null>(null)
+  const dragRef = useRef<DragState>({
+    active: false,
+    index: -1,
+    pointerId: -1,
+    offsetX: 0,
+    offsetY: 0,
+  })
   const { activeIndex, scrollOffset, scrollPhysicsDirection, scrollPhysicsPulseId, scrollPhysicsStrength } = useAppShellScroll()
   const viewport = useViewportSize()
   const [isRunning, setIsRunning] = useState(false)
@@ -162,9 +180,11 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
       }
 
       matter = Matter
+      matterRef.current = Matter
       engine = Matter.Engine.create({
         gravity: { x: 0, y: 1, scale: 0.00145 },
       })
+      engineRef.current = engine
 
       const { width, height } = stage.getBoundingClientRect()
       const stageWidth = Math.max(320, width)
@@ -215,6 +235,8 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
         }
       })
 
+      bodyRefs.current = chipEntries.map((entry) => entry.body)
+
       Matter.World.add(engine.world, [...walls, ...chipEntries.map((entry) => entry.body)])
 
       burstRef.current = ({ direction, emphasis = 1, strength }) => {
@@ -238,6 +260,10 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
         const time = performance.now() * 0.001
 
         chipEntries.forEach((entry, index) => {
+          if (dragRef.current.active && dragRef.current.index === index) {
+            return
+          }
+
           const wobble = 0.000016 + index * 0.0000012
           Matter.Body.applyForce(entry.body, entry.body.position, {
             x: Math.sin(time * 1.15 + index * 0.85) * wobble,
@@ -271,6 +297,10 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
       window.cancelAnimationFrame(frameId)
       burstRef.current = null
       chipRefs.current = []
+      bodyRefs.current = []
+      matterRef.current = null
+      engineRef.current = null
+      dragRef.current.active = false
 
       if (matter && engine) {
         matter.Composite.clear(engine.world, false, true)
@@ -295,6 +325,59 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
     })
   }, [activeIndex, scrollPhysicsDirection, scrollPhysicsPulseId, scrollPhysicsStrength, sectionIndex])
 
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      const drag = dragRef.current
+      if (!drag.active) {
+        return
+      }
+
+      const stage = stageRef.current
+      const body = bodyRefs.current[drag.index]
+      const chip = chipRefs.current[drag.index]
+      const Matter = matterRef.current
+
+      if (!stage || !body || !chip || !Matter) {
+        return
+      }
+
+      if (event.pointerId !== drag.pointerId) {
+        return
+      }
+
+      const rect = stage.getBoundingClientRect()
+      const nextX = clamp(event.clientX - rect.left + drag.offsetX, 0, rect.width)
+      const nextY = clamp(event.clientY - rect.top + drag.offsetY, 0, rect.height)
+
+      Matter.Body.setPosition(body, { x: nextX, y: nextY })
+      Matter.Body.setVelocity(body, { x: 0, y: 0 })
+      Matter.Body.setAngularVelocity(body, 0)
+    }
+
+    const handlePointerUp = (event: PointerEvent) => {
+      const drag = dragRef.current
+      if (!drag.active || event.pointerId !== drag.pointerId) {
+        return
+      }
+
+      drag.active = false
+      drag.index = -1
+      drag.pointerId = -1
+      drag.offsetX = 0
+      drag.offsetY = 0
+    }
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', handlePointerUp)
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', handlePointerUp)
+    }
+  }, [])
+
   return (
     <div ref={stageRef} className="physics-skill-cloud">
       <div className="physics-skill-cloud__field" aria-hidden="true">
@@ -302,7 +385,7 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
           const icon = item.icon ? skillsIconMap[item.icon] : undefined
 
           return (
-            <div
+              <div
               key={item.label}
               ref={(node) => {
                 chipRefs.current[index] = node
@@ -313,6 +396,29 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
                 'magnetic-target',
               ].join(' ')}
               data-magnetic-shell="compact"
+              onPointerDown={(event) => {
+                const stage = stageRef.current
+                const body = bodyRefs.current[index]
+                const Matter = matterRef.current
+
+                if (!stage || !body || !Matter) {
+                  return
+                }
+
+                const rect = stage.getBoundingClientRect()
+                dragRef.current = {
+                  active: true,
+                  index,
+                  pointerId: event.pointerId,
+                  offsetX: body.position.x - (event.clientX - rect.left),
+                  offsetY: body.position.y - (event.clientY - rect.top),
+                }
+                chipRefs.current[index]?.setPointerCapture(event.pointerId)
+                Matter.Body.setVelocity(body, { x: 0, y: 0 })
+                Matter.Body.setAngularVelocity(body, 0)
+                event.stopPropagation()
+                event.preventDefault()
+              }}
             >
               <span className="physics-skill-cloud__chip-icon" aria-hidden="true">
                 {icon?.path ? (

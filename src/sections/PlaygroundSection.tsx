@@ -67,6 +67,15 @@ function lerp(from: number, to: number, progress: number) {
   return from + (to - from) * progress
 }
 
+function smoothstep(edge0: number, edge1: number, value: number) {
+  if (edge0 === edge1) {
+    return value >= edge1 ? 1 : 0
+  }
+
+  const x = clamp((value - edge0) / (edge1 - edge0), 0, 1)
+  return x * x * (3 - 2 * x)
+}
+
 function positiveMod(value: number, modulus: number) {
   if (modulus <= 0) {
     return 0
@@ -243,18 +252,20 @@ export function PlaygroundSection() {
   const [viewport, setViewport] = useState<ViewportSize>(getViewportSize)
   const [camera, setCamera] = useState<CameraState>({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
-  const [titleLinger, setTitleLinger] = useState(0)
   const [activeProjectIndex, setActiveProjectIndex] = useState(() =>
     buildHoneycombLayout(playgroundProjects, getViewportSize(), { x: 0, y: 0 }).centerProjectIndex,
   )
-  const { activeIndex, scrollProgress } = useAppShellScroll()
+  const { activeIndex, playgroundRevealProgress } = useAppShellScroll()
 
   const engaged = activeIndex === 5
-  const stageProgress = engaged ? clamp(scrollProgress * 1.15, 0, 1) : 0
-  const stageWidth = viewport.width > 0 ? Math.round(lerp(Math.min(viewport.width * 0.46, 820), viewport.width, stageProgress)) : 0
-  const stageHeight = viewport.height > 0 ? Math.round(lerp(Math.min(viewport.height * 0.38, 520), viewport.height, stageProgress)) : 0
-  const stageScale = lerp(0.94, 1, stageProgress)
-  const stageLift = lerp(24, 0, stageProgress)
+  const stageProgress = engaged ? clamp(playgroundRevealProgress, 0, 1) : 0
+  const stageRise = smoothstep(0, 0.7, stageProgress)
+  const stageFill = smoothstep(0.08, 0.88, stageProgress)
+  const titleProgress = smoothstep(0.02, 0.56, stageProgress)
+  const stageWidth = viewport.width > 0 ? Math.round(lerp(Math.min(viewport.width * 0.7, 960), viewport.width, stageFill)) : 0
+  const stageHeight = viewport.height > 0 ? Math.round(lerp(Math.min(viewport.height * 0.52, 640), viewport.height, stageFill)) : 0
+  const stageScale = lerp(0.96, 1, stageFill)
+  const stageLift = lerp(18, 0, stageRise)
   const layout = useMemo(
     () => buildHoneycombLayout(playgroundProjects, { width: stageWidth, height: stageHeight }, camera),
     [stageWidth, stageHeight, camera],
@@ -263,29 +274,6 @@ export function PlaygroundSection() {
   useEffect(() => {
     cameraRef.current = camera
   }, [camera])
-
-  useEffect(() => {
-    const target = stageProgress
-    let frameId = 0
-    let current = titleLinger
-
-    const tick = () => {
-      current += (target - current) * 0.12
-      setTitleLinger(current)
-
-      if (Math.abs(target - current) > 0.001) {
-        frameId = window.requestAnimationFrame(tick)
-      }
-    }
-
-    frameId = window.requestAnimationFrame(tick)
-
-    return () => {
-      if (frameId !== 0) {
-        window.cancelAnimationFrame(frameId)
-      }
-    }
-  }, [stageProgress])
 
   useEffect(() => {
     const updateViewport = () => setViewport(getViewportSize())
@@ -498,34 +486,33 @@ export function PlaygroundSection() {
         className={`playground-showcase${engaged ? ' playground-showcase--engaged' : ''}`}
         aria-labelledby="playground-showcase-title"
       >
-        <div className="playground-showcase__header">
-          <h2
-            id="playground-showcase-title"
-            className="playground-showcase__title"
-            data-text="Playground"
-            style={
-              {
-                '--playground-title-linger': String(titleLinger),
-              } as CSSProperties
-            }
-          >
-            Playground
-          </h2>
-        </div>
-
         <div className="playground-showcase__frame">
+          <header className="playground-showcase__header-layer">
+            <h2
+              id="playground-showcase-title"
+              className="playground-showcase__title"
+              style={
+                {
+                  '--playground-title-progress': String(titleProgress),
+                } as CSSProperties
+              }
+            >
+              Playground
+            </h2>
+          </header>
+
           <div className="playground-showcase__stage-shell">
             <div
               ref={stageRef}
               className="playground-showcase__stage"
               style={
                 {
-                  '--playground-stage-width': `${stageWidth}px`,
-                  '--playground-stage-height': `${stageHeight}px`,
-                  '--playground-stage-radius': `${Math.round(lerp(34, 0, stageProgress))}px`,
-                  '--playground-stage-scale': String(stageScale),
-                  '--playground-stage-lift': `${stageLift}px`,
-                  '--playground-camera-x': `${camera.x}px`,
+              '--playground-stage-width': `${stageWidth}px`,
+              '--playground-stage-height': `${stageHeight}px`,
+              '--playground-stage-radius': `${Math.round(lerp(40, 0, stageFill))}px`,
+              '--playground-stage-scale': String(stageScale),
+              '--playground-stage-lift': `${stageLift}px`,
+              '--playground-camera-x': `${camera.x}px`,
                   '--playground-camera-y': `${camera.y}px`,
                   '--playground-hex-radius': `${layout.hexRadius}px`,
                   '--playground-hex-width': `${layout.hexWidth}px`,

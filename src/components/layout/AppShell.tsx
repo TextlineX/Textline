@@ -13,6 +13,10 @@ import './AppShell.less'
 
 type AppShellProps = PropsWithChildren
 
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value))
+}
+
 export function AppShell({ children }: AppShellProps) {
   const viewport = useViewportSize()
   useViewportVars()
@@ -21,6 +25,10 @@ export function AppShell({ children }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrollPhysicsDirection, setScrollPhysicsDirection] = useState(1)
   const [scrollPhysicsStrength, setScrollPhysicsStrength] = useState(0)
+  const [playgroundRevealProgress, setPlaygroundRevealProgress] = useState(0)
+  const playgroundRevealProgressRef = useRef(0)
+  const activeIndexRef = useRef(0)
+  const playgroundRecedeFrameRef = useRef<number | undefined>(undefined)
   const targetOffsetRef = useRef(0)
   const currentOffsetRef = useRef(0)
   const frameRef = useRef<number | undefined>(undefined)
@@ -69,6 +77,20 @@ export function AppShell({ children }: AppShellProps) {
   }, [activeIndex])
 
   useEffect(() => {
+    activeIndexRef.current = activeIndex
+  }, [activeIndex])
+
+  const snapToOffset = useCallback(
+    (value: number) => {
+      const next = clampOffset(value)
+      targetOffsetRef.current = next
+      currentOffsetRef.current = next
+      setCurrentOffset(next)
+    },
+    [clampOffset],
+  )
+
+  useEffect(() => {
     document.documentElement.style.setProperty('--app-scroll-offset', `${currentOffset}px`)
     document.documentElement.style.setProperty('--app-scroll-progress', String(scrollProgress))
 
@@ -84,6 +106,50 @@ export function AppShell({ children }: AppShellProps) {
       delete document.documentElement.dataset.menuOpen
     }
   }, [menuOpen])
+
+  useEffect(() => {
+    if (activeIndex !== 5 && playgroundRevealProgress !== 0) {
+      if (playgroundRecedeFrameRef.current !== undefined) {
+        window.cancelAnimationFrame(playgroundRecedeFrameRef.current)
+      }
+
+      const startProgress = playgroundRevealProgressRef.current
+      const startTime = performance.now()
+      const duration = 320
+
+      const tick = (time: number) => {
+        const elapsed = time - startTime
+        const progress = clamp(1 - elapsed / duration, 0, 1)
+        const eased = progress * progress * (3 - 2 * progress)
+        const nextProgress = startProgress * eased
+
+        setPlaygroundRevealProgress(nextProgress)
+
+        if (nextProgress > 0.001 && activeIndexRef.current !== 5) {
+          playgroundRecedeFrameRef.current = window.requestAnimationFrame(tick)
+          return
+        }
+
+        playgroundRecedeFrameRef.current = undefined
+        setPlaygroundRevealProgress(0)
+      }
+
+      playgroundRecedeFrameRef.current = window.requestAnimationFrame(tick)
+      return
+    }
+  }, [activeIndex, playgroundRevealProgress])
+
+  useEffect(() => {
+    playgroundRevealProgressRef.current = playgroundRevealProgress
+  }, [playgroundRevealProgress])
+
+  useEffect(() => {
+    return () => {
+      if (playgroundRecedeFrameRef.current !== undefined) {
+        window.cancelAnimationFrame(playgroundRecedeFrameRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const tick = () => {
@@ -121,6 +187,44 @@ export function AppShell({ children }: AppShellProps) {
 
       const delta =
         event.deltaMode === 1 ? event.deltaY * 28 : event.deltaMode === 2 ? event.deltaY * viewport.height : event.deltaY
+
+      if (activeIndex === 5) {
+        const currentRevealProgress = playgroundRevealProgressRef.current
+        const stageOffset = clampOffset(5 * viewport.height)
+        const revealDelta = delta / Math.max(1, viewport.height) * 1.8
+        const nextRevealProgress = Math.max(0, Math.min(1, currentRevealProgress + revealDelta))
+        const snappedRevealProgress =
+          nextRevealProgress > 0.995 ? 1 : nextRevealProgress < 0.005 ? 0 : nextRevealProgress
+
+        setPlaygroundRevealProgress(snappedRevealProgress)
+
+        if (delta > 0) {
+          if (currentRevealProgress < 1) {
+            snapToOffset(stageOffset)
+            event.preventDefault()
+            return
+          }
+
+          const dampedDelta = delta * 0.42
+          snapToOffset(targetOffsetRef.current + dampedDelta)
+          event.preventDefault()
+          return
+        }
+
+        if (delta < 0) {
+          if (currentRevealProgress > 0) {
+            snapToOffset(stageOffset)
+            event.preventDefault()
+            return
+          }
+
+          const exitDelta = delta * 0.85
+          snapToOffset(targetOffsetRef.current + exitDelta)
+          event.preventDefault()
+          return
+        }
+      }
+
       const nextTarget = clampOffset(targetOffsetRef.current + delta * 0.85)
       targetOffsetRef.current = nextTarget
 
@@ -142,7 +246,7 @@ export function AppShell({ children }: AppShellProps) {
     return () => {
       window.removeEventListener('wheel', handleWheel)
     }
-  }, [armScrollPhysics, clampOffset, menuOpen, sections.length, touchScrollPhysics, viewport.height])
+  }, [activeIndex, armScrollPhysics, clampOffset, menuOpen, playgroundRevealProgress, sections.length, touchScrollPhysics, viewport.height])
 
   return (
     <AppShellScrollProvider
@@ -152,6 +256,7 @@ export function AppShell({ children }: AppShellProps) {
         viewportHeight: viewport.height,
         maxOffset,
         activeIndex,
+        playgroundRevealProgress,
         scrollPhysicsReady,
         scrollPhysicsPulseId,
         scrollPhysicsDirection,

@@ -1,8 +1,8 @@
 import { type CSSProperties, type PointerEvent, useEffect, useMemo, useRef, useState } from 'react'
 
-import { SectionShell } from '../components/shared/SectionShell'
-import { useAppShellScroll } from '../components/layout/AppShellScrollContext'
-import { playgroundProjects, type PlaygroundProject } from '../data/siteData'
+import { SectionShell } from '../../components/shared/SectionShell'
+import { useAppShellScroll } from '../../components/layout/AppShellScrollContext'
+import { playgroundProjects, type PlaygroundProject } from '../../data/siteData'
 import './PlaygroundSection.less'
 
 type HexVariant = 'base' | 'accent' | 'soft'

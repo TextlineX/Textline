@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
 
-import { SectionShell } from '../components/shared/SectionShell'
-import { useAppShellScroll } from '../components/layout/AppShellScrollContext'
-import { StickyMagneticTitle } from '../components/shared/StickyMagneticTitle'
-import { CodeTunnel } from './works/CodeTunnel'
-import { WorksModePanel } from './works/WorksModePanel'
+import { SectionShell } from '../../components/shared/SectionShell'
+import { useAppShellScroll } from '../../components/layout/AppShellScrollContext'
+import { StickyMagneticTitle } from '../../components/shared/StickyMagneticTitle'
+import { CodeTunnel } from './CodeTunnel'
+import { WorksModePanel } from './WorksModePanel'
 import './WorksSection.less'
 
 export function WorksSection() {

@@ -1,0 +1,344 @@
+.game-page {
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.1), transparent 32%),
+    linear-gradient(180deg, #050505 0%, #0d0d10 100%);
+  color: #f1ede6;
+}
+
+.game-page--embed {
+  background: transparent;
+  min-height: 100%;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.game-page--fullscreen {
+  width: 100%;
+}
+
+.game-page__embed-shell {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.06), transparent 30%),
+    linear-gradient(180deg, rgba(3, 3, 4, 0.02), rgba(3, 3, 4, 0.08));
+  pointer-events: none;
+}
+
+.game-page__stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.game-page__canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.game-page__boot {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  gap: 1rem;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.98));
+}
+
+.game-page__boot-title {
+  position: absolute;
+  top: 1.4rem;
+  margin: 0;
+  font-size: 0.76rem;
+  letter-spacing: 0.28em;
+  color: rgba(241, 237, 230, 0.72);
+}
+
+.game-page__boot-icon {
+  width: 6rem;
+  height: 6rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(241, 237, 230, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.game-page__boot-icon > span {
+  width: 2.6rem;
+  height: 2.6rem;
+  background: #f1ede6;
+  animation: game-boot-spin 0.9s steps(4) infinite;
+}
+
+.game-page__boot-bar {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1.4rem;
+  height: 0.75rem;
+  border: 1px solid rgba(241, 237, 230, 0.2);
+  overflow: hidden;
+}
+
+.game-page__boot-bar > span {
+  display: block;
+  width: 42%;
+  height: 100%;
+  background: #f1ede6;
+  animation: game-boot-bar 1.1s ease-in-out infinite;
+}
+
+.game-page--controls-hidden .game-page__controls {
+  display: none;
+}
+
+.game-page__desktop {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2rem;
+  pointer-events: none;
+}
+
+.game-page__desktop-grid {
+  width: min(74rem, calc(100vw - 2rem));
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.game-page__desktop-card {
+  aspect-ratio: 1.15;
+  display: grid;
+  align-content: space-between;
+  padding: 1rem;
+  border: 1px solid rgba(241, 237, 230, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f1ede6;
+}
+
+.game-page__desktop-card--active {
+  background: rgba(241, 237, 230, 0.92);
+  color: #050505;
+}
+
+.game-page__desktop-card-badge {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+}
+
+.game-page__desktop-card-title {
+  align-self: end;
+  font-size: clamp(1rem, 1.8vw, 1.4rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.game-page__desktop-sprite {
+  width: 4rem;
+  height: 4rem;
+  display: grid;
+  place-items: center;
+}
+
+.game-page__desktop-sprite > span {
+  width: 100%;
+  height: 100%;
+  background: #f1ede6;
+  clip-path: polygon(50% 0%, 80% 18%, 100% 45%, 78% 100%, 50% 82%, 22% 100%, 0% 45%, 20% 18%);
+}
+
+.game-page__card-panel {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  z-index: 5;
+  width: min(42rem, calc(100vw - 2rem));
+  padding: 1.25rem;
+  border: 1px solid rgba(241, 237, 230, 0.16);
+  background: rgba(10, 10, 12, 0.92);
+  transform: translate(-50%, -50%) scale(0.88);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.game-page__card-panel--active {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: auto;
+}
+
+.game-page__card-panel-kicker {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  color: rgba(241, 237, 230, 0.56);
+}
+
+.game-page__card-panel-title {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 0.96;
+}
+
+.game-page__card-panel-copy {
+  margin: 1rem 0 0;
+  line-height: 1.7;
+  color: rgba(241, 237, 230, 0.78);
+}
+
+.game-page__card-panel-foot {
+  margin: 1.5rem 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: rgba(241, 237, 230, 0.56);
+}
+
+.game-page__controls {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 7;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1rem, 2vw, 2rem);
+  pointer-events: none;
+}
+
+.game-page__dpad,
+.game-page__action-pair {
+  display: grid;
+  gap: 0.75rem;
+  pointer-events: auto;
+}
+
+.game-page__dpad {
+  grid-template-columns: repeat(3, minmax(3.25rem, 4rem));
+  grid-template-rows: repeat(3, minmax(3.25rem, 4rem));
+  align-items: center;
+  justify-items: center;
+}
+
+.game-page__action-pair {
+  grid-template-columns: repeat(2, minmax(3.75rem, 4.5rem));
+  align-items: end;
+  justify-items: center;
+}
+
+.game-page__control {
+  appearance: none;
+  border: 1px solid rgba(241, 237, 230, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1ede6;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  touch-action: manipulation;
+  cursor: pointer;
+  user-select: none;
+}
+
+.game-page__control:active {
+  transform: translateY(1px) scale(0.98);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.game-page__control--up,
+.game-page__control--down,
+.game-page__control--left,
+.game-page__control--right {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0.95rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.game-page__control--action {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.game-page__control--up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.game-page__control--left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.game-page__control--down {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.game-page__control--right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.game-page__control--a {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.game-page__control--b {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+@keyframes game-boot-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes game-boot-bar {
+  0% {
+    transform: translateX(-20%);
+  }
+
+  50% {
+    transform: translateX(120%);
+  }
+
+  100% {
+    transform: translateX(-20%);
+  }
+}
+
+@media (max-width: 720px) {
+  .game-page__controls {
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .game-page__dpad {
+    grid-template-columns: repeat(3, minmax(2.8rem, 3.2rem));
+    grid-template-rows: repeat(3, minmax(2.8rem, 3.2rem));
+    gap: 0.5rem;
+  }
+
+  .game-page__action-pair {
+    grid-template-columns: repeat(2, minmax(3.2rem, 3.8rem));
+    gap: 0.5rem;
+  }
+}

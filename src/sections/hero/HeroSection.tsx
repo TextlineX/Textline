@@ -1,10 +1,10 @@
-import { SectionShell } from '../components/shared/SectionShell'
-import { useMagneticCursor } from '../hooks/cursor/useMagneticCursor'
-import { MagneticCursor } from '../effects/cursor/MagneticCursor'
-import { StageBackdrop } from '../effects/StageBackdrop'
-import { GooeyReveal } from '../effects/hero/GooeyReveal'
-import { CharacterSphere } from './hero/CharacterSphere'
-import { NameBanner } from './hero/NameBanner'
+import { SectionShell } from '../../components/shared/SectionShell'
+import { useMagneticCursor } from '../../hooks/cursor/useMagneticCursor'
+import { MagneticCursor } from '../../effects/cursor/MagneticCursor'
+import { StageBackdrop } from '../../effects/StageBackdrop'
+import { GooeyReveal } from '../../effects/hero/GooeyReveal'
+import { CharacterSphere } from './CharacterSphere'
+import { NameBanner } from './NameBanner'
 import './HeroSection.less'
 
 export function HeroSection() {

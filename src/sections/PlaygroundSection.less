@@ -1,9 +1,21 @@
 .playground-showcase {
   width: 100%;
-  min-height: 180dvh;
+  min-height: 192dvh;
   background: #050403;
   display: flex;
   flex-direction: column;
+}
+
+.playground-showcase__header-layer {
+  position: absolute;
+  inset: 0 0 auto 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  padding-top: clamp(0.1rem, 0.3vh, 0.35rem);
+  pointer-events: none;
+  z-index: 3;
 }
 
 .playground-showcase__frame {
@@ -12,6 +24,9 @@
   width: 100%;
   height: 100dvh;
   isolation: isolate;
+  display: grid;
+  grid-template-areas: 'stack';
+  align-items: stretch;
   overflow: hidden;
 }
 
@@ -72,20 +87,21 @@
   position: relative;
   display: flex;
   justify-content: center;
-  align-items: flex-end;
-  min-height: clamp(6.8rem, 13vh, 8.8rem);
+  align-items: flex-start;
+  min-height: 0;
   pointer-events: none;
-  padding: clamp(1.35rem, 2.8vw, 2rem) 1rem clamp(1rem, 2vw, 1.5rem);
+  padding: 0.05rem 1rem 0.5rem;
 }
 
 .playground-showcase__stage-shell {
   position: relative;
+  grid-area: 1 / 1;
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 0;
-  padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 2vw, 2rem) clamp(1rem, 2vw, 2rem);
+  padding: clamp(0.45rem, 1.2vh, 0.8rem) clamp(0.6rem, 1.4vw, 1.25rem) clamp(0.55rem, 1.4vh, 1rem);
 }
 
 .playground-showcase__stage {
@@ -100,6 +116,8 @@
   transform: translate3d(0, var(--playground-stage-lift, 0px), 0) scale(var(--playground-stage-scale, 1));
   transform-origin: center center;
   transition:
+    width 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    height 320ms cubic-bezier(0.16, 1, 0.3, 1),
     transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
     border-radius 240ms cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 240ms ease;
@@ -202,62 +220,42 @@
 .playground-showcase__title {
   position: relative;
   margin: 0;
+  width: fit-content;
+  max-width: min(34rem, calc(100% - 2rem));
   color: var(--color-text-strong);
-  font-size: clamp(3.8rem, 6.8vw, 5.8rem);
-  line-height: 0.9;
-  letter-spacing: 0.12em;
+  font-size: clamp(3.1rem, 6vw, 5rem);
+  line-height: 0.88;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   text-align: center;
   pointer-events: none;
   user-select: none;
+  will-change: transform, opacity, filter;
   transform:
-    translate3d(0, calc((1 - var(--playground-title-linger, 0)) * 1.15rem), 0)
-    scale(calc(0.975 + var(--playground-title-linger, 0) * 0.03));
-  filter:
-    drop-shadow(0 0 18px rgba(229, 61, 61, 0.2))
-    drop-shadow(0 0 34px rgba(101, 196, 200, 0.1))
-    blur(calc((1 - var(--playground-title-linger, 0)) * 0.4px));
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.06);
+    translate3d(0, calc(var(--playground-title-progress, 0) * -2.1rem), 0)
+    scale(calc(1 - var(--playground-title-progress, 0) * 0.03));
+  opacity: calc(1 - var(--playground-title-progress, 0));
+  filter: blur(calc(var(--playground-title-progress, 0) * 4px));
   transition:
-    transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
-    filter 260ms ease,
-    opacity 260ms ease;
-  opacity: calc(0.82 + var(--playground-title-linger, 0) * 0.18);
-}
-
-.playground-showcase__title::before {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  color: rgba(229, 61, 61, 0.38);
-  transform: translate3d(0.08em, 0.06em, 0);
-  filter: blur(calc(10px + (1 - var(--playground-title-linger, 0)) * 10px));
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 44%, transparent 78%);
-  mask-image: radial-gradient(circle at 50% 50%, black 44%, transparent 78%);
-  pointer-events: none;
-}
-
-.playground-showcase__title::after {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  color: transparent;
-  -webkit-text-stroke: 1.5px rgba(229, 61, 61, 0.22);
-  mix-blend-mode: screen;
-  pointer-events: none;
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 180ms linear;
+  text-shadow:
+    0 0 18px rgba(233, 104, 86, 0.12),
+    0 0 32px rgba(88, 172, 186, 0.08);
 }
 
 @media (max-width: 900px) {
   .playground-showcase {
-    min-height: 160dvh;
+    min-height: 174dvh;
   }
 
   .playground-showcase__title {
-    font-size: clamp(3rem, 11vw, 4.4rem);
+    font-size: clamp(2.6rem, 9vw, 4rem);
   }
 
   .playground-showcase__stage-shell {
-    padding: clamp(0.75rem, 2vw, 1rem) 0.75rem 0.75rem;
+    padding: clamp(0.35rem, 1vh, 0.7rem) 0.55rem 0.65rem;
   }
 
   .playground-showcase__hex {

@@ -6,6 +6,7 @@ export type AppShellScrollContextValue = {
   viewportHeight: number
   maxOffset: number
   activeIndex: number
+  playgroundRevealProgress: number
   scrollPhysicsReady: boolean
   scrollPhysicsPulseId: number
   scrollPhysicsDirection: number

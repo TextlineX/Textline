@@ -8,8 +8,9 @@ import { WorksModePanel } from './works/WorksModePanel'
 import './WorksSection.less'
 
 export function WorksSection() {
-  const { activeIndex } = useAppShellScroll()
-  const engaged = activeIndex === 3
+  const { scrollOffset, viewportHeight } = useAppShellScroll()
+  const sectionProgress = viewportHeight > 0 ? scrollOffset / viewportHeight - 3 : 0
+  const engaged = sectionProgress >= -0.35 && sectionProgress <= 0.85
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('works-tunnel-cursor-state', { detail: { active: engaged } }))

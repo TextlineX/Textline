@@ -2,50 +2,97 @@ import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 
 import { SectionShell } from '../components/shared/SectionShell'
 import { useAppShellScroll } from '../components/layout/AppShellScrollContext'
+import { playgroundProjects, type PlaygroundProject } from '../data/siteData'
 import './PlaygroundSection.less'
+
+type HexVariant = 'base' | 'accent' | 'soft'
 
 type HexCell = {
   id: string
   x: number
   y: number
   radius: number
-  label: string
-  tone: 'base' | 'accent' | 'soft'
+  variant: HexVariant
+  projectIndex: number
+  project: PlaygroundProject
+  lane: 'title' | 'summary' | 'stack' | 'status'
 }
-
-const labels = ['HEX', 'GRID', 'MOVE', 'DRAG', 'PAN', 'FLOW', 'NODE', 'CELL', 'SYNC', 'TRACE', 'MODE', 'LOCK']
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
 }
 
-function buildHexCells() {
+function buildHexCells(projects: PlaygroundProject[]) {
   const cells: HexCell[] = []
-  const cols = 13
-  const rows = 9
-  const radius = 64
+  const cols = 6
+  const rows = 4
+  const radius = 128
   const horizontalStep = radius * 1.5
-  const verticalStep = radius * Math.sqrt(3) * 0.82
-  const startX = 180
-  const startY = 170
+  const verticalStep = radius * 0.92
+  const startX = 104
+  const startY = 108
 
   for (let row = 0; row < rows; row += 1) {
     for (let col = 0; col < cols; col += 1) {
-      const offsetX = row % 2 === 0 ? 0 : horizontalStep / 2
-      const tone = (row + col) % 4 === 0 ? 'accent' : (row + col) % 3 === 0 ? 'soft' : 'base'
+      const projectIndex = (row * 2 + col + (row % 2)) % projects.length
+      const project = projects[projectIndex]
+      const laneIndex = (row + col) % 4
+      const lane: HexCell['lane'] = laneIndex === 0 ? 'title' : laneIndex === 1 ? 'summary' : laneIndex === 2 ? 'stack' : 'status'
+      const variant: HexVariant =
+        lane === 'title'
+          ? 'accent'
+          : lane === 'stack'
+            ? 'soft'
+            : row % 3 === 0
+              ? 'soft'
+              : 'base'
 
       cells.push({
         id: `hex-${row}-${col}`,
-        x: startX + col * horizontalStep + offsetX,
+        x: startX + col * horizontalStep + (row % 2 === 0 ? 0 : horizontalStep / 2),
         y: startY + row * verticalStep,
         radius,
-        label: labels[(row * cols + col) % labels.length],
-        tone,
+        variant,
+        projectIndex,
+        project,
+        lane,
       })
     }
   }
 
   return cells
+}
+
+function getCellContent(cell: HexCell) {
+  if (cell.lane === 'title') {
+    return {
+      kicker: cell.project.tag,
+      title: cell.project.title,
+      copy: cell.project.year,
+    }
+  }
+
+  if (cell.lane === 'summary') {
+    return {
+      kicker: 'SUMMARY',
+      title: cell.project.description,
+      copy: 'Drag the surface and keep scanning the grid.',
+    }
+  }
+
+  if (cell.lane === 'stack') {
+    return {
+      kicker: 'STACK',
+      title: cell.project.stack.join(' / '),
+      copy: cell.project.status,
+    }
+  }
+
+  return {
+    kicker: 'STATUS',
+    title: cell.project.status,
+    copy: `${cell.project.year} · ${cell.project.tag}`,
+  }
 }
 
 export function PlaygroundSection() {
@@ -60,10 +107,12 @@ export function PlaygroundSection() {
   })
   const offsetRef = useRef({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
+  const [activeProjectIndex, setActiveProjectIndex] = useState(0)
   const { activeIndex, scrollProgress } = useAppShellScroll()
 
   const engaged = activeIndex === 5
-  const cells = useMemo(() => buildHexCells(), [])
+  const cells = useMemo(() => buildHexCells(playgroundProjects), [])
+  const activeProject = playgroundProjects[activeProjectIndex % playgroundProjects.length]
 
   useEffect(() => {
     window.dispatchEvent(
@@ -100,6 +149,11 @@ export function PlaygroundSection() {
 
     const handlePointerDown = (event: PointerEvent) => {
       if (!engaged) {
+        return
+      }
+
+      const target = event.target as HTMLElement | null
+      if (target?.closest('button')) {
         return
       }
 
@@ -194,39 +248,61 @@ export function PlaygroundSection() {
           <div ref={surfaceRef} className="playground-showcase__surface">
             <div className="playground-showcase__glow" />
 
-            <div className="playground-showcase__grid" aria-hidden="true">
-              {cells.map((cell) => (
-                <button
-                  key={cell.id}
-                  type="button"
-                  className={`playground-showcase__hex playground-showcase__hex--${cell.tone}`}
-                  style={
-                    {
-                      '--hex-x': `${cell.x}px`,
-                      '--hex-y': `${cell.y}px`,
-                      '--hex-size': `${cell.radius}px`,
-                    } as CSSProperties
-                  }
-                  aria-label={`${cell.label} node`}
-                >
-                  <span className="playground-showcase__hex-label">{cell.label}</span>
-                </button>
-              ))}
+            <div className="playground-showcase__grid" aria-label="Project honeycomb grid">
+              {cells.map((cell) => {
+                const content = getCellContent(cell)
+                const isActive = cell.projectIndex === activeProjectIndex
+
+                return (
+                  <button
+                    key={cell.id}
+                    type="button"
+                    className={`playground-showcase__hex playground-showcase__hex--${cell.variant}${isActive ? ' playground-showcase__hex--active' : ''}`}
+                    style={
+                      {
+                        '--hex-x': `${cell.x}px`,
+                        '--hex-y': `${cell.y}px`,
+                        '--hex-size': `${cell.radius}px`,
+                      } as CSSProperties
+                    }
+                    aria-label={`${cell.project.title} ${content.kicker} ${content.title}`}
+                    aria-pressed={isActive}
+                    onClick={() => setActiveProjectIndex(cell.projectIndex)}
+                  >
+                    <span className="playground-showcase__hex-kicker">{content.kicker}</span>
+                    <span className="playground-showcase__hex-title">{content.title}</span>
+                    <span className="playground-showcase__hex-copy">{content.copy}</span>
+                  </button>
+                )
+              })}
             </div>
 
             <div className="playground-showcase__hud">
               <div className="playground-showcase__eyebrow">Playground</div>
               <h2 id="playground-showcase-title" className="playground-showcase__title">
-                Honeycomb mode
+                Honeycomb projects
               </h2>
               <p className="playground-showcase__subtitle">
-                Drag the canvas. Double click to reset. Cursor mode switches automatically while this section is active.
+                网格按固定节奏生成，项目标题、描述、技术栈和状态会在蜂窝中轮换显示。
               </p>
+            </div>
+
+            <div className="playground-showcase__detail">
+              <div className="playground-showcase__detail-label">ACTIVE PROJECT</div>
+              <div className="playground-showcase__detail-title">{activeProject.title}</div>
+              <p className="playground-showcase__detail-copy">{activeProject.description}</p>
+              <div className="playground-showcase__detail-meta">
+                <span>{activeProject.year}</span>
+                <span>{activeProject.status}</span>
+                <span>{activeProject.tag}</span>
+              </div>
+              <div className="playground-showcase__detail-stack">{activeProject.stack.join(' / ')}</div>
             </div>
 
             <div className="playground-showcase__status">
               <span className="playground-showcase__status-item">SECTION {String(activeIndex).padStart(2, '0')}</span>
               <span className="playground-showcase__status-item">PROGRESS {Math.round(scrollProgress * 100)}%</span>
+              <span className="playground-showcase__status-item">PROJECT {String(activeProjectIndex + 1).padStart(2, '0')}</span>
               <span className="playground-showcase__status-item">{isDragging ? 'DRAGGING' : 'READY'}</span>
             </div>
           </div>

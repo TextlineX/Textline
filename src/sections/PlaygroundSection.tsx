@@ -54,12 +54,17 @@ type DragState = {
   lastX: number
   lastY: number
   lastTime: number
+  moved: boolean
 }
 
 const SQRT3 = Math.sqrt(3)
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
+}
+
+function lerp(from: number, to: number, progress: number) {
+  return from + (to - from) * progress
 }
 
 function positiveMod(value: number, modulus: number) {
@@ -110,7 +115,7 @@ function buildHoneycombLayout(
     }
   }
 
-  const hexRadius = clamp(Math.round(Math.min(viewport.width, viewport.height) * 0.22), 200, 340)
+  const hexRadius = clamp(Math.round(Math.min(viewport.width, viewport.height) * 0.255), 228, 392)
   const hexWidth = SQRT3 * hexRadius
   const hexHeight = hexRadius * 2
   const rowStep = hexRadius * 1.5
@@ -218,7 +223,7 @@ function getCellContent(cell: HoneycombCell) {
 }
 
 export function PlaygroundSection() {
-  const frameRef = useRef<HTMLDivElement | null>(null)
+  const stageRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState>({
     active: false,
     pointerId: -1,
@@ -229,25 +234,58 @@ export function PlaygroundSection() {
     lastX: 0,
     lastY: 0,
     lastTime: 0,
+    moved: false,
   })
   const cameraRef = useRef<CameraState>({ x: 0, y: 0 })
   const velocityRef = useRef<CameraState>({ x: 0, y: 0 })
   const inertiaFrameRef = useRef<number>(0)
+  const suppressNextClickRef = useRef(false)
   const [viewport, setViewport] = useState<ViewportSize>(getViewportSize)
   const [camera, setCamera] = useState<CameraState>({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
+  const [titleLinger, setTitleLinger] = useState(0)
   const [activeProjectIndex, setActiveProjectIndex] = useState(() =>
     buildHoneycombLayout(playgroundProjects, getViewportSize(), { x: 0, y: 0 }).centerProjectIndex,
   )
   const { activeIndex, scrollProgress } = useAppShellScroll()
 
   const engaged = activeIndex === 5
-  const layout = useMemo(() => buildHoneycombLayout(playgroundProjects, viewport, camera), [viewport, camera])
-  const activeProject = playgroundProjects[activeProjectIndex % playgroundProjects.length]
+  const stageProgress = engaged ? clamp(scrollProgress * 1.15, 0, 1) : 0
+  const stageWidth = viewport.width > 0 ? Math.round(lerp(Math.min(viewport.width * 0.46, 820), viewport.width, stageProgress)) : 0
+  const stageHeight = viewport.height > 0 ? Math.round(lerp(Math.min(viewport.height * 0.38, 520), viewport.height, stageProgress)) : 0
+  const stageScale = lerp(0.94, 1, stageProgress)
+  const stageLift = lerp(24, 0, stageProgress)
+  const layout = useMemo(
+    () => buildHoneycombLayout(playgroundProjects, { width: stageWidth, height: stageHeight }, camera),
+    [stageWidth, stageHeight, camera],
+  )
 
   useEffect(() => {
     cameraRef.current = camera
   }, [camera])
+
+  useEffect(() => {
+    const target = stageProgress
+    let frameId = 0
+    let current = titleLinger
+
+    const tick = () => {
+      current += (target - current) * 0.12
+      setTitleLinger(current)
+
+      if (Math.abs(target - current) > 0.001) {
+        frameId = window.requestAnimationFrame(tick)
+      }
+    }
+
+    frameId = window.requestAnimationFrame(tick)
+
+    return () => {
+      if (frameId !== 0) {
+        window.cancelAnimationFrame(frameId)
+      }
+    }
+  }, [stageProgress])
 
   useEffect(() => {
     const updateViewport = () => setViewport(getViewportSize())
@@ -298,20 +336,20 @@ export function PlaygroundSection() {
   }, [])
 
   const applyPointer = (clientX: number, clientY: number) => {
-    const frame = frameRef.current
-    if (!frame) {
+    const stage = stageRef.current
+    if (!stage) {
       return
     }
 
-    const rect = frame.getBoundingClientRect()
+    const rect = stage.getBoundingClientRect()
     if (rect.width <= 0 || rect.height <= 0) {
       return
     }
 
     const pointerX = clamp((clientX - rect.left) / rect.width, 0, 1)
     const pointerY = clamp((clientY - rect.top) / rect.height, 0, 1)
-    frame.style.setProperty('--playground-pointer-x', `${(pointerX * 100).toFixed(2)}%`)
-    frame.style.setProperty('--playground-pointer-y', `${(pointerY * 100).toFixed(2)}%`)
+    stage.style.setProperty('--playground-pointer-x', `${(pointerX * 100).toFixed(2)}%`)
+    stage.style.setProperty('--playground-pointer-y', `${(pointerY * 100).toFixed(2)}%`)
   }
 
   const updateCamera = (next: CameraState) => {
@@ -359,11 +397,6 @@ export function PlaygroundSection() {
       return
     }
 
-    const target = event.target as HTMLElement | null
-    if (target?.closest('button')) {
-      return
-    }
-
     stopInertia()
     dragRef.current = {
       active: true,
@@ -375,6 +408,7 @@ export function PlaygroundSection() {
       lastX: event.clientX,
       lastY: event.clientY,
       lastTime: performance.now(),
+      moved: false,
     }
     setIsDragging(true)
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -398,6 +432,12 @@ export function PlaygroundSection() {
     const moveX = event.clientX - dragRef.current.lastX
     const moveY = event.clientY - dragRef.current.lastY
     const elapsed = Math.max(now - dragRef.current.lastTime, 16)
+    const distance = Math.hypot(deltaX, deltaY)
+
+    if (!dragRef.current.moved && distance > 6) {
+      dragRef.current.moved = true
+      suppressNextClickRef.current = true
+    }
 
     const nextCamera = {
       x: dragRef.current.startCameraX - deltaX,
@@ -421,7 +461,12 @@ export function PlaygroundSection() {
 
     dragRef.current.active = false
     setIsDragging(false)
-    startInertia()
+
+    if (dragRef.current.moved) {
+      startInertia()
+    } else {
+      velocityRef.current = { x: 0, y: 0 }
+    }
   }
 
   const handlePointerUp = () => finishDrag()
@@ -429,18 +474,19 @@ export function PlaygroundSection() {
 
   const handlePointerLeave = () => {
     if (!dragRef.current.active) {
-      const frame = frameRef.current
-      if (!frame) {
+      const stage = stageRef.current
+      if (!stage) {
         return
       }
 
-      frame.style.setProperty('--playground-pointer-x', '50%')
-      frame.style.setProperty('--playground-pointer-y', '50%')
+      stage.style.setProperty('--playground-pointer-x', '50%')
+      stage.style.setProperty('--playground-pointer-y', '50%')
     }
   }
 
   const handleDoubleClick = () => {
     stopInertia()
+    suppressNextClickRef.current = true
     cameraRef.current = { x: 0, y: 0 }
     velocityRef.current = { x: 0, y: 0 }
     updateCamera({ x: 0, y: 0 })
@@ -452,88 +498,88 @@ export function PlaygroundSection() {
         className={`playground-showcase${engaged ? ' playground-showcase--engaged' : ''}`}
         aria-labelledby="playground-showcase-title"
       >
-        <div ref={frameRef} className="playground-showcase__frame">
-          <div
-            className="playground-showcase__surface"
+        <div className="playground-showcase__header">
+          <h2
+            id="playground-showcase-title"
+            className="playground-showcase__title"
+            data-text="Playground"
             style={
               {
-                '--playground-camera-x': `${camera.x}px`,
-                '--playground-camera-y': `${camera.y}px`,
-                '--playground-hex-radius': `${layout.hexRadius}px`,
-                '--playground-hex-width': `${layout.hexWidth}px`,
-                '--playground-hex-height': `${layout.hexHeight}px`,
+                '--playground-title-linger': String(titleLinger),
               } as CSSProperties
             }
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerCancel}
-            onPointerLeave={handlePointerLeave}
-            onDoubleClick={handleDoubleClick}
           >
-            <div className="playground-showcase__atmosphere" />
-            <div className="playground-showcase__mask" />
+            Playground
+          </h2>
+        </div>
 
-            <div className="playground-showcase__world">
-              <div className="playground-showcase__grid" aria-label="Project honeycomb grid">
-                {layout.cells.map((cell) => {
-                  const content = getCellContent(cell)
-                  const isActive = cell.projectIndex === activeProjectIndex
+        <div className="playground-showcase__frame">
+          <div className="playground-showcase__stage-shell">
+            <div
+              ref={stageRef}
+              className="playground-showcase__stage"
+              style={
+                {
+                  '--playground-stage-width': `${stageWidth}px`,
+                  '--playground-stage-height': `${stageHeight}px`,
+                  '--playground-stage-radius': `${Math.round(lerp(34, 0, stageProgress))}px`,
+                  '--playground-stage-scale': String(stageScale),
+                  '--playground-stage-lift': `${stageLift}px`,
+                  '--playground-camera-x': `${camera.x}px`,
+                  '--playground-camera-y': `${camera.y}px`,
+                  '--playground-hex-radius': `${layout.hexRadius}px`,
+                  '--playground-hex-width': `${layout.hexWidth}px`,
+                  '--playground-hex-height': `${layout.hexHeight}px`,
+                } as CSSProperties
+              }
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerCancel}
+              onPointerLeave={handlePointerLeave}
+              onDoubleClick={handleDoubleClick}
+            >
+              <div className="playground-showcase__surface">
+                <div className="playground-showcase__atmosphere" />
+                <div className="playground-showcase__mask" />
 
-                  return (
-                    <button
-                      key={cell.id}
-                      type="button"
-                      className={`playground-showcase__hex playground-showcase__hex--${cell.variant}${isActive ? ' playground-showcase__hex--active' : ''}`}
-                      style={
-                        {
-                          '--hex-left': `${cell.x}px`,
-                          '--hex-top': `${cell.y}px`,
-                          '--hex-width': `${cell.width}px`,
-                          '--hex-height': `${cell.height}px`,
-                        } as CSSProperties
-                      }
-                      aria-label={`${cell.project.title} ${content.kicker} ${content.title}`}
-                      aria-pressed={isActive}
-                      onClick={() => setActiveProjectIndex(cell.projectIndex)}
-                    >
-                      <span className="playground-showcase__hex-kicker">{content.kicker}</span>
-                      <span className="playground-showcase__hex-title">{content.title}</span>
-                      <span className="playground-showcase__hex-copy">{content.copy}</span>
-                    </button>
-                  )
-                })}
+                <div className="playground-showcase__world">
+                  <div className="playground-showcase__grid" aria-label="Project honeycomb grid">
+                    {layout.cells.map((cell) => {
+                      const content = getCellContent(cell)
+                      const isActive = cell.projectIndex === activeProjectIndex
+
+                      return (
+                        <button
+                          key={cell.id}
+                          type="button"
+                          className={`playground-showcase__hex playground-showcase__hex--${cell.variant}${isActive ? ' playground-showcase__hex--active' : ''}`}
+                          style={
+                            {
+                              '--hex-left': `${cell.x}px`,
+                              '--hex-top': `${cell.y}px`,
+                              '--hex-width': `${cell.width}px`,
+                              '--hex-height': `${cell.height}px`,
+                            } as CSSProperties
+                          }
+                          aria-label={`${cell.project.title} ${content.kicker} ${content.title}`}
+                          aria-pressed={isActive}
+                          onClick={() => {
+                            if (suppressNextClickRef.current) {
+                              suppressNextClickRef.current = false
+                              return
+                            }
+
+                            setActiveProjectIndex(cell.projectIndex)
+                          }}
+                        />
+                      )
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="playground-showcase__hud">
-              <div className="playground-showcase__eyebrow">Playground</div>
-              <h2 id="playground-showcase-title" className="playground-showcase__title">
-                Honeycomb projects
-              </h2>
-              <p className="playground-showcase__subtitle">
-                纯数据驱动的蜂窝世界。标题固定在视口，六边形由相机采样生成，不再依赖有限大板子回卷。
-              </p>
-            </div>
-
-            <div className="playground-showcase__detail">
-              <div className="playground-showcase__detail-label">ACTIVE PROJECT</div>
-              <div className="playground-showcase__detail-title">{activeProject.title}</div>
-              <p className="playground-showcase__detail-copy">{activeProject.description}</p>
-              <div className="playground-showcase__detail-meta">
-                <span>{activeProject.year}</span>
-                <span>{activeProject.status}</span>
-                <span>{activeProject.tag}</span>
-              </div>
-              <div className="playground-showcase__detail-stack">{activeProject.stack.join(' / ')}</div>
-            </div>
-
-            <div className="playground-showcase__status">
-              <span className="playground-showcase__status-item">SECTION {String(activeIndex).padStart(2, '0')}</span>
-              <span className="playground-showcase__status-item">PROGRESS {Math.round(scrollProgress * 100)}%</span>
-              <span className="playground-showcase__status-item">PROJECT {String(activeProjectIndex + 1).padStart(2, '0')}</span>
-              <span className="playground-showcase__status-item">{engaged && isDragging ? 'DRAGGING' : 'READY'}</span>
-            </div>
           </div>
         </div>
       </section>

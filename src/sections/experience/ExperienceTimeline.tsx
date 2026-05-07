@@ -84,9 +84,12 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
   const tetherRefs = useRef<Array<SVGLineElement | null>>([])
   const rigRef = useRef<HangingRig | null>(null)
   const frameRef = useRef<number | null>(null)
+  const lastTickAtRef = useRef(0)
   const progressRef = useRef(0)
   const engagedRef = useRef(false)
   const pointerRef = useRef({ x: 0.5, y: 0.5, energy: 0 })
+  const stageRectRef = useRef({ left: 0, top: 0, width: 1, height: 1 })
+  const pointerFrameRef = useRef<number | null>(null)
   const { activeIndex, experienceRevealProgress, scrollOffset, viewportHeight } = useAppShellScroll()
 
   const sectionStart = sectionIndex * viewportHeight
@@ -154,6 +157,12 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
       const rect = root.getBoundingClientRect()
       const width = Math.max(rect.width, 1)
       const height = Math.max(rect.height, 1)
+      stageRectRef.current = {
+        left: rect.left,
+        top: rect.top,
+        width,
+        height,
+      }
 
       engine = Matter.Engine.create({ enableSleeping: true })
       engine.gravity.x = 0
@@ -251,7 +260,15 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
     resizeObserver.observe(root)
 
     const tick = () => {
-      const rect = root.getBoundingClientRect()
+      const now = performance.now()
+      const lastFrameAt = lastTickAtRef.current
+      if (now - lastFrameAt < 33) {
+        frameRef.current = window.requestAnimationFrame(tick)
+        return
+      }
+      lastTickAtRef.current = now
+
+      const rect = stageRectRef.current
       const scaleX = rect.width / svgWidth
       const scaleY = rect.height / svgHeight
       const progress = progressRef.current
@@ -391,21 +408,35 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
     }
 
     const handlePointerMove = (event: PointerEvent) => {
-      const rect = root.getBoundingClientRect()
-      const nextX = clamp((event.clientX - rect.left) / rect.width, 0, 1)
-      const nextY = clamp((event.clientY - rect.top) / rect.height, 0, 1)
+      const rect = stageRectRef.current
+      const nextX = clamp((event.clientX - rect.left) / Math.max(rect.width, 1), 0, 1)
+      const nextY = clamp((event.clientY - rect.top) / Math.max(rect.height, 1), 0, 1)
 
       pointerRef.current.x = nextX
       pointerRef.current.y = nextY
       pointerRef.current.energy = clamp(pointerRef.current.energy + 0.18, 0, 1)
 
-      root.style.setProperty('--experience-pointer-x', `${(nextX * 100).toFixed(2)}%`)
-      root.style.setProperty('--experience-pointer-y', `${(nextY * 100).toFixed(2)}%`)
+      if (pointerFrameRef.current !== null) {
+        return
+      }
+
+      pointerFrameRef.current = window.requestAnimationFrame(() => {
+        pointerFrameRef.current = null
+        const current = pointerRef.current
+        root.style.setProperty('--experience-pointer-x', `${(current.x * 100).toFixed(2)}%`)
+        root.style.setProperty('--experience-pointer-y', `${(current.y * 100).toFixed(2)}%`)
+      })
     }
 
     const handlePointerLeave = () => {
       pointerRef.current.x = 0.5
       pointerRef.current.y = 0.5
+
+      if (pointerFrameRef.current !== null) {
+        window.cancelAnimationFrame(pointerFrameRef.current)
+        pointerFrameRef.current = null
+      }
+
       root.style.setProperty('--experience-pointer-x', '50%')
       root.style.setProperty('--experience-pointer-y', '50%')
     }
@@ -416,6 +447,10 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
     return () => {
       root.removeEventListener('pointermove', handlePointerMove)
       root.removeEventListener('pointerleave', handlePointerLeave)
+      if (pointerFrameRef.current !== null) {
+        window.cancelAnimationFrame(pointerFrameRef.current)
+        pointerFrameRef.current = null
+      }
     }
   }, [])
 
@@ -429,9 +464,9 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
           </filter>
 
           <linearGradient id="experience-timeline-glow" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="rgba(241, 106, 106, 0.18)" />
+            <stop offset="0%" stopColor="rgba(168, 230, 255, 0.2)" />
             <stop offset="52%" stopColor="rgba(255, 255, 255, 0.66)" />
-            <stop offset="100%" stopColor="rgba(101, 196, 200, 0.24)" />
+            <stop offset="100%" stopColor="rgba(255, 209, 220, 0.24)" />
           </linearGradient>
         </defs>
 

@@ -34,7 +34,11 @@ function createInvisibleHitMaterial(THREE: ThreeModule) {
   })
 }
 
-export function AboutShowcaseModel({ modelUrl = '/models/gb.glb', onCommand, screenTextureSource }: AboutShowcaseModelProps) {
+export function AboutShowcaseModel({
+  modelUrl = '/models/gb.glb',
+  onCommand,
+  screenTextureSource,
+}: AboutShowcaseModelProps) {
   const { scrollOffset, viewportHeight } = useAppShellScroll()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const scrollOffsetRef = useRef(scrollOffset)
@@ -153,7 +157,7 @@ export function AboutShowcaseModel({ modelUrl = '/models/gb.glb', onCommand, scr
         const scale = targetSize / maxSize
         const displayScale = scale * 8.5
         model.scale.setScalar(displayScale)
-        model.rotation.set(0,-(Math.PI / 2), 0)
+        model.rotation.set(0, -(Math.PI / 2), 0)
         model.updateWorldMatrix(true, true)
 
         const framedBox = new THREE.Box3().setFromObject(model)

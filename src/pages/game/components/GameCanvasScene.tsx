@@ -9,19 +9,43 @@ type GameCanvasSceneProps = {
   activeCard: GameCardItem
   className?: string
   onCanvasReady?: (canvas: HTMLCanvasElement | null) => void
+  rotateForTexture?: boolean
+  renderMode?: 'display' | 'texture'
 }
 
-function fitCanvas(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D) {
+function fitCanvas(
+  canvas: HTMLCanvasElement,
+  context: CanvasRenderingContext2D,
+  renderMode: 'display' | 'texture',
+) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
-  const size = 720 * dpr
+  let width = 0
+  let height = 0
 
-  if (canvas.width !== size || canvas.height !== size) {
-    canvas.width = size
-    canvas.height = size
+  if (renderMode === 'texture') {
+    width = 720
+    height = 720
+    const size = 720 * dpr
+    if (canvas.width !== size || canvas.height !== size) {
+      canvas.width = size
+      canvas.height = size
+    }
+  } else {
+    const rect = canvas.getBoundingClientRect()
+    width = Math.max(1, Math.round(rect.width))
+    height = Math.max(1, Math.round(rect.height))
+    const physicalWidth = Math.max(1, Math.round(width * dpr))
+    const physicalHeight = Math.max(1, Math.round(height * dpr))
+    if (canvas.width !== physicalWidth || canvas.height !== physicalHeight) {
+      canvas.width = physicalWidth
+      canvas.height = physicalHeight
+    }
   }
 
   context.setTransform(dpr, 0, 0, dpr, 0, 0)
   context.imageSmoothingEnabled = false
+
+  return { width, height }
 }
 
 function drawBackground(context: CanvasRenderingContext2D, width: number, height: number) {
@@ -215,7 +239,15 @@ function wrapText(text: string, maxChars: number): string[] {
   return lines
 }
 
-export function GameCanvasScene({ phase, activeCardIndex, activeCard, className, onCanvasReady }: GameCanvasSceneProps) {
+export function GameCanvasScene({
+  phase,
+  activeCardIndex,
+  activeCard,
+  className,
+  onCanvasReady,
+  rotateForTexture = false,
+  renderMode = 'display',
+}: GameCanvasSceneProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const phaseRef = useRef(phase)
   const activeCardIndexRef = useRef(activeCardIndex)
@@ -257,29 +289,32 @@ export function GameCanvasScene({ phase, activeCardIndex, activeCard, className,
     }
 
     const render = (time: number) => {
-      fitCanvas(canvas, context)
-      const size = canvas.width
+      const { width, height } = fitCanvas(canvas, context, renderMode)
 
-      context.clearRect(0, 0, size, size)
+      context.clearRect(0, 0, width, height)
 
-      // Rotate canvas 90° CW to match mesh orientation
-      context.save()
-      context.translate(size, 0)
-      context.rotate(Math.PI / 2)
+      if (rotateForTexture) {
+        // Rotate canvas 90° CW for Three.js texture use.
+        context.save()
+        context.translate(width, 0)
+        context.rotate(Math.PI / 2)
+      }
 
-      drawBackground(context, size, size)
+      drawBackground(context, width, height)
 
       const { charW, charH } = getCharMetrics()
 
       if (phaseRef.current === 'boot') {
-        drawBoot(context, size, size, time, charW, charH)
+        drawBoot(context, width, height, time, charW, charH)
       } else if (phaseRef.current === 'desktop') {
-        drawDesktop(context, size, size, activeCardIndexRef.current, charW, charH, time)
+        drawDesktop(context, width, height, activeCardIndexRef.current, charW, charH, time)
       } else {
-        drawCardPanel(context, size, size, activeCardRef.current, charW, charH)
+        drawCardPanel(context, width, height, activeCardRef.current, charW, charH)
       }
 
-      context.restore()
+      if (rotateForTexture) {
+        context.restore()
+      }
 
       frameId = window.requestAnimationFrame(render)
     }
@@ -294,7 +329,7 @@ export function GameCanvasScene({ phase, activeCardIndex, activeCard, className,
       window.cancelAnimationFrame(frameId)
       observer?.disconnect()
     }
-  }, [])
+  }, [renderMode, rotateForTexture])
 
   return <canvas ref={canvasRef} className={className ?? 'game-page__canvas'} aria-hidden="true" />
 }

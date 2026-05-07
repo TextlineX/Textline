@@ -141,6 +141,8 @@ export function AboutSection() {
                         activeCard={activeCard}
                         className="about-showcase__screen-source"
                         onCanvasReady={setScreenTextureSource}
+                        rotateForTexture
+                        renderMode="texture"
                       />
                     </div>
                   ) : null}

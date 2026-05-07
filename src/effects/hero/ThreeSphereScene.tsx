@@ -90,6 +90,7 @@ const codeDebrisTokens = [...textFlowTokens, '=>', '{}', '[]', '()', 'const', 'l
 const maxImpactParticles = 28
 const activeLoopDelay = 33
 const idleLoopDelay = 120
+const idleSpinSpeed = 0.000006
 
 function pickDebrisToken(index: number) {
   return codeDebrisTokens[index % codeDebrisTokens.length]
@@ -619,10 +620,11 @@ export function ThreeSphereScene({
         const currentScale = physicsGroup.scale.x
         const nextScale = currentScale + (targetScale - currentScale) * (motion.returning ? 0.14 : 0.12)
         physicsGroup.scale.set(nextScale, nextScale, 1)
-        if (motion.detached || motion.returning) {
-          visualGroup.rotation.y = motion.returning ? 0 : time * heroThreeConfig.rotationSpeed
-        } else {
-          visualGroup.rotation.y = 0
+        const idleSpin = time * idleSpinSpeed
+        const scrollSpin = motion.detached ? time * heroThreeConfig.rotationSpeed : 0
+        visualGroup.rotation.y = idleSpin + scrollSpin
+        if (motion.returning) {
+          visualGroup.rotation.y = idleSpin * 0.5
         }
 
         if (motion.returning) {

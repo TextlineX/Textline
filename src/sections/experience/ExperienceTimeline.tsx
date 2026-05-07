@@ -69,9 +69,13 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
 }
 
-function wrap01(value: number) {
-  const wrapped = value % 1
-  return wrapped < 0 ? wrapped + 1 : wrapped
+function smoothstep(edge0: number, edge1: number, value: number) {
+  if (edge0 === edge1) {
+    return value >= edge1 ? 1 : 0
+  }
+
+  const x = clamp((value - edge0) / (edge1 - edge0), 0, 1)
+  return x * x * (3 - 2 * x)
 }
 
 export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
@@ -293,8 +297,8 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
           return
         }
 
-        const baseProgress = 0.08 + index * 0.18
-        const walkingProgress = wrap01(baseProgress + progress * 0.46 + Math.sin(progress * 6.2 + index * 0.8) * 0.02)
+        const travelProgress = progress * 1.12 - index * 0.18
+        const walkingProgress = clamp(travelProgress, 0, 1)
         const position = MotionPathPlugin.getPositionOnPath(rawPath, walkingProgress, true) as {
           angle?: number
           x: number
@@ -305,16 +309,14 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
         const angleRad = (angleDeg * Math.PI) / 180
         const normalRad = angleRad + Math.PI / 2
         const offsetDistance = (index % 2 === 0 ? 1 : -1) * (122 + Math.sin(progress * 5 + index) * 24)
+        const travelTail = travelProgress > 1 ? (travelProgress - 1) * 320 : travelProgress < 0 ? travelProgress * 320 : 0
         const nodeX = position.x * scaleX
         const nodeY = position.y * scaleY
-        const cardX = (position.x + Math.cos(normalRad) * offsetDistance) * scaleX
-        const cardY = (position.y + Math.sin(normalRad) * offsetDistance) * scaleY
-        const reveal = clamp(progress * 1.26 - index * 0.09 + 0.38, 0, 1)
-        const centerX = rect.width / 2
-        const centerY = rect.height / 2
-        const isFinalCard = index === timelineEntries.length - 1
-        const settledX = isFinalCard && reveal > 0.98 ? centerX : cardX
-        const settledY = isFinalCard && reveal > 0.98 ? centerY : cardY
+        const cardX = (position.x + Math.cos(normalRad) * offsetDistance + Math.cos(angleRad) * travelTail) * scaleX
+        const cardY = (position.y + Math.sin(normalRad) * offsetDistance + Math.sin(angleRad) * travelTail) * scaleY
+        const enter = smoothstep(-0.12, 0.08, travelProgress)
+        const exit = 1 - smoothstep(0.82, 1.08, travelProgress)
+        const reveal = clamp(enter * exit, 0, 1)
 
         if (anchor) {
           Matter.Body.setPosition(anchor, {
@@ -326,11 +328,9 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
         if (rig) {
           const body = rig.cards[index]
           if (body) {
-            const dx = settledX - body.position.x
-            const dy = settledY - body.position.y
-            Matter.Body.applyForce(body, body.position, {
-              x: dx * 0.0000015,
-              y: dy * 0.0000012,
+            Matter.Body.setPosition(body, {
+              x: cardX,
+              y: cardY,
             })
             Matter.Body.setAngle(body, 0)
             Matter.Body.setAngularVelocity(body, 0)

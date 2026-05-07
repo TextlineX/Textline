@@ -32,30 +32,36 @@ type ThreeSphereSceneProps = {
 }
 
 const ribbonColors = {
-  text: 'rgba(240, 235, 228, 0.84)',
-  ember: 'rgba(214, 92, 92, 0.72)',
-  soft: 'rgba(202, 214, 224, 0.5)',
-  muted: 'rgba(202, 214, 224, 0.24)',
+  bright: 'hsla(195, 100%, 85%, 0.98)',
+  side: 'hsla(195, 80%, 70%, 0.78)',
+  back: 'hsla(205, 50%, 30%, 0.24)',
+  ice: 'hsla(195, 96%, 92%, 0.96)',
+  pink: 'hsla(345, 100%, 91%, 0.72)',
+  pinkSoft: 'hsla(345, 100%, 91%, 0.46)',
 }
 
 function classifyRibbonToken(text: string, index: number) {
   if (text === 'TEXTLINE') {
-    return ribbonColors.ember
+    return ribbonColors.bright
   }
 
   if (text === 'AI' || text === 'REACT' || text === 'TYPESCRIPT') {
-    return index % 2 === 0 ? ribbonColors.soft : ribbonColors.muted
+    return index % 2 === 0 ? ribbonColors.bright : ribbonColors.side
   }
 
   if (text === 'VUE' || text === 'PYTHON' || text === 'BLENDER') {
-    return index % 2 === 0 ? ribbonColors.text : ribbonColors.muted
+    return index % 2 === 0 ? ribbonColors.ice : ribbonColors.back
   }
 
   if (text === 'AXIOS' || text === 'UNITY') {
-    return index % 3 === 0 ? ribbonColors.ember : ribbonColors.soft
+    return index % 3 === 0 ? ribbonColors.pinkSoft : ribbonColors.side
   }
 
-  return index % 4 === 0 ? ribbonColors.text : ribbonColors.muted
+  if (text === ' · ') {
+    return index % 2 === 0 ? ribbonColors.back : ribbonColors.side
+  }
+
+  return index % 4 === 0 ? ribbonColors.bright : ribbonColors.back
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -73,7 +79,7 @@ function buildRibbonTokens() {
 
     tokens.push({
       text: ' · ',
-      color: ribbonColors.muted,
+      color: ribbonColors.back,
     })
   })
 
@@ -91,23 +97,23 @@ function pickDebrisToken(index: number) {
 
 function pickDebrisColor(token: string, index: number) {
   if (/^(const|let|return|fn)$/i.test(token)) {
-    return index % 2 === 0 ? 'rgba(214, 92, 92, 0.66)' : 'rgba(240, 235, 228, 0.74)'
+    return index % 2 === 0 ? 'hsla(195, 100%, 85%, 0.9)' : 'hsla(345, 100%, 91%, 0.82)'
   }
 
   if (/^(\{|\}|\[|\]|\(|\)|=>|\+\+)$/.test(token)) {
-    return index % 2 === 0 ? 'rgba(202, 214, 224, 0.66)' : 'rgba(214, 92, 92, 0.58)'
+    return index % 2 === 0 ? 'hsla(195, 70%, 60%, 0.84)' : 'hsla(205, 40%, 30%, 0.72)'
   }
 
   if (token === '//') {
-    return index % 2 === 0 ? 'rgba(202, 214, 224, 0.44)' : 'rgba(214, 92, 92, 0.42)'
+    return index % 2 === 0 ? 'hsla(205, 50%, 30%, 0.24)' : 'hsla(195, 100%, 85%, 0.52)'
   }
 
   const colors = [
-    'rgba(240, 235, 228, 0.82)',
-    'rgba(214, 92, 92, 0.62)',
-    'rgba(202, 214, 224, 0.58)',
-    'rgba(214, 92, 92, 0.46)',
-    'rgba(232, 236, 240, 0.52)',
+    'hsla(195, 100%, 85%, 0.7)',
+    'hsla(195, 80%, 70%, 0.56)',
+    'hsla(205, 50%, 30%, 0.16)',
+    'hsla(345, 100%, 91%, 0.52)',
+    'hsla(195, 96%, 92%, 0.42)',
   ]
 
   return colors[index % colors.length]
@@ -244,11 +250,26 @@ export function ThreeSphereScene({
           for (const token of rowTokens) {
             const tokenWidth = ribbonTextureContext.measureText(token.text).width
             ribbonTextureContext.fillStyle = token.color
+            if (token.text === 'TEXTLINE') {
+              ribbonTextureContext.shadowColor = 'hsla(195, 100%, 83%, 0.8)'
+              ribbonTextureContext.shadowBlur = 26
+            } else if (token.text === 'AI' || token.text === 'REACT' || token.text === 'TYPESCRIPT') {
+              ribbonTextureContext.shadowColor = 'hsla(195, 100%, 85%, 0.28)'
+              ribbonTextureContext.shadowBlur = 14
+            } else if (token.text === 'VUE' || token.text === 'PYTHON' || token.text === 'BLENDER') {
+              ribbonTextureContext.shadowColor = 'hsla(345, 100%, 91%, 0.18)'
+              ribbonTextureContext.shadowBlur = 10
+            } else {
+              ribbonTextureContext.shadowColor = 'transparent'
+              ribbonTextureContext.shadowBlur = 0
+            }
             ribbonTextureContext.fillText(token.text, cursorX, baselineY)
             cursorX += tokenWidth + gap
           }
           x += rowWidth + 180
         }
+        ribbonTextureContext.shadowBlur = 0
+        ribbonTextureContext.shadowColor = 'transparent'
         ribbonTextureContext.restore()
       }
 

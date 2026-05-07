@@ -1,17 +1,17 @@
 :root {
-  --abyssal-bg: #050505;
-  --abyssal-surface: #0d0d0d;
-  --abyssal-surface-2: #141414;
-  --abyssal-text: #d8d8d8;
-  --abyssal-text-strong: #f4f4f4;
-  --abyssal-text-muted: rgba(216, 216, 216, 0.54);
-  --abyssal-border: rgba(255, 255, 255, 0.1);
-  --abyssal-border-strong: rgba(255, 255, 255, 0.2);
-  --abyssal-border-soft: rgba(255, 255, 255, 0.06);
-  --abyssal-ash: #232323;
-  --abyssal-ember: #e53d3d;
-  --abyssal-violet: #6e63c7;
-  --abyssal-cyan: #65c4c8;
+  --abyssal-bg: #0d1117;
+  --abyssal-surface: #111826;
+  --abyssal-surface-2: #162131;
+  --abyssal-text: #f5f7fa;
+  --abyssal-text-strong: #ffffff;
+  --abyssal-text-muted: rgba(245, 247, 250, 0.66);
+  --abyssal-border: rgba(168, 230, 255, 0.14);
+  --abyssal-border-strong: rgba(168, 230, 255, 0.24);
+  --abyssal-border-soft: rgba(168, 230, 255, 0.08);
+  --abyssal-ash: #243244;
+  --abyssal-ember: #a8e6ff;
+  --abyssal-violet: #5ba4d6;
+  --abyssal-cyan: #ffd1dc;
 
   --color-bg: var(--abyssal-bg);
   --color-surface: var(--abyssal-surface);
@@ -23,12 +23,14 @@
   --color-border-strong: var(--abyssal-border-strong);
   --color-border-soft: var(--abyssal-border-soft);
   --color-accent: var(--abyssal-ember);
-  --color-accent-strong: #f16a6a;
-  --color-accent-glow: rgba(229, 61, 61, 0.24);
-  --color-accent-soft: rgba(229, 61, 61, 0.14);
-  --color-accent-faint: rgba(229, 61, 61, 0.055);
-  --color-cyan-glow: rgba(101, 196, 200, 0.18);
-  --color-violet-glow: rgba(110, 99, 199, 0.18);
+  --color-accent-strong: #5ba4d6;
+  --color-accent-glow: rgba(168, 230, 255, 0.3);
+  --color-accent-soft: rgba(168, 230, 255, 0.12);
+  --color-accent-faint: rgba(168, 230, 255, 0.05);
+  --color-cyan-glow: rgba(91, 164, 214, 0.2);
+  --color-violet-glow: rgba(255, 209, 220, 0.16);
+  --color-pink: #ffd1dc;
+  --color-pink-glow: rgba(255, 209, 220, 0.22);
 
   --font-sans: system-ui, sans-serif;
   --font-display: var(--font-sans);
@@ -60,7 +62,8 @@ body {
   min-height: 100vh;
   background:
     radial-gradient(circle at 50% 20%, var(--color-accent-faint), transparent 30%),
-    radial-gradient(circle at 78% 14%, rgba(101, 196, 200, 0.04), transparent 22%),
+    radial-gradient(circle at 78% 14%, rgba(91, 164, 214, 0.08), transparent 22%),
+    radial-gradient(circle at 16% 82%, rgba(255, 209, 220, 0.04), transparent 24%),
     var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
@@ -87,11 +90,11 @@ a {
 }
 
 :where(.magnetic-target--active, [data-magnetic-active='true']) {
-  color: var(--color-accent-strong);
+  color: var(--color-accent);
   text-shadow:
-    0 0 16px rgba(229, 61, 61, 0.58),
-    0 0 34px rgba(229, 61, 61, 0.28),
-    0 0 64px rgba(229, 61, 61, 0.16);
+    0 0 16px rgba(168, 230, 255, 0.56),
+    0 0 34px rgba(168, 230, 255, 0.26),
+    0 0 64px rgba(91, 164, 214, 0.14);
 }
 
 button,

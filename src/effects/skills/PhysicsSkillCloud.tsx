@@ -137,6 +137,8 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
   const burstRef = useRef<((options: BurstOptions) => void) | null>(null)
   const matterRef = useRef<MatterModule | null>(null)
   const engineRef = useRef<MatterEngine | null>(null)
+  const stageRectRef = useRef({ left: 0, top: 0, width: 1, height: 1 })
+  const lastTickAtRef = useRef(0)
   const dragRef = useRef<DragState>({
     active: false,
     index: -1,
@@ -189,6 +191,12 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
       const { width, height } = stage.getBoundingClientRect()
       const stageWidth = Math.max(320, width)
       const stageHeight = Math.max(420, height)
+      stageRectRef.current = {
+        left: stage.getBoundingClientRect().left,
+        top: stage.getBoundingClientRect().top,
+        width: stageWidth,
+        height: stageHeight,
+      }
       const centerX = stageWidth / 2
       const wallThickness = 180
       const stackCellSize = viewport.width <= 900 ? 104 : 118
@@ -255,6 +263,13 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
         if (disposed || !engine || !matter) {
           return
         }
+
+        const now = performance.now()
+        if (now - lastTickAtRef.current < 33) {
+          frameId = window.requestAnimationFrame(tick)
+          return
+        }
+        lastTickAtRef.current = now
 
         const Matter = matter
         const time = performance.now() * 0.001
@@ -345,7 +360,7 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
         return
       }
 
-      const rect = stage.getBoundingClientRect()
+      const rect = stageRectRef.current
       const nextX = clamp(event.clientX - rect.left + drag.offsetX, 0, rect.width)
       const nextY = clamp(event.clientY - rect.top + drag.offsetY, 0, rect.height)
 
@@ -405,7 +420,7 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
                   return
                 }
 
-                const rect = stage.getBoundingClientRect()
+                const rect = stageRectRef.current
                 dragRef.current = {
                   active: true,
                   index,

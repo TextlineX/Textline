@@ -73,6 +73,8 @@ export function AsciiWavesBackdrop() {
   })
   const frameRef = useRef<number>(0)
   const gridRef = useRef<Point[][]>([])
+  const canvasRectRef = useRef({ left: 0, top: 0, width: 1, height: 1 })
+  const lastDrawAtRef = useRef(0)
   const [size, setSize] = useState<Size>({ width: 0, height: 0 })
 
   useEffect(() => {
@@ -84,12 +86,7 @@ export function AsciiWavesBackdrop() {
     }
 
     const handleMouseMove = (event: MouseEvent) => {
-      const canvas = canvasRef.current
-      if (!canvas) {
-        return
-      }
-
-      const rect = canvas.getBoundingClientRect()
+      const rect = canvasRectRef.current
       mouseRef.current.x = event.clientX - rect.left
       mouseRef.current.y = event.clientY - rect.top
     }
@@ -120,6 +117,7 @@ export function AsciiWavesBackdrop() {
     canvas.height = Math.floor(size.height * dpr)
     canvas.style.width = `${size.width}px`
     canvas.style.height = `${size.height}px`
+    canvasRectRef.current = canvas.getBoundingClientRect()
 
     gridRef.current = buildGrid(size.width, size.height)
 
@@ -134,6 +132,12 @@ export function AsciiWavesBackdrop() {
       if (disposed) {
         return
       }
+
+      if (time - lastDrawAtRef.current < 33) {
+        frameRef.current = window.requestAnimationFrame(draw)
+        return
+      }
+      lastDrawAtRef.current = time
 
       const mouse = mouseRef.current
       context.setTransform(dpr, 0, 0, dpr, 0, 0)

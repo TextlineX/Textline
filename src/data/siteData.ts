@@ -120,10 +120,10 @@ function buildProjectCover(options: {
         <circle cx="756" cy="132" r="68" fill="${options.glowColor}" fill-opacity="0.22" />
         <circle cx="756" cy="132" r="16" fill="${options.glowColor}" fill-opacity="0.6" />
       </g>
-      <text x="68" y="120" fill="${options.lineColor}" fill-opacity="0.88" font-family="Inter, Arial, sans-serif" font-size="28" letter-spacing="0.32em">${escapeSvgText(options.tag.toUpperCase())}</text>
-      <text x="68" y="382" fill="#f5f7fa" fill-opacity="0.96" font-family="Inter, Arial, sans-serif" font-size="164" font-weight="700" letter-spacing="0.04em">${escapeSvgText(initials)}</text>
-      <text x="68" y="482" fill="#dcefff" fill-opacity="0.92" font-family="Inter, Arial, sans-serif" font-size="52" font-weight="600">${escapeSvgText(options.title)}</text>
-      <text x="68" y="560" fill="${options.lineColor}" fill-opacity="0.72" font-family="Inter, Arial, sans-serif" font-size="30" letter-spacing="0.22em">${escapeSvgText(options.year)}</text>
+      <text x="480" y="120" text-anchor="middle" fill="${options.lineColor}" fill-opacity="0.88" font-family="Inter, Arial, sans-serif" font-size="28" letter-spacing="0.32em">${escapeSvgText(options.tag.toUpperCase())}</text>
+      <text x="480" y="382" text-anchor="middle" fill="#f5f7fa" fill-opacity="0.96" font-family="Inter, Arial, sans-serif" font-size="164" font-weight="700" letter-spacing="0.04em">${escapeSvgText(initials)}</text>
+      <text x="480" y="482" text-anchor="middle" fill="#dcefff" fill-opacity="0.92" font-family="Inter, Arial, sans-serif" font-size="52" font-weight="600">${escapeSvgText(options.title)}</text>
+      <text x="480" y="560" text-anchor="middle" fill="${options.lineColor}" fill-opacity="0.72" font-family="Inter, Arial, sans-serif" font-size="30" letter-spacing="0.22em">${escapeSvgText(options.year)}</text>
     </svg>
   `
 

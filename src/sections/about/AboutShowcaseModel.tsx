@@ -10,6 +10,7 @@ type AboutShowcaseModelProps = {
   modelUrl?: string
   onCommand?: (command: AboutShowcaseCommand) => void
   screenTextureSource?: HTMLCanvasElement | null
+  scrollDirection?: 1 | -1
 }
 
 type AboutShowcaseCommand = 'rotate-left' | 'rotate-right' | 'tilt-up' | 'tilt-down' | 'focus-screen' | 'btn-a' | 'btn-b'
@@ -17,10 +18,6 @@ type AboutShowcaseCommand = 'rotate-left' | 'rotate-right' | 'tilt-up' | 'tilt-d
 type CommandHotspot = {
   mesh: InstanceType<ThreeModule['Mesh']>
   command: AboutShowcaseCommand
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value))
 }
 
 function createInvisibleHitMaterial(THREE: ThreeModule) {
@@ -34,10 +31,20 @@ function createInvisibleHitMaterial(THREE: ThreeModule) {
   })
 }
 
+function clamp01(value: number) {
+  return Math.max(0, Math.min(1, value))
+}
+
+function smoothstep(edge0: number, edge1: number, value: number) {
+  const t = clamp01((value - edge0) / (edge1 - edge0))
+  return t * t * (3 - 2 * t)
+}
+
 export function AboutShowcaseModel({
-  modelUrl = '/models/gb.glb',
+  modelUrl = '/models/GB.glb',
   onCommand,
   screenTextureSource,
+  scrollDirection,
 }: AboutShowcaseModelProps) {
   const { scrollOffset, viewportHeight } = useAppShellScroll()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -45,8 +52,10 @@ export function AboutShowcaseModel({
   const viewportHeightRef = useRef(viewportHeight)
   const onCommandRef = useRef(onCommand)
   const screenTextureSourceRef = useRef<HTMLCanvasElement | null>(screenTextureSource ?? null)
+  const scrollDirectionRef = useRef(scrollDirection ?? 1)
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
+  const modelFileName = modelUrl.split('/').filter(Boolean).pop() ?? 'model.glb'
 
   useEffect(() => {
     scrollOffsetRef.current = scrollOffset
@@ -65,6 +74,12 @@ export function AboutShowcaseModel({
   }, [screenTextureSource])
 
   useEffect(() => {
+    if (scrollDirection !== undefined) {
+      scrollDirectionRef.current = scrollDirection
+    }
+  }, [scrollDirection])
+
+  useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) {
       return
@@ -78,6 +93,7 @@ export function AboutShowcaseModel({
     let camera: InstanceType<ThreeModule['PerspectiveCamera']> | null = null
     let rootGroup: InstanceType<ThreeModule['Group']> | null = null
     let loadedModel: InstanceType<ThreeModule['Object3D']> | null = null
+    let threeModule: ThreeModule | null = null
     let screenMesh: InstanceType<ThreeModule['Mesh']> | null = null
     let screenMaterial: InstanceType<ThreeModule['MeshBasicMaterial']> | null = null
     let screenTexture: InstanceType<ThreeModule['CanvasTexture']> | null = null
@@ -90,6 +106,7 @@ export function AboutShowcaseModel({
     void (async () => {
       try {
         const THREE = await import('three')
+        threeModule = THREE
         const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js')
 
         if (disposed || !canvasRef.current) {
@@ -143,7 +160,14 @@ export function AboutShowcaseModel({
           const material = mesh.material
           if (!Array.isArray(material)) {
             material.transparent = false
+            material.side = THREE.FrontSide
             material.needsUpdate = true
+          } else {
+            for (const entry of material) {
+              entry.transparent = false
+              entry.side = THREE.FrontSide
+              entry.needsUpdate = true
+            }
           }
         })
 
@@ -180,8 +204,8 @@ export function AboutShowcaseModel({
           { name: 'right_anchor', command: 'rotate-right' },
         ]
         for (const { name, command } of invisibleAnchors) {
-          const mesh = model.getObjectByName(name) as InstanceType<ThreeModule['Mesh']> | null
-          if (!mesh || !mesh.isMesh) continue
+          const mesh = model.getObjectByName(name)
+          if (!(mesh instanceof THREE.Mesh)) continue
           mesh.material = hitMaterial.clone()
           mesh.renderOrder = 1000
           commandHotspots.push({ mesh, command })
@@ -193,25 +217,25 @@ export function AboutShowcaseModel({
           { name: 'B', command: 'btn-b' },
         ]
         for (const { name, command } of visibleButtons) {
-          const mesh = model.getObjectByName(name) as InstanceType<ThreeModule['Mesh']> | null
-          if (!mesh || !mesh.isMesh) continue
+          const mesh = model.getObjectByName(name)
+          if (!(mesh instanceof THREE.Mesh)) continue
           commandHotspots.push({ mesh, command })
         }
 
         const screenGroup = model.getObjectByName('screen')
-        if (screenGroup && screenGroup.isMesh) {
+        if (screenGroup instanceof THREE.Mesh) {
           screenMaterial = new THREE.MeshBasicMaterial({
             color: 0xffffff,
-            side: THREE.DoubleSide,
-            depthTest: false,
-            depthWrite: false,
+            side: THREE.FrontSide,
+            depthTest: true,
+            depthWrite: true,
             toneMapped: false,
             transparent: false,
           })
           screenGroup.material = screenMaterial
           screenGroup.renderOrder = 999
-          screenMesh = screenGroup as InstanceType<ThreeModule['Mesh']>
-          commandHotspots.push({ mesh: screenGroup as InstanceType<ThreeModule['Mesh']>, command: 'focus-screen' })
+          screenMesh = screenGroup
+          commandHotspots.push({ mesh: screenGroup, command: 'focus-screen' })
         }
 
         const syncScreenTexture = () => {
@@ -249,9 +273,9 @@ export function AboutShowcaseModel({
             const material = new THREE.MeshBasicMaterial({
               map: screenTexture,
               color: 0xffffff,
-              side: THREE.DoubleSide,
-              depthTest: false,
-              depthWrite: false,
+              side: THREE.FrontSide,
+              depthTest: true,
+              depthWrite: true,
               toneMapped: false,
               transparent: false,
             })
@@ -273,7 +297,7 @@ export function AboutShowcaseModel({
           const projectedWidth = framedSize.x / 2
           const verticalDistance = projectedHeight / Math.tan(fov / 2)
           const horizontalDistance = projectedWidth / (Math.tan(fov / 2) * aspect)
-          camera.position.z = Math.max(verticalDistance, horizontalDistance) * 1.46 + framedSize.z * 0.38
+          camera.position.z = Math.max(verticalDistance, horizontalDistance) * 1.65 + framedSize.z * 0.45
           camera.position.y = framedSize.y * 0.22
           camera.lookAt(0, framedSize.y * 0.12, 0)
         }
@@ -301,6 +325,7 @@ export function AboutShowcaseModel({
 
         handlePointerMove = (event: PointerEvent) => {
           if (!camera || !raycaster || !pointerNdc || commandHotspots.length === 0) {
+            canvas.style.cursor = 'default'
             return
           }
 
@@ -309,6 +334,8 @@ export function AboutShowcaseModel({
           const y = -(((event.clientY - rect.top) / rect.height) * 2 - 1)
           pointerNdc.set(x, y)
           raycaster.setFromCamera(pointerNdc, camera)
+          const hits = raycaster.intersectObjects(commandHotspots.map((entry) => entry.mesh), false)
+          canvas.style.cursor = hits.length > 0 ? 'pointer' : 'crosshair'
         }
 
         handlePointerDown = (event: PointerEvent) => {
@@ -338,17 +365,122 @@ export function AboutShowcaseModel({
         canvas.addEventListener('pointermove', handlePointerMove)
         canvas.addEventListener('pointerdown', handlePointerDown)
 
-        const tick = (time: number) => {
+        const tick = (_time: number) => {
           if (!disposed && renderer && scene && camera && rootGroup && loadedModel) {
             const currentViewportHeight = viewportHeightRef.current
             const currentScrollOffset = scrollOffsetRef.current
             const sectionProgress = currentViewportHeight > 0 ? currentScrollOffset / currentViewportHeight - 1 : 0
-            const active = clamp((sectionProgress + 1.1) / 1.2, 0, 1)
+            const visibility = sectionProgress <= -1.1
+              ? 0
+              : sectionProgress < 0
+                ? smoothstep(-1.1, 0, sectionProgress)
+                : sectionProgress <= 0.85
+                  ? 1
+                  : sectionProgress < 1.55
+                    ? 1 - smoothstep(0.85, 1.55, sectionProgress)
+                    : 0
 
-            rootGroup.rotation.y = Math.PI + Math.sin(time * 0.00045) * 0.05
-            rootGroup.rotation.x = 0.32 - active * 0.06
-            rootGroup.position.y = framedSize.y * 0.24 + Math.sin(time * 0.0008) * 0.02
-            rootGroup.scale.setScalar(0.995 + active * 0.02)
+            canvas.style.opacity = `${visibility.toFixed(3)}`
+            canvas.style.pointerEvents = visibility > 0.02 ? 'auto' : 'none'
+            if (visibility <= 0) {
+              renderer.render(scene, camera)
+              frameId = window.requestAnimationFrame(tick)
+              return
+            }
+
+            // Animation keyframes driven by scrollProgress
+            // Each phase maps to a defined transform; transitions are smoothstep-interpolated
+
+            type Keyframe = {
+              t: number       // 0..1 scroll progress within the current phase
+              y: number        // rotation.y
+              x: number        // rotation.x
+              z: number        // rotation.z
+              sy: number       // scale
+              py: number       // position.y (relative to center)
+              px: number       // position.x
+            }
+
+            const phases: Array<{ range: [number, number]; frames: Keyframe[] }> = [
+              // Phase 0: Enter — from back, spin clockwise (positive Y) to front
+              {
+                range: [-1.1, 0.0] as [number, number],
+                frames: [
+                  { t: 0,   y: Math.PI * 2.0,  x: -0.6,  z: -0.5, sy: 0.18, py: 0.35, px: 0 },
+                  { t: 0.15,y: Math.PI * 1.3,  x: 0.5,   z: 0.6,  sy: 0.45, py: 0.32, px: 0 },
+                  { t: 0.35,y: Math.PI * 0.8,  x: -0.4,  z: -0.4, sy: 0.70, py: 0.30, px: 0 },
+                  { t: 0.55,y: Math.PI * 0.4,  x: 0.35,  z: 0.25, sy: 0.85, py: 0.27, px: 0 },
+                  { t: 0.75,y: Math.PI * 0.15, x: 0.2,   z: 0.1,  sy: 0.96, py: 0.25, px: 0 },
+                  { t: 1.0, y: Math.PI,        x: 0.32,  z: 0,    sy: 1.02, py: 0.24, px: 0 },
+                ],
+              },
+              // Phase 1: Idle — gentle micro breathing (raw 0 → 6+)
+              {
+                range: [0.0, 7.0] as [number, number],
+                frames: [
+                  { t: 0,   y: Math.PI,        x: 0.32,  z: 0,     sy: 1.02, py: 0.24, px: 0 },
+                  { t: 0.15,y: Math.PI + 0.06, x: 0.35,  z: 0.01,  sy: 1.05, py: 0.28, px: 0 },
+                  { t: 0.3, y: Math.PI,        x: 0.29,  z: -0.01, sy: 0.99, py: 0.20, px: 0 },
+                  { t: 0.45,y: Math.PI - 0.06, x: 0.35,  z: 0.01,  sy: 1.05, py: 0.28, px: 0 },
+                  { t: 0.6, y: Math.PI,        x: 0.32,  z: 0,     sy: 1.02, py: 0.24, px: 0 },
+                  { t: 0.75,y: Math.PI + 0.06, x: 0.35,  z: 0.01,  sy: 1.05, py: 0.28, px: 0 },
+                  { t: 0.9, y: Math.PI,        x: 0.29,  z: -0.01, sy: 0.99, py: 0.20, px: 0 },
+                  { t: 1.0, y: Math.PI - 0.06, x: 0.35,  z: 0.01,  sy: 1.05, py: 0.28, px: 0 },
+                ],
+              },
+              // Phase 2: Exit — spin to show back, then disappear
+              {
+                range: [-2.2, -1.1] as [number, number],
+                frames: [
+                  { t: 0,   y: Math.PI,        x: 0.32,  z: 0,    sy: 1.02, py: 0.24, px: 0 },
+                  { t: 0.3, y: Math.PI * 0.5,  x: 0.25,  z: 0.05, sy: 1.08, py: 0.28, px: 0 },
+                  { t: 0.65,y: Math.PI * 0,    x: 0.15,  z: 0.1,  sy: 1.05, py: 0.32, px: 0 },
+                  { t: 1.0, y: Math.PI * -0.5, x: 0.1,   z: 0.05, sy: 0.5,  py: 0.4,  px: 0 },
+                ],
+              },
+            ]
+
+            let phase: typeof phases[0]
+            let phaseT = 0
+
+            if (sectionProgress < 0) {
+              // Enter phase while the section is sliding into view
+              phase = phases[0]
+              phaseT = smoothstep(-1.1, 0, sectionProgress)
+            } else if (sectionProgress <= 0.85) {
+              // Idle phase while the section is centered
+              phase = phases[1]
+              const idleDrift = _time * 0.00018 + sectionProgress * 0.6
+              phaseT = idleDrift - Math.floor(idleDrift)
+            } else {
+              // Exit phase while the section is leaving view
+              phase = phases[2]
+              phaseT = smoothstep(0.85, 1.55, sectionProgress)
+            }
+
+            const frames = phase.frames
+            // Find surrounding keyframes
+            let lo = 0
+            for (let i = 0; i < frames.length - 1; i++) {
+              if (phaseT >= frames[i].t && phaseT <= frames[i + 1].t) {
+                lo = i
+                break
+              }
+            }
+            const hi = lo + 1
+            const span = frames[hi].t - frames[lo].t
+            const localT = span > 0 ? (phaseT - frames[lo].t) / span : 0
+            // smoothstep ease
+            const ease = localT * localT * (3 - 2 * localT)
+
+            const lerp = (a: number, b: number) => a + (b - a) * ease
+
+            rootGroup.rotation.y = lerp(frames[lo].y, frames[hi].y)
+            rootGroup.rotation.x = lerp(frames[lo].x, frames[hi].x)
+            rootGroup.rotation.z = lerp(frames[lo].z, frames[hi].z)
+            rootGroup.scale.setScalar(lerp(frames[lo].sy, frames[hi].sy))
+            rootGroup.position.y = lerp(frames[lo].py, frames[hi].py) * framedSize.y
+            rootGroup.position.x = lerp(frames[lo].px, frames[hi].px) * framedSize.x
 
             syncScreenTexture()
             if (screenTexture) {
@@ -376,14 +508,17 @@ export function AboutShowcaseModel({
         canvasRef.current.removeEventListener('pointermove', handlePointerMove)
         canvasRef.current.removeEventListener('pointerdown', handlePointerDown)
       }
+      const THREE = threeModule
+      if (!THREE) {
+        return
+      }
       loadedModel?.traverse((object) => {
-        const mesh = object as InstanceType<ThreeModule['Mesh']>
-        if (!mesh.isMesh) {
+        if (!(object instanceof THREE.Mesh)) {
           return
         }
 
-        mesh.geometry.dispose()
-        const material = mesh.material
+        object.geometry.dispose()
+        const material = object.material
         if (Array.isArray(material)) {
           material.forEach((entry) => entry.dispose())
         } else {
@@ -405,7 +540,7 @@ export function AboutShowcaseModel({
             {failed ? 'MODEL LOAD FAILED' : 'LOADING MODEL'}
           </div>
           <div className="about-showcase-model__overlay-copy">
-            {failed ? '请检查 gb.glb 是否存在。' : '正在加载 gb.glb。'}
+            {failed ? `请检查 ${modelFileName} 是否存在。` : `正在加载 ${modelFileName}。`}
           </div>
         </div>
       ) : null}

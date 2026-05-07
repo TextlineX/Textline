@@ -7,16 +7,18 @@ export type AppShellScrollContextValue = {
   maxOffset: number
   activeIndex: number
   playgroundRevealProgress: number
+  experienceRevealProgress: number
   scrollPhysicsReady: boolean
   scrollPhysicsPulseId: number
   scrollPhysicsDirection: number
   scrollPhysicsStrength: number
+  scrollDirection: 1 | -1
   requestHome: () => void
 }
 
 export const AppShellScrollContext = createContext<AppShellScrollContextValue | null>(null)
 
-export function useAppShellScroll() {
+export function useAppShellScroll(): AppShellScrollContextValue {
   const context = useContext(AppShellScrollContext)
 
   if (!context) {

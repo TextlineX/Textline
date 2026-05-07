@@ -74,7 +74,7 @@ export function AboutSection() {
     )
   }
 
-  const handleModelCommand = (command: 'rotate-left' | 'rotate-right' | 'tilt-up' | 'tilt-down' | 'focus-screen') => {
+  const handleModelCommand = (command: 'rotate-left' | 'rotate-right' | 'tilt-up' | 'tilt-down' | 'focus-screen' | 'btn-a' | 'btn-b') => {
     if (command === 'rotate-left') {
       sendGameKey('left')
       return
@@ -92,6 +92,16 @@ export function AboutSection() {
 
     if (command === 'tilt-down') {
       sendGameKey('down')
+      return
+    }
+
+    if (command === 'btn-a') {
+      sendGameKey('a')
+      return
+    }
+
+    if (command === 'btn-b') {
+      sendGameKey('b')
       return
     }
 
@@ -129,7 +139,7 @@ export function AboutSection() {
               {engaged ? (
                 <>
                   <AboutShowcaseModel
-                    modelUrl="/models/gb.glb"
+                    modelUrl="/models/GB.glb"
                     onCommand={handleModelCommand}
                     screenTextureSource={screenTextureSource}
                   />

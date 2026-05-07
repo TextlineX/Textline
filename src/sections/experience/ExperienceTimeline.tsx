@@ -169,15 +169,15 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
       engine.gravity.y = 1
       engine.gravity.scale = 0.00108
 
-      const cardWidth = clamp(width * 0.12, 126, 172)
-      const cardHeight = clamp(cardWidth * 1.58, 198, 286)
+      const cardWidth = clamp(width * 0.145, 154, 202)
+      const cardHeight = clamp(cardWidth * 1.68, 258, 342)
       const cardSize = {
         width: cardWidth,
         height: cardHeight,
       }
 
-      const anchorY = clamp(height * 0.07, 54, 92)
-      const anchorSpacing = clamp(height * 0.14, 104, 154)
+      const anchorY = clamp(height * 0.055, 48, 82)
+      const anchorSpacing = clamp(height * 0.19, 132, 208)
       const anchorX = width / 2
 
       const anchors = timelineEntries.map((_, index) => {
@@ -191,9 +191,9 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
       const cards = timelineEntries.map((_, index) => {
         const side = index % 2 === 0 ? -1 : 1
         const tier = Math.floor(index / 2)
-        const x = anchorX + side * clamp(width * 0.15 + tier * 30, 96, 216)
-        const verticalBias = index % 2 === 0 ? -12 : 18
-        const y = anchorY + index * anchorSpacing + 30 + tier * 10 + verticalBias
+        const x = anchorX + side * clamp(width * 0.18 + tier * 36, 124, 268)
+        const verticalBias = index % 2 === 0 ? -20 : 26
+        const y = anchorY + index * anchorSpacing + 24 + tier * 14 + verticalBias
 
         const body = Matter.Bodies.rectangle(x, y, cardSize.width, cardSize.height, {
           chamfer: { radius: 18 },
@@ -216,9 +216,9 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
           bodyB: card,
           pointB: {
             x: 0,
-            y: -cardSize.height * 0.48,
+            y: -cardSize.height * 0.5,
           },
-          length: clamp(height * 0.18, 138, 260),
+          length: clamp(height * 0.21, 164, 302),
           stiffness: 0.88,
           damping: 0.16,
           render: { visible: false },
@@ -304,7 +304,7 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
         const angleDeg = position.angle ?? 0
         const angleRad = (angleDeg * Math.PI) / 180
         const normalRad = angleRad + Math.PI / 2
-        const offsetDistance = (index % 2 === 0 ? 1 : -1) * (94 + Math.sin(progress * 5 + index) * 18)
+        const offsetDistance = (index % 2 === 0 ? 1 : -1) * (122 + Math.sin(progress * 5 + index) * 24)
         const nodeX = position.x * scaleX
         const nodeY = position.y * scaleY
         const cardX = (position.x + Math.cos(normalRad) * offsetDistance) * scaleX

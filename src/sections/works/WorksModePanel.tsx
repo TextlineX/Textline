@@ -4,6 +4,7 @@ import './WorksModePanel.less'
 
 type WorksModePanelProps = {
   engaged: boolean
+  revealProgress: number
 }
 
 const statusRows = [
@@ -31,7 +32,24 @@ const projectItems = [
   },
 ]
 
-export function WorksModePanel({ engaged }: WorksModePanelProps) {
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value))
+}
+
+function lerp(from: number, to: number, progress: number) {
+  return from + (to - from) * progress
+}
+
+function smoothstep(edge0: number, edge1: number, value: number) {
+  if (edge0 === edge1) {
+    return value >= edge1 ? 1 : 0
+  }
+
+  const x = clamp((value - edge0) / (edge1 - edge0), 0, 1)
+  return x * x * (3 - 2 * x)
+}
+
+export function WorksModePanel({ engaged, revealProgress }: WorksModePanelProps) {
   return (
     <div className={`works-mode-panel${engaged ? ' works-mode-panel--engaged' : ''}`} aria-hidden="true">
       <div className="works-mode-panel__status surface">
@@ -62,17 +80,38 @@ export function WorksModePanel({ engaged }: WorksModePanelProps) {
       </div>
 
       <div className="works-mode-panel__cards">
-        {projectItems.map((item, index) => (
-          <article
-            key={item.title}
-            className="works-mode-panel__card surface"
-            style={{ '--reveal-index': index + 6 } as CSSProperties}
-          >
-            <div className="works-mode-panel__card-title">{item.title}</div>
-            <p className="works-mode-panel__card-summary">{item.summary}</p>
-            <div className="works-mode-panel__card-stack">{item.stack}</div>
-          </article>
-        ))}
+        {projectItems.map((item, index) => {
+          const phase = revealProgress * (projectItems.length + 1) - index
+          const localProgress = clamp(phase, 0, 1)
+          const enter = smoothstep(-0.25, 0.08, phase)
+          const exit = 1 - smoothstep(0.78, 1.18, phase)
+          const visibility = clamp(enter * exit, 0, 1)
+          const farScale = lerp(0.58, 1, localProgress)
+          const depth = lerp(940, -110, localProgress)
+          const lift = Math.sin((phase + index) * 1.3) * 42 * (1 - visibility)
+          const sway = (index % 2 === 0 ? -1 : 1) * (92 - localProgress * 48)
+          const style = {
+            '--card-opacity': String(visibility),
+            '--card-scale': String(farScale),
+            '--card-depth': `${depth}px`,
+            '--card-rotate': `${(index % 2 === 0 ? -1 : 1) * (1 - visibility) * 5.5}deg`,
+            '--card-sway': `${sway}px`,
+            '--card-lift': `${lift}px`,
+            zIndex: Math.round(visibility * 1000) + index,
+          } as CSSProperties
+
+          return (
+            <article key={item.title} className="works-mode-panel__card surface" style={style}>
+              <div className="works-mode-panel__card-kicker">
+                <span>Project {String(index + 1).padStart(2, '0')}</span>
+                <span>{`${String(index + 1).padStart(2, '0')} / ${String(projectItems.length).padStart(2, '0')}`}</span>
+              </div>
+              <div className="works-mode-panel__card-title">{item.title}</div>
+              <p className="works-mode-panel__card-summary">{item.summary}</p>
+              <div className="works-mode-panel__card-stack">{item.stack}</div>
+            </article>
+          )
+        })}
       </div>
     </div>
   )

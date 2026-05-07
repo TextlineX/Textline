@@ -28,10 +28,13 @@ export function AppShell({ children }: AppShellProps) {
   const [scrollDirection, setScrollDirection] = useState<1 | -1>(1)
   const [playgroundRevealProgress, setPlaygroundRevealProgress] = useState(0)
   const [experienceRevealProgress, setExperienceRevealProgress] = useState(0)
+  const [worksRevealProgress, setWorksRevealProgress] = useState(0)
   const playgroundRevealProgressRef = useRef(0)
   const experienceRevealProgressRef = useRef(0)
+  const worksRevealProgressRef = useRef(0)
   const activeIndexRef = useRef(0)
   const playgroundRecedeFrameRef = useRef<number | undefined>(undefined)
+  const worksRecedeFrameRef = useRef<number | undefined>(undefined)
   const targetOffsetRef = useRef(0)
   const currentOffsetRef = useRef(0)
   const frameRef = useRef<number | undefined>(undefined)
@@ -166,9 +169,48 @@ export function AppShell({ children }: AppShellProps) {
   }, [activeIndex, experienceRevealProgress])
 
   useEffect(() => {
+    if (activeIndex !== 3 && worksRevealProgress !== 0) {
+      if (worksRecedeFrameRef.current !== undefined) {
+        window.cancelAnimationFrame(worksRecedeFrameRef.current)
+      }
+
+      const startProgress = worksRevealProgressRef.current
+      const startTime = performance.now()
+      const duration = 280
+
+      const tick = (time: number) => {
+        const elapsed = time - startTime
+        const progress = clamp(1 - elapsed / duration, 0, 1)
+        const eased = progress * progress * (3 - 2 * progress)
+        const nextProgress = startProgress * eased
+
+        setWorksRevealProgress(nextProgress)
+
+        if (nextProgress > 0.001 && activeIndexRef.current !== 3) {
+          worksRecedeFrameRef.current = window.requestAnimationFrame(tick)
+          return
+        }
+
+        worksRecedeFrameRef.current = undefined
+        setWorksRevealProgress(0)
+      }
+
+      worksRecedeFrameRef.current = window.requestAnimationFrame(tick)
+      return
+    }
+  }, [activeIndex, worksRevealProgress])
+
+  useEffect(() => {
+    worksRevealProgressRef.current = worksRevealProgress
+  }, [worksRevealProgress])
+
+  useEffect(() => {
     return () => {
       if (playgroundRecedeFrameRef.current !== undefined) {
         window.cancelAnimationFrame(playgroundRecedeFrameRef.current)
+      }
+      if (worksRecedeFrameRef.current !== undefined) {
+        window.cancelAnimationFrame(worksRecedeFrameRef.current)
       }
     }
   }, [])
@@ -209,6 +251,33 @@ export function AppShell({ children }: AppShellProps) {
 
       const delta =
         event.deltaMode === 1 ? event.deltaY * 28 : event.deltaMode === 2 ? event.deltaY * viewport.height : event.deltaY
+
+      if (activeIndex === 3) {
+        const currentRevealProgress = worksRevealProgressRef.current
+        const stageOffset = clampOffset(3 * viewport.height)
+        const revealDelta = (delta / Math.max(1, viewport.height)) * 1.2
+        const nextRevealProgress = clamp(currentRevealProgress + revealDelta, 0, 1)
+        const snappedRevealProgress =
+          nextRevealProgress > 0.995 ? 1 : nextRevealProgress < 0.005 ? 0 : nextRevealProgress
+
+        setWorksRevealProgress(snappedRevealProgress)
+
+        if (delta > 0) {
+          if (currentRevealProgress < 1) {
+            snapToOffset(stageOffset)
+            event.preventDefault()
+            return
+          }
+        }
+
+        if (delta < 0) {
+          if (currentRevealProgress > 0) {
+            snapToOffset(stageOffset)
+            event.preventDefault()
+            return
+          }
+        }
+      }
 
       if (activeIndex === 5) {
         const currentRevealProgress = playgroundRevealProgressRef.current
@@ -309,6 +378,7 @@ export function AppShell({ children }: AppShellProps) {
         activeIndex,
         playgroundRevealProgress,
         experienceRevealProgress,
+        worksRevealProgress,
         scrollPhysicsReady,
         scrollPhysicsPulseId,
         scrollPhysicsDirection,

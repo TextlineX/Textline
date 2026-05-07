@@ -33,9 +33,10 @@ function clamp(value: number, min: number, max: number) {
 
 type CodeTunnelProps = {
   engaged?: boolean
+  revealProgress?: number
 }
 
-export function CodeTunnel({ engaged = false }: CodeTunnelProps) {
+export function CodeTunnel({ engaged = false, revealProgress = 0 }: CodeTunnelProps) {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const engagedRef = useRef(false)
 
@@ -85,6 +86,14 @@ export function CodeTunnel({ engaged = false }: CodeTunnelProps) {
       rootRef.current.style.setProperty('--tunnel-tilt-y', '0deg')
     }
   }, [engaged])
+
+  useEffect(() => {
+    if (!rootRef.current) {
+      return
+    }
+
+    rootRef.current.style.setProperty('--tunnel-reveal-progress', revealProgress.toFixed(3))
+  }, [revealProgress])
 
   useEffect(() => {
     const root = rootRef.current

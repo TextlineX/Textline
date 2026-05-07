@@ -4,6 +4,7 @@
   --tunnel-tilt-x: 0deg;
   --tunnel-tilt-y: 0deg;
   --tunnel-reveal-progress: 0;
+  --tunnel-motion-impulse: 0;
   --ring-radius: clamp(10.6rem, 24vmin, 17rem);
   position: absolute;
   inset: 0;
@@ -25,7 +26,7 @@
   transform:
     rotateX(var(--tunnel-tilt-x))
     rotateY(var(--tunnel-tilt-y))
-    scale(calc(1 + var(--tunnel-reveal-progress) * 0.028));
+    scale(calc(1 + var(--tunnel-reveal-progress) * 0.028 + var(--tunnel-motion-impulse) * 0.02));
 }
 
 .code-tunnel__ring {
@@ -39,6 +40,7 @@
   animation-delay: var(--ring-delay);
   pointer-events: none;
   will-change: transform, opacity;
+  filter: blur(calc(var(--tunnel-motion-impulse) * 0.2px));
 }
 
 .code-tunnel__ring-shell {
@@ -195,7 +197,7 @@
     0 0 0 1px rgba(168, 230, 255, 0.05),
     0 0 34px rgba(168, 230, 255, 0.18),
     inset 0 0 24px rgba(0, 0, 0, 0.44);
-  transform: scale(calc(1 + var(--tunnel-reveal-progress) * 0.16));
+  transform: scale(calc(1 + var(--tunnel-reveal-progress) * 0.16 + var(--tunnel-motion-impulse) * 0.06));
 }
 
 @keyframes code-wormhole-flight {

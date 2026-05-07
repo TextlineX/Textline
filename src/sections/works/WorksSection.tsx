@@ -8,7 +8,7 @@ import { WorksModePanel } from './WorksModePanel'
 import './WorksSection.less'
 
 export function WorksSection() {
-  const { scrollOffset, viewportHeight, worksRevealProgress } = useAppShellScroll()
+  const { scrollOffset, viewportHeight, worksRevealProgress, worksScrollImpulse } = useAppShellScroll()
   const sectionProgress = viewportHeight > 0 ? scrollOffset / viewportHeight - 3 : 0
   const engaged = sectionProgress >= -0.35 && sectionProgress <= 0.85
 
@@ -25,11 +25,11 @@ export function WorksSection() {
       <section className={`works-showcase${engaged ? ' works-showcase--engaged' : ''}`} aria-labelledby="works-showcase-title">
         <div className="works-showcase__frame">
           <div className="works-showcase__tunnel">
-            <CodeTunnel engaged={engaged} revealProgress={worksRevealProgress} />
+            <CodeTunnel engaged={engaged} revealProgress={worksRevealProgress} motionImpulse={worksScrollImpulse} />
           </div>
 
           <div className="works-showcase__mode">
-            <WorksModePanel engaged={engaged} revealProgress={worksRevealProgress} />
+            <WorksModePanel engaged={engaged} revealProgress={worksRevealProgress} motionImpulse={worksScrollImpulse} />
           </div>
 
           <div className="works-showcase__header-layer">

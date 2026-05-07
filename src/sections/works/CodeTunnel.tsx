@@ -34,9 +34,10 @@ function clamp(value: number, min: number, max: number) {
 type CodeTunnelProps = {
   engaged?: boolean
   revealProgress?: number
+  motionImpulse?: number
 }
 
-export function CodeTunnel({ engaged = false, revealProgress = 0 }: CodeTunnelProps) {
+export function CodeTunnel({ engaged = false, revealProgress = 0, motionImpulse = 0 }: CodeTunnelProps) {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const engagedRef = useRef(false)
 
@@ -93,7 +94,8 @@ export function CodeTunnel({ engaged = false, revealProgress = 0 }: CodeTunnelPr
     }
 
     rootRef.current.style.setProperty('--tunnel-reveal-progress', revealProgress.toFixed(3))
-  }, [revealProgress])
+    rootRef.current.style.setProperty('--tunnel-motion-impulse', motionImpulse.toFixed(3))
+  }, [motionImpulse, revealProgress])
 
   useEffect(() => {
     const root = rootRef.current

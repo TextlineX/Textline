@@ -9,6 +9,7 @@ export type AppShellScrollContextValue = {
   playgroundRevealProgress: number
   experienceRevealProgress: number
   worksRevealProgress: number
+  worksScrollImpulse: number
   scrollPhysicsReady: boolean
   scrollPhysicsPulseId: number
   scrollPhysicsDirection: number

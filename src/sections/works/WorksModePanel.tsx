@@ -5,6 +5,7 @@ import './WorksModePanel.less'
 type WorksModePanelProps = {
   engaged: boolean
   revealProgress: number
+  motionImpulse: number
 }
 
 const statusRows = [
@@ -49,7 +50,7 @@ function smoothstep(edge0: number, edge1: number, value: number) {
   return x * x * (3 - 2 * x)
 }
 
-export function WorksModePanel({ engaged, revealProgress }: WorksModePanelProps) {
+export function WorksModePanel({ engaged, revealProgress, motionImpulse }: WorksModePanelProps) {
   return (
     <div className={`works-mode-panel${engaged ? ' works-mode-panel--engaged' : ''}`} aria-hidden="true">
       <div className="works-mode-panel__status surface">
@@ -87,16 +88,21 @@ export function WorksModePanel({ engaged, revealProgress }: WorksModePanelProps)
           const exit = 1 - smoothstep(0.78, 1.18, phase)
           const visibility = clamp(enter * exit, 0, 1)
           const farScale = lerp(0.58, 1, localProgress)
-          const depth = lerp(940, -110, localProgress)
-          const lift = Math.sin((phase + index) * 1.3) * 42 * (1 - visibility)
-          const sway = (index % 2 === 0 ? -1 : 1) * (92 - localProgress * 48)
+          const impulse = clamp(motionImpulse, 0, 1)
+          const depth = lerp(1000, -140, localProgress)
+          const lift = Math.sin((phase + index) * 1.3) * (42 + impulse * 16) * (1 - visibility)
+          const sway = (index % 2 === 0 ? -1 : 1) * (92 - localProgress * 48) * (1 + impulse * 0.16)
+          const stretch = 1 + impulse * (1 - visibility) * 0.06
+          const trail = impulse * (1 - visibility) * 1.8
           const style = {
             '--card-opacity': String(visibility),
             '--card-scale': String(farScale),
             '--card-depth': `${depth}px`,
-            '--card-rotate': `${(index % 2 === 0 ? -1 : 1) * (1 - visibility) * 5.5}deg`,
+            '--card-rotate': `${(index % 2 === 0 ? -1 : 1) * (1 - visibility) * (5.5 + impulse * 4.5)}deg`,
             '--card-sway': `${sway}px`,
             '--card-lift': `${lift}px`,
+            '--card-stretch': String(stretch),
+            '--card-trail': String(trail),
             zIndex: Math.round(visibility * 1000) + index,
           } as CSSProperties
 

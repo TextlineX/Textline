@@ -29,9 +29,11 @@ export function AppShell({ children }: AppShellProps) {
   const [playgroundRevealProgress, setPlaygroundRevealProgress] = useState(0)
   const [experienceRevealProgress, setExperienceRevealProgress] = useState(0)
   const [worksRevealProgress, setWorksRevealProgress] = useState(0)
+  const [worksScrollImpulse, setWorksScrollImpulse] = useState(0)
   const playgroundRevealProgressRef = useRef(0)
   const experienceRevealProgressRef = useRef(0)
   const worksRevealProgressRef = useRef(0)
+  const worksScrollImpulseRef = useRef(0)
   const activeIndexRef = useRef(0)
   const playgroundRecedeFrameRef = useRef<number | undefined>(undefined)
   const worksRecedeFrameRef = useRef<number | undefined>(undefined)
@@ -205,6 +207,10 @@ export function AppShell({ children }: AppShellProps) {
   }, [worksRevealProgress])
 
   useEffect(() => {
+    worksScrollImpulseRef.current = worksScrollImpulse
+  }, [worksScrollImpulse])
+
+  useEffect(() => {
     return () => {
       if (playgroundRecedeFrameRef.current !== undefined) {
         window.cancelAnimationFrame(playgroundRecedeFrameRef.current)
@@ -225,6 +231,12 @@ export function AppShell({ children }: AppShellProps) {
       if (Math.abs(snapped - currentOffsetRef.current) > 0.5) {
         currentOffsetRef.current = snapped
         setCurrentOffset(snapped)
+      }
+
+      const nextWorksImpulse = worksScrollImpulseRef.current * 0.9
+      if (Math.abs(nextWorksImpulse - worksScrollImpulseRef.current) > 0.001) {
+        worksScrollImpulseRef.current = nextWorksImpulse
+        setWorksScrollImpulse(nextWorksImpulse)
       }
 
       frameRef.current = window.requestAnimationFrame(tick)
@@ -261,6 +273,7 @@ export function AppShell({ children }: AppShellProps) {
           nextRevealProgress > 0.995 ? 1 : nextRevealProgress < 0.005 ? 0 : nextRevealProgress
 
         setWorksRevealProgress(snappedRevealProgress)
+        setWorksScrollImpulse((current) => Math.min(1, Math.max(current, Math.abs(delta) / Math.max(1, viewport.height) * 1.5)))
 
         if (delta > 0) {
           if (currentRevealProgress < 1) {
@@ -379,6 +392,7 @@ export function AppShell({ children }: AppShellProps) {
         playgroundRevealProgress,
         experienceRevealProgress,
         worksRevealProgress,
+        worksScrollImpulse,
         scrollPhysicsReady,
         scrollPhysicsPulseId,
         scrollPhysicsDirection,

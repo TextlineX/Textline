@@ -14,7 +14,10 @@ type RibbonToken = {
 
 type ImpactParticle = {
   sprite: InstanceType<ThreeModule['Sprite']>
-  velocity: InstanceType<ThreeModule['Vector3']>
+  material: InstanceType<ThreeModule['SpriteMaterial']>
+  velocityX: number
+  velocityY: number
+  velocityZ: number
   life: number
   maxLife: number
   spin: number
@@ -22,6 +25,7 @@ type ImpactParticle = {
 }
 
 type ThreeSphereSceneProps = {
+  enabled?: boolean
   scrollPhysicsDirection?: number
   scrollPhysicsPulseId?: number
   scrollPhysicsStrength?: number
@@ -77,6 +81,9 @@ function buildRibbonTokens() {
 }
 
 const codeDebrisTokens = [...textFlowTokens, '=>', '{}', '[]', '()', 'const', 'let', 'fn', 'return', '++', '//']
+const maxImpactParticles = 28
+const activeLoopDelay = 33
+const idleLoopDelay = 120
 
 function pickDebrisToken(index: number) {
   return codeDebrisTokens[index % codeDebrisTokens.length]
@@ -107,6 +114,7 @@ function pickDebrisColor(token: string, index: number) {
 }
 
 export function ThreeSphereScene({
+  enabled = true,
   scrollPhysicsDirection = 1,
   scrollPhysicsPulseId = 0,
   scrollPhysicsStrength = 0,
@@ -130,13 +138,17 @@ export function ThreeSphereScene({
   }, [scrollPhysicsStrength])
 
   useEffect(() => {
+    if (!enabled) {
+      return
+    }
+
     const canvas = canvasRef.current
     if (!canvas) {
       return
     }
 
     let disposed = false
-    let frameId = 0
+    let tickTimerId: number | null = null
     let observer: ResizeObserver | null = null
     let renderer: InstanceType<ThreeModule['WebGLRenderer']> | null = null
     let scene: InstanceType<ThreeModule['Scene']> | null = null
@@ -163,7 +175,6 @@ export function ThreeSphereScene({
     let lastScrollImpulseAt = 0
     let lastImpactBurstAt = 0
     let returnStartedAt = 0
-
     void (async () => {
       const THREE = await import('three')
       if (disposed || !canvasRef.current) {
@@ -304,6 +315,9 @@ export function ThreeSphereScene({
         return vector.normalize()
       }
 
+      const impactOriginVector = new THREE.Vector3()
+      const worldOriginVector = new THREE.Vector3()
+
       const createRibbonNormal = (index: number, total: number) => {
         const phi = Math.acos(1 - (2 * (index + 0.5)) / total)
         const theta = Math.PI * (1 + Math.sqrt(5)) * index
@@ -361,9 +375,17 @@ export function ThreeSphereScene({
         physicsGroup.updateMatrixWorld(true)
 
         const burstCount = clamp(Math.round(7 + impulse * 30), 7, 16)
-        const worldOrigin = physicsGroup.localToWorld(origin.clone())
+        const worldOrigin = physicsGroup.localToWorld(worldOriginVector.copy(origin))
 
         for (let index = 0; index < burstCount; index += 1) {
+          if (impactParticles.length >= maxImpactParticles) {
+            const recycled = impactParticles.shift()
+            if (recycled) {
+              scene.remove(recycled.sprite)
+              recycled.material.dispose()
+            }
+          }
+
           const token = pickDebrisToken(index + Math.floor(now / 140))
           const color = pickDebrisColor(token, index + Math.floor(now / 220))
           const texture = buildDebrisTexture(token, color)
@@ -393,11 +415,10 @@ export function ThreeSphereScene({
 
           impactParticles.push({
             sprite,
-            velocity: new THREE.Vector3(
-              horizontalKick * 0.55 + (Math.random() - 0.5) * 0.01,
-              downwardKick,
-              depthKick * 0.4 + (Math.random() - 0.5) * 0.01,
-            ),
+            material,
+            velocityX: horizontalKick * 0.55 + (Math.random() - 0.5) * 0.01,
+            velocityY: downwardKick,
+            velocityZ: depthKick * 0.4 + (Math.random() - 0.5) * 0.01,
             life: 0,
             maxLife: 48 + Math.random() * 24,
             spin: (Math.random() - 0.5) * 0.03 * direction,
@@ -454,6 +475,26 @@ export function ThreeSphereScene({
       })
       observer.observe(canvas)
       resize()
+
+      const scheduleTick = (delay: number) => {
+        if (disposed) {
+          return
+        }
+
+        if (tickTimerId !== null) {
+          window.clearTimeout(tickTimerId)
+          tickTimerId = null
+        }
+
+        tickTimerId = window.setTimeout(() => {
+          tickTimerId = null
+          if (disposed) {
+            return
+          }
+
+          loop(performance.now())
+        }, delay)
+      }
 
       const loop = (time: number) => {
         if (!renderer || !scene || !camera || !physicsGroup || !visualGroup || disposed) {
@@ -517,14 +558,14 @@ export function ThreeSphereScene({
           motion.vx *= motion.detached ? -0.72 : -0.2
           impactImpulse = Math.max(impactImpulse, preBounce)
           impactDirection = motion.x >= 0 ? 1 : -1
-          impactOrigin = new THREE.Vector3(motion.x, motion.y, 0)
+          impactOrigin = impactOriginVector.set(motion.x, motion.y, 0)
         } else if (motion.x < -horizontalBound) {
           const preBounce = Math.abs(motion.vx)
           motion.x = -horizontalBound
           motion.vx *= motion.detached ? -0.72 : -0.2
           impactImpulse = Math.max(impactImpulse, preBounce)
           impactDirection = motion.x >= 0 ? 1 : -1
-          impactOrigin = new THREE.Vector3(motion.x, motion.y, 0)
+          impactOrigin = impactOriginVector.set(motion.x, motion.y, 0)
         }
 
         if (motion.y > verticalBound) {
@@ -533,14 +574,14 @@ export function ThreeSphereScene({
           motion.velocityY *= motion.detached ? -0.68 : -0.2
           impactImpulse = Math.max(impactImpulse, preBounce)
           impactDirection = motion.y >= 0 ? 1 : -1
-          impactOrigin = new THREE.Vector3(motion.x, motion.y, 0)
+          impactOrigin = impactOriginVector.set(motion.x, motion.y, 0)
         } else if (motion.y < -verticalBound) {
           const preBounce = Math.abs(motion.velocityY)
           motion.y = -verticalBound
           motion.velocityY *= motion.detached ? -0.72 : -0.2
           impactImpulse = Math.max(impactImpulse, preBounce)
           impactDirection = motion.y >= 0 ? 1 : -1
-          impactOrigin = new THREE.Vector3(motion.x, motion.y, 0)
+          impactOrigin = impactOriginVector.set(motion.x, motion.y, 0)
         }
 
         if (impactOrigin && impactImpulse > 0.04) {
@@ -610,34 +651,48 @@ export function ThreeSphereScene({
         for (let index = impactParticles.length - 1; index >= 0; index -= 1) {
           const particle = impactParticles[index]
           particle.life += 1
-          particle.velocity.x *= particle.drag
-          particle.velocity.y *= particle.drag
-          particle.velocity.z *= particle.drag
-          particle.velocity.y -= 0.0024
-          particle.sprite.position.add(particle.velocity)
+          particle.velocityX *= particle.drag
+          particle.velocityY *= particle.drag
+          particle.velocityZ *= particle.drag
+          particle.velocityY -= 0.0024
+          particle.sprite.position.x += particle.velocityX
+          particle.sprite.position.y += particle.velocityY
+          particle.sprite.position.z += particle.velocityZ
           const opacity = Math.max(0, 1 - particle.life / particle.maxLife)
-          const material = particle.sprite.material as InstanceType<ThreeModule['SpriteMaterial']>
-          material.opacity = opacity
-          material.rotation += particle.spin
+          particle.material.opacity = opacity
+          particle.material.rotation += particle.spin
           particle.sprite.scale.multiplyScalar(0.996)
 
           if (particle.life >= particle.maxLife) {
-            material.dispose()
             scene.remove(particle.sprite)
+            particle.material.dispose()
             impactParticles.splice(index, 1)
           }
         }
 
         renderer.render(scene, camera)
-        frameId = window.requestAnimationFrame(loop)
+
+        const isIdle =
+          !motion.detached &&
+          !motion.returning &&
+          impactParticles.length === 0 &&
+          Math.abs(motion.x) < 0.002 &&
+          Math.abs(motion.y) < 0.002 &&
+          Math.abs(motion.vx) < 0.002 &&
+          Math.abs(motion.velocityY) < 0.002
+
+        scheduleTick(isIdle ? idleLoopDelay : activeLoopDelay)
       }
 
-      frameId = window.requestAnimationFrame(loop)
+      scheduleTick(0)
     })()
 
     return () => {
       disposed = true
-      window.cancelAnimationFrame(frameId)
+      if (tickTimerId !== null) {
+        window.clearTimeout(tickTimerId)
+        tickTimerId = null
+      }
       observer?.disconnect()
       geometries.forEach((geometry) => geometry.dispose())
       materials.forEach((materialItem) => materialItem.dispose())
@@ -645,8 +700,7 @@ export function ThreeSphereScene({
       ribbonMeshes.length = 0
       impactParticles.forEach((particle) => {
         scene?.remove(particle.sprite)
-        const material = particle.sprite.material as InstanceType<ThreeModule['SpriteMaterial']>
-        material.dispose()
+        particle.material.dispose()
       })
       fragmentTextureCache.forEach((texture) => texture.dispose())
       collisionShell?.geometry.dispose()
@@ -656,7 +710,7 @@ export function ThreeSphereScene({
       }
       renderer?.dispose()
     }
-  }, [])
+  }, [enabled])
 
   return (
     <div className="three-sphere-scene" aria-hidden="true">

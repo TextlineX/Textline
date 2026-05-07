@@ -23,7 +23,7 @@ export const heroThreeConfig: HeroThreeConfig = {
   tiltAngle: 0.42,
   textScrollSpeed: 0.000095,
   ribbonOpacity: 0.82,
-  textCanvasWidth: 8192,
-  textCanvasHeight: 768,
+  textCanvasWidth: 4096,
+  textCanvasHeight: 384,
   fontSize: 155,
 }

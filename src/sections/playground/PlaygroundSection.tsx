@@ -36,6 +36,15 @@ type HoneycombCell = {
   lane: 'title' | 'summary' | 'stack' | 'status'
 }
 
+type CellContent = {
+  image: string
+  kicker: string
+  title: string
+  copy: string
+  footer: string
+  stack: string
+}
+
 type HoneycombLayout = {
   cells: HoneycombCell[]
   hexRadius: number
@@ -199,35 +208,14 @@ function buildHoneycombLayout(
   }
 }
 
-function getCellContent(cell: HoneycombCell) {
-  if (cell.lane === 'title') {
-    return {
-      kicker: cell.project.tag,
-      title: cell.project.title,
-      copy: cell.project.year,
-    }
-  }
-
-  if (cell.lane === 'summary') {
-    return {
-      kicker: 'SUMMARY',
-      title: cell.project.description,
-      copy: 'Drag the world and keep scanning.',
-    }
-  }
-
-  if (cell.lane === 'stack') {
-    return {
-      kicker: 'STACK',
-      title: cell.project.stack.join(' / '),
-      copy: cell.project.status,
-    }
-  }
-
+function getCellContent(cell: HoneycombCell): CellContent {
   return {
-    kicker: 'STATUS',
-    title: cell.project.status,
-    copy: `${cell.project.year} · ${cell.project.tag}`,
+    image: cell.project.image,
+    kicker: cell.project.tag,
+    title: cell.project.title,
+    copy: cell.project.description,
+    footer: `${cell.project.year} · ${cell.project.status}`,
+    stack: cell.project.stack.join(' / '),
   }
 }
 
@@ -549,7 +537,7 @@ export function PlaygroundSection() {
                               '--hex-height': `${cell.height}px`,
                             } as CSSProperties
                           }
-                          aria-label={`${cell.project.title} ${content.kicker} ${content.title}`}
+                          aria-label={`${cell.project.title}，${content.copy}，${content.footer}`}
                           aria-pressed={isActive}
                           onClick={() => {
                             if (suppressNextClickRef.current) {
@@ -559,7 +547,28 @@ export function PlaygroundSection() {
 
                             setActiveProjectIndex(cell.projectIndex)
                           }}
-                        />
+                        >
+                          <span className="playground-showcase__hex-shell">
+                            <span className="playground-showcase__hex-media">
+                              <img
+                                className="playground-showcase__hex-image"
+                                src={content.image}
+                                alt=""
+                                aria-hidden="true"
+                              />
+                              <span className="playground-showcase__hex-media-glow" />
+                            </span>
+                            <span className="playground-showcase__hex-body">
+                              <span className="playground-showcase__hex-kicker">{content.kicker}</span>
+                              <span className="playground-showcase__hex-title">{content.title}</span>
+                              <span className="playground-showcase__hex-copy">{content.copy}</span>
+                            </span>
+                            <span className="playground-showcase__hex-footer">
+                              <span className="playground-showcase__hex-footer-primary">{content.footer}</span>
+                              <span className="playground-showcase__hex-footer-secondary">{content.stack}</span>
+                            </span>
+                          </span>
+                        </button>
                       )
                     })}
                   </div>

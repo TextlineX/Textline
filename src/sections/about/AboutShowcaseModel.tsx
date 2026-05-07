@@ -12,7 +12,7 @@ type AboutShowcaseModelProps = {
   screenTextureSource?: HTMLCanvasElement | null
 }
 
-type AboutShowcaseCommand = 'rotate-left' | 'rotate-right' | 'tilt-up' | 'tilt-down' | 'focus-screen'
+type AboutShowcaseCommand = 'rotate-left' | 'rotate-right' | 'tilt-up' | 'tilt-down' | 'focus-screen' | 'btn-a' | 'btn-b'
 
 type CommandHotspot = {
   mesh: InstanceType<ThreeModule['Mesh']>
@@ -170,70 +170,36 @@ export function AboutShowcaseModel({
         rootGroup.add(model)
         loadedModel = model
 
-        const buttonGroup = model.getObjectByName('controler')
-        if (buttonGroup) {
-          const buttonBox = new THREE.Box3().setFromObject(buttonGroup)
-          const buttonSize = buttonBox.getSize(new THREE.Vector3())
-          const buttonCenter = buttonBox.getCenter(new THREE.Vector3())
-          const halfX = Math.max(buttonSize.x * 0.5, 0.06)
-          const halfY = Math.max(buttonSize.y * 0.5, 0.06)
-          const depth = Math.max(buttonSize.z * 0.5, 0.05)
-          const localCenter = buttonGroup.worldToLocal(buttonCenter.clone())
-          const hitMaterial = createInvisibleHitMaterial(THREE)
+        const hitMaterial = createInvisibleHitMaterial(THREE)
 
-          const localCommands: Array<{
-            name: string
-            position: [number, number, number]
-            size: [number, number, number]
-            command: AboutShowcaseCommand
-          }> = [
-            { name: 'btn_up', position: [0, halfY * 0.5, 0], size: [buttonSize.x * 0.42, buttonSize.y * 0.18, depth * 1.4], command: 'tilt-up' },
-            { name: 'btn_down', position: [0, -halfY * 0.5, 0], size: [buttonSize.x * 0.42, buttonSize.y * 0.18, depth * 1.4], command: 'tilt-down' },
-            { name: 'btn_left', position: [-halfX * 0.52, 0, 0], size: [buttonSize.x * 0.18, buttonSize.y * 0.42, depth * 1.4], command: 'rotate-left' },
-            { name: 'btn_right', position: [halfX * 0.52, 0, 0], size: [buttonSize.x * 0.18, buttonSize.y * 0.42, depth * 1.4], command: 'rotate-right' },
-          ]
+        // Direction anchors are invisible hit meshes — replace material for raycasting
+        const invisibleAnchors: Array<{ name: string; command: AboutShowcaseCommand }> = [
+          { name: 'up_anchor', command: 'tilt-up' },
+          { name: 'down_anchor', command: 'tilt-down' },
+          { name: 'left_anchor', command: 'rotate-left' },
+          { name: 'right_anchor', command: 'rotate-right' },
+        ]
+        for (const { name, command } of invisibleAnchors) {
+          const mesh = model.getObjectByName(name) as InstanceType<ThreeModule['Mesh']> | null
+          if (!mesh || !mesh.isMesh) continue
+          mesh.material = hitMaterial.clone()
+          mesh.renderOrder = 1000
+          commandHotspots.push({ mesh, command })
+        }
 
-          localCommands.forEach((entry) => {
-            const mesh = new THREE.Mesh(
-              new THREE.BoxGeometry(
-                Math.max(entry.size[0], 0.05),
-                Math.max(entry.size[1], 0.05),
-                Math.max(entry.size[2], 0.04),
-              ),
-              hitMaterial.clone(),
-            )
-            mesh.name = entry.name
-            mesh.position.set(
-              localCenter.x + entry.position[0],
-              localCenter.y + entry.position[1],
-              localCenter.z + entry.position[2],
-            )
-            buttonGroup.add(mesh)
-            commandHotspots.push({ mesh, command: entry.command })
-          })
+        // A and B are visible button meshes — keep original material, just register for raycasting
+        const visibleButtons: Array<{ name: string; command: AboutShowcaseCommand }> = [
+          { name: 'A', command: 'btn-a' },
+          { name: 'B', command: 'btn-b' },
+        ]
+        for (const { name, command } of visibleButtons) {
+          const mesh = model.getObjectByName(name) as InstanceType<ThreeModule['Mesh']> | null
+          if (!mesh || !mesh.isMesh) continue
+          commandHotspots.push({ mesh, command })
         }
 
         const screenGroup = model.getObjectByName('screen')
-        if (screenGroup) {
-          const mesh = screenGroup as InstanceType<ThreeModule['Mesh']>
-          const screenBox = new THREE.Box3().setFromObject(screenGroup)
-          const screenSize = screenBox.getSize(new THREE.Vector3())
-          const screenCenter = screenBox.getCenter(new THREE.Vector3())
-          const screenLocalCenter = screenGroup.worldToLocal(screenCenter.clone())
-          const screenHitMaterial = createInvisibleHitMaterial(THREE)
-          const screenHit = new THREE.Mesh(
-            new THREE.BoxGeometry(
-              Math.max(screenSize.x * 1.08, 0.08),
-              Math.max(screenSize.y * 1.08, 0.08),
-              Math.max(screenSize.z * 1.4, 0.05),
-            ),
-            screenHitMaterial,
-          )
-          screenHit.name = 'btn_screen'
-          screenHit.position.set(screenLocalCenter.x, screenLocalCenter.y, screenLocalCenter.z)
-          screenGroup.add(screenHit)
-          commandHotspots.push({ mesh: screenHit, command: 'focus-screen' })
-
+        if (screenGroup && screenGroup.isMesh) {
           screenMaterial = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             side: THREE.DoubleSide,
@@ -242,9 +208,10 @@ export function AboutShowcaseModel({
             toneMapped: false,
             transparent: false,
           })
-          mesh.material = screenMaterial
-          mesh.renderOrder = 999
-          screenMesh = mesh
+          screenGroup.material = screenMaterial
+          screenGroup.renderOrder = 999
+          screenMesh = screenGroup as InstanceType<ThreeModule['Mesh']>
+          commandHotspots.push({ mesh: screenGroup as InstanceType<ThreeModule['Mesh']>, command: 'focus-screen' })
         }
 
         const syncScreenTexture = () => {

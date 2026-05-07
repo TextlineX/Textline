@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
 import { gsap } from 'gsap'
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
+import * as Matter from 'matter-js'
 
 import { useAppShellScroll } from '../../components/layout/AppShellScrollContext'
 
@@ -16,6 +17,16 @@ type TimelineEntry = {
   title: string
   description: string
   tags: string[]
+}
+
+type HangingRig = {
+  engine: Matter.Engine
+  anchors: Matter.Body[]
+  cards: Matter.Body[]
+  cardSize: {
+    width: number
+    height: number
+  }
 }
 
 const svgWidth = 1400
@@ -71,13 +82,16 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
   const cardRefs = useRef<Array<HTMLElement | null>>([])
   const nodeRefs = useRef<Array<SVGCircleElement | null>>([])
   const tetherRefs = useRef<Array<SVGLineElement | null>>([])
+  const rigRef = useRef<HangingRig | null>(null)
+  const frameRef = useRef<number | null>(null)
   const progressRef = useRef(0)
   const engagedRef = useRef(false)
   const pointerRef = useRef({ x: 0.5, y: 0.5, energy: 0 })
-  const { scrollOffset, viewportHeight } = useAppShellScroll()
+  const { activeIndex, experienceRevealProgress, scrollOffset, viewportHeight } = useAppShellScroll()
 
   const sectionStart = sectionIndex * viewportHeight
-  const sectionProgress = viewportHeight <= 0 ? 0 : clamp((scrollOffset - sectionStart) / viewportHeight, 0, 1)
+  const sectionScrollProgress = viewportHeight <= 0 ? 0 : clamp((scrollOffset - sectionStart) / viewportHeight, 0, 1)
+  const sectionProgress = activeIndex === sectionIndex ? clamp(experienceRevealProgress, 0, 1) : sectionScrollProgress
 
   const isEngaged = sectionProgress >= -0.35 && sectionProgress <= 0.85
 
@@ -104,7 +118,137 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
     }
 
     const rawPath = MotionPathPlugin.getRawPath(path.getAttribute('d') ?? '')
-    let frameId = 0
+    let engine: Matter.Engine | null = null
+
+    const clearRig = () => {
+      if (engine) {
+        Matter.Composite.clear(engine.world, false, true)
+        Matter.Engine.clear(engine)
+        engine = null
+      }
+
+      rigRef.current = null
+    }
+
+    const syncCardDom = () => {
+      const rig = rigRef.current
+      if (!rig) {
+        return
+      }
+
+      rig.cards.forEach((body, index) => {
+        const cardNode = cardRefs.current[index]
+        if (!cardNode) {
+          return
+        }
+
+        cardNode.style.width = `${rig.cardSize.width}px`
+        cardNode.style.height = `${rig.cardSize.height}px`
+        cardNode.style.transform = `translate3d(${body.position.x - rig.cardSize.width / 2}px, ${body.position.y - rig.cardSize.height / 2}px, 0) rotate(${body.angle}rad)`
+      })
+    }
+
+    const buildRig = () => {
+      clearRig()
+
+      const rect = root.getBoundingClientRect()
+      const width = Math.max(rect.width, 1)
+      const height = Math.max(rect.height, 1)
+
+      engine = Matter.Engine.create({ enableSleeping: true })
+      engine.gravity.x = 0
+      engine.gravity.y = 1
+      engine.gravity.scale = 0.00108
+
+      const cardWidth = clamp(width * 0.12, 126, 172)
+      const cardHeight = clamp(cardWidth * 1.58, 198, 286)
+      const cardSize = {
+        width: cardWidth,
+        height: cardHeight,
+      }
+
+      const anchorY = clamp(height * 0.07, 54, 92)
+      const anchorSpacing = clamp(height * 0.14, 104, 154)
+      const anchorX = width / 2
+
+      const anchors = timelineEntries.map((_, index) => {
+        return Matter.Bodies.circle(anchorX, anchorY + index * anchorSpacing, 4.5, {
+          isStatic: true,
+          collisionFilter: { group: -1 },
+          render: { visible: false },
+        })
+      })
+
+      const cards = timelineEntries.map((_, index) => {
+        const side = index % 2 === 0 ? -1 : 1
+        const tier = Math.floor(index / 2)
+        const x = anchorX + side * clamp(width * 0.15 + tier * 30, 96, 216)
+        const verticalBias = index % 2 === 0 ? -12 : 18
+        const y = anchorY + index * anchorSpacing + 30 + tier * 10 + verticalBias
+
+        const body = Matter.Bodies.rectangle(x, y, cardSize.width, cardSize.height, {
+          chamfer: { radius: 18 },
+          friction: 0.03,
+          frictionAir: 0.03,
+          restitution: 0.01,
+          density: 0.003,
+          slop: 0.01,
+          collisionFilter: { group: -1 },
+        })
+
+        Matter.Body.setAngle(body, 0)
+        Matter.Body.setAngularVelocity(body, 0)
+        return body
+      })
+
+      const ropes = cards.map((card, index) => {
+        return Matter.Constraint.create({
+          bodyA: anchors[index],
+          bodyB: card,
+          pointB: {
+            x: 0,
+            y: -cardSize.height * 0.48,
+          },
+          length: clamp(height * 0.18, 138, 260),
+          stiffness: 0.88,
+          damping: 0.16,
+          render: { visible: false },
+        })
+      })
+
+      const walls = [
+        Matter.Bodies.rectangle(width / 2, height + 110, width + 420, 220, {
+          isStatic: true,
+          render: { visible: false },
+        }),
+        Matter.Bodies.rectangle(-110, height / 2, 220, height + 420, {
+          isStatic: true,
+          render: { visible: false },
+        }),
+        Matter.Bodies.rectangle(width + 110, height / 2, 220, height + 420, {
+          isStatic: true,
+          render: { visible: false },
+        }),
+      ]
+
+      Matter.World.add(engine.world, [...walls, ...anchors, ...cards, ...ropes])
+      rigRef.current = {
+        engine,
+        anchors,
+        cards,
+        cardSize,
+      }
+
+      syncCardDom()
+    }
+
+    buildRig()
+
+    const resizeObserver = new ResizeObserver(() => {
+      buildRig()
+    })
+
+    resizeObserver.observe(root)
 
     const tick = () => {
       const rect = root.getBoundingClientRect()
@@ -113,17 +257,20 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
       const progress = progressRef.current
       const pointer = pointerRef.current
       const engagedFactor = engagedRef.current ? 1 : 0.45
-      const warpScale = 8 + progress * 24 + pointer.energy * 18 * engagedFactor
+      const warpScale = 1.8 + progress * 3.2 + pointer.energy * 1.6 * engagedFactor
       const noiseX = 0.0048 + pointer.x * 0.0032
       const noiseY = 0.012 + pointer.y * 0.0075
 
       turbulenceRef.current?.setAttribute('baseFrequency', `${noiseX.toFixed(4)} ${noiseY.toFixed(4)}`)
       displacementRef.current?.setAttribute('scale', warpScale.toFixed(2))
 
+      const rig = rigRef.current
+
       timelineEntries.forEach((_, index) => {
         const node = nodeRefs.current[index]
         const card = cardRefs.current[index]
         const tether = tetherRefs.current[index]
+        const anchor = rig?.anchors[index]
 
         if (!node || !card || !tether) {
           return
@@ -146,6 +293,32 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
         const cardX = (position.x + Math.cos(normalRad) * offsetDistance) * scaleX
         const cardY = (position.y + Math.sin(normalRad) * offsetDistance) * scaleY
         const reveal = clamp(progress * 1.26 - index * 0.09 + 0.38, 0, 1)
+        const centerX = rect.width / 2
+        const centerY = rect.height / 2
+        const isFinalCard = index === timelineEntries.length - 1
+        const settledX = isFinalCard && reveal > 0.98 ? centerX : cardX
+        const settledY = isFinalCard && reveal > 0.98 ? centerY : cardY
+
+        if (anchor) {
+          Matter.Body.setPosition(anchor, {
+            x: nodeX,
+            y: nodeY,
+          })
+        }
+
+        if (rig) {
+          const body = rig.cards[index]
+          if (body) {
+            const dx = settledX - body.position.x
+            const dy = settledY - body.position.y
+            Matter.Body.applyForce(body, body.position, {
+              x: dx * 0.0000015,
+              y: dy * 0.0000012,
+            })
+            Matter.Body.setAngle(body, 0)
+            Matter.Body.setAngularVelocity(body, 0)
+          }
+        }
 
         gsap.set(node, {
           attr: {
@@ -166,24 +339,47 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
           opacity: 0.12 + reveal * 0.44,
         })
 
-        gsap.set(card, {
-          x: cardX,
-          y: cardY,
-          rotation: clamp((angleDeg - 90) * 0.08, -8, 8),
-          opacity: reveal,
-          filter: `blur(${(1 - reveal) * 12}px)`,
-          scale: 0.9 + reveal * 0.1,
-        })
+        if (rig) {
+          gsap.set(card, {
+            opacity: reveal,
+            filter: 'none',
+            rotation: 0,
+          })
+        } else {
+          gsap.set(card, {
+            x: cardX,
+            y: cardY,
+            rotation: 0,
+            opacity: reveal,
+            filter: `blur(${(1 - reveal) * 12}px)`,
+            scale: 0.9 + reveal * 0.1,
+          })
+        }
       })
 
+      if (rig && engine) {
+        Matter.Engine.update(engine, 1000 / 60)
+        syncCardDom()
+      }
+
       pointerRef.current.energy *= 0.92
-      frameId = window.requestAnimationFrame(tick)
+      frameRef.current = window.requestAnimationFrame(tick)
     }
 
-    frameId = window.requestAnimationFrame(tick)
+    frameRef.current = window.requestAnimationFrame(tick)
 
     return () => {
-      window.cancelAnimationFrame(frameId)
+      resizeObserver.disconnect()
+
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current)
+        frameRef.current = null
+      }
+
+      clearRig()
+      cardRefs.current = []
+      nodeRefs.current = []
+      tetherRefs.current = []
     }
   }, [isEngaged])
 

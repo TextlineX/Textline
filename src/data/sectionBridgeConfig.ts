@@ -75,15 +75,15 @@ export const sectionBridgeConfigById: Record<string, SectionBridgeConfig> = {
     next: 'playground',
     enter: {
       overlapVh: 0.16,
-      liftVh: 0.5,
-      opacityFrom: 0.82,
+      liftVh: 0,
+      opacityFrom: 1,
       opacityTo: 1,
     },
     exit: {
       overlapVh: 0.22,
-      liftVh: 0.78,
+      liftVh: 0,
       opacityFrom: 1,
-      opacityTo: 0.12,
+      opacityTo: 1,
     },
   },
   playground: {

@@ -10,7 +10,7 @@ import { AboutShowcaseModel } from './AboutShowcaseModel'
 import './AboutSection.less'
 
 export function AboutSection() {
-  const { scrollOffset, viewportHeight } = useAppShellScroll()
+  const { scrollOffset, viewportHeight, scrollDirection } = useAppShellScroll()
   const sectionProgress = viewportHeight > 0 ? scrollOffset / viewportHeight - 1 : 0
   const engaged = sectionProgress >= -1.1 && sectionProgress <= 0.85
   const [screenLinked, setScreenLinked] = useState(false)
@@ -136,33 +136,31 @@ export function AboutSection() {
 
           <aside className="about-showcase__visual" aria-label="about three.js showcase">
             <div className="about-showcase__visual-frame">
-              {engaged ? (
-                <>
-                  <AboutShowcaseModel
-                    modelUrl="/models/GB.glb"
-                    onCommand={handleModelCommand}
-                    screenTextureSource={screenTextureSource}
+              <AboutShowcaseModel
+                modelUrl="/models/GB.glb"
+                onCommand={handleModelCommand}
+                screenTextureSource={screenTextureSource}
+                scrollDirection={scrollDirection}
+              />
+              {screenLinked ? (
+                <div className="about-showcase__screen-source-shell" aria-hidden="true">
+                  <GameCanvasScene
+                    phase={phase}
+                    activeCardIndex={activeCardIndex}
+                    activeCard={activeCard}
+                    className="about-showcase__screen-source"
+                    onCanvasReady={setScreenTextureSource}
+                    rotateForTexture
+                    renderMode="texture"
                   />
-                  {screenLinked ? (
-                    <div className="about-showcase__screen-source-shell" aria-hidden="true">
-                      <GameCanvasScene
-                        phase={phase}
-                        activeCardIndex={activeCardIndex}
-                        activeCard={activeCard}
-                        className="about-showcase__screen-source"
-                        onCanvasReady={setScreenTextureSource}
-                        rotateForTexture
-                        renderMode="texture"
-                      />
-                    </div>
-                  ) : null}
-                </>
-              ) : (
+                </div>
+              ) : null}
+              {!engaged ? (
                 <div className="about-showcase-model__overlay" aria-hidden="true">
                   <div className="about-showcase-model__overlay-title">SCROLL TO ACTIVATE</div>
                   <div className="about-showcase-model__overlay-copy">GB 模型只在该窗口可见时运行。</div>
                 </div>
-              )}
+              ) : null}
             </div>
           </aside>
         </div>

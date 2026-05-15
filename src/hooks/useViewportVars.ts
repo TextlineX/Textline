@@ -1,16 +1,13 @@
 import { useEffect } from 'react'
 
-import { isBrowser } from '../utils/isBrowser'
-import { useViewportSize } from './useViewportSize'
+type UseViewportVarsOptions = {
+  width: number
+  height: number
+}
 
-export function useViewportVars() {
-  const { width, height } = useViewportSize()
+export function useViewportVars({ width, height }: UseViewportVarsOptions) {
 
   useEffect(() => {
-    if (!isBrowser()) {
-      return
-    }
-
     const root = document.documentElement
     root.style.setProperty('--viewport-width', `${width}px`)
     root.style.setProperty('--viewport-height', `${height}px`)

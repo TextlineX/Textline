@@ -329,6 +329,10 @@ export function PlaygroundSection() {
   }
 
   const updateCamera = (next: CameraState) => {
+    if (Math.abs(next.x - cameraRef.current.x) < 0.01 && Math.abs(next.y - cameraRef.current.y) < 0.01) {
+      return
+    }
+
     cameraRef.current = next
     setCamera(next)
   }
@@ -344,17 +348,24 @@ export function PlaygroundSection() {
     stopInertia()
 
     const tick = () => {
-      cameraRef.current = {
-        x: cameraRef.current.x + velocityRef.current.x,
-        y: cameraRef.current.y + velocityRef.current.y,
+      const previousCamera = cameraRef.current
+      const nextCamera = {
+        x: previousCamera.x + velocityRef.current.x,
+        y: previousCamera.y + velocityRef.current.y,
       }
-      velocityRef.current = {
+      const nextVelocity = {
         x: velocityRef.current.x * 0.9,
         y: velocityRef.current.y * 0.9,
       }
-      setCamera({ ...cameraRef.current })
 
-      const speed = Math.hypot(velocityRef.current.x, velocityRef.current.y)
+      cameraRef.current = nextCamera
+      velocityRef.current = nextVelocity
+
+      if (Math.abs(nextCamera.x - previousCamera.x) >= 0.01 || Math.abs(nextCamera.y - previousCamera.y) >= 0.01) {
+        setCamera(nextCamera)
+      }
+
+      const speed = Math.hypot(nextVelocity.x, nextVelocity.y)
       if (speed < 0.08) {
         velocityRef.current.x = 0
         velocityRef.current.y = 0

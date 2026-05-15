@@ -2,15 +2,19 @@ import { SectionShell } from '../../components/shared/SectionShell'
 import { ScrollLinger } from '../../effects/text/ScrollLinger'
 import { skillsCloudItems } from '../../data/skillsCloudData'
 import { PhysicsSkillCloud } from '../../effects/skills/PhysicsSkillCloud'
+import { useSectionWindow } from '../../hooks/useSectionWindow'
 import './SkillsSection.less'
 
 export function SkillsSection() {
+  const { isPreloaded } = useSectionWindow({ sectionIndex: 2, preloadBefore: 3, preloadAfter: 2 })
+  const cloudEnabled = isPreloaded
+
   return (
     <SectionShell id="skills">
       <section className="skills-showcase" aria-labelledby="skills-showcase-title">
         <div className="skills-showcase__frame">
           <div className="skills-showcase__cloud">
-            <PhysicsSkillCloud items={skillsCloudItems} limit={18} sectionIndex={2} />
+            <PhysicsSkillCloud items={skillsCloudItems} limit={18} sectionIndex={2} enabled={cloudEnabled} />
           </div>
 
           <ScrollLinger

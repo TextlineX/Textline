@@ -1,6 +1,7 @@
 import cors from 'cors'
 import express from 'express'
 
+import { aiRouter } from './routes/ai.js'
 import { contactRouter } from './routes/contact.js'
 import { experienceRouter } from './routes/experience.js'
 import { profileRouter } from './routes/profile.js'
@@ -36,6 +37,8 @@ app.use('/api', skillsRouter)
 app.use('/api', projectsRouter)
 app.use('/api', experienceRouter)
 app.use('/api', contactRouter)
+app.use('/ai', aiRouter)
+app.use('/api/ai', aiRouter)
 
 app.use((_req, res) => {
   res.status(404).json(

@@ -7,7 +7,12 @@ import { useViewportSize } from '../../hooks/useViewportSize'
 import { ThreeSphereScene } from '../../effects/hero/ThreeSphereScene'
 import './CharacterSphere.less'
 
-export function CharacterSphere() {
+type CharacterSphereProps = {
+  enabled?: boolean
+  onReady?: () => void
+}
+
+export function CharacterSphere({ enabled = true, onReady }: CharacterSphereProps) {
   const viewport = useViewportSize()
   const sceneShellRef = useRef<HTMLDivElement | null>(null)
   const [isWarmed, setIsWarmed] = useState(true)
@@ -42,7 +47,7 @@ export function CharacterSphere() {
       },
       {
         root: null,
-        rootMargin: '140% 0px 180% 0px',
+        rootMargin: '80% 0px 120% 0px',
         threshold: 0.01,
       },
     )
@@ -54,20 +59,29 @@ export function CharacterSphere() {
     }
   }, [])
 
+  const sceneEnabled = enabled && isWarmed
+
   return (
     <div className="character-sphere" aria-label="character sphere">
       <div
         ref={sceneShellRef}
         className="character-sphere__scene"
         onPointerMove={(event) => {
+          if (!sceneEnabled) {
+            return
+          }
+
           setCursor({ x: event.clientX, y: event.clientY })
         }}
       >
         <ThreeSphereScene
-          enabled={isWarmed}
+          enabled={sceneEnabled}
           scrollPhysicsDirection={scrollPhysicsDirection}
           scrollPhysicsPulseId={scrollPhysicsPulseId}
           scrollPhysicsStrength={scrollPhysicsStrength}
+          onReady={() => {
+            onReady?.()
+          }}
         />
       </div>
     </div>

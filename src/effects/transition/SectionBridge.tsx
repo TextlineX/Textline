@@ -62,16 +62,16 @@ function resolveBridgeConfig(config?: SectionBridgeConfig) {
 }
 
 export function SectionBridge({ children, className, sectionId, sectionIndex }: SectionBridgeProps) {
-  const { scrollOffset, viewportHeight, activeIndex } = useAppShellScroll()
+  const { scrollOffset, sectionStep, activeIndex } = useAppShellScroll()
 
   const bridge = useMemo(() => resolveBridgeConfig(sectionBridgeConfigById[sectionId]), [sectionId])
 
-  const sectionProgress = viewportHeight > 0 ? scrollOffset / viewportHeight - sectionIndex : 0
+  const sectionProgress = sectionStep > 0 ? scrollOffset / sectionStep - sectionIndex : 0
   const enterProgress = smoothstep(-1, 0, sectionProgress)
   const exitProgress = smoothstep(0, 1, sectionProgress)
 
-  const enterLift = viewportHeight * bridge.enter.liftVh * (1 - easeOutCubic(enterProgress))
-  const exitPush = -viewportHeight * bridge.exit.liftVh * easeInCubic(exitProgress)
+  const enterLift = sectionStep * bridge.enter.liftVh * (1 - easeOutCubic(enterProgress))
+  const exitPush = -sectionStep * bridge.exit.liftVh * easeInCubic(exitProgress)
   const transformY = enterLift + exitPush
 
   const enterOpacity = clamp(

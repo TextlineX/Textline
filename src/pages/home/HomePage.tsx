@@ -41,9 +41,10 @@ export function HomePage() {
   }, [])
 
   const loadingReady = hasLoaded && minElapsed
+  const interactiveReady = loadingDismissed
 
   return (
-    <BootProvider bootComplete={loadingReady}>
+    <BootProvider bootComplete={loadingReady} interactiveReady={interactiveReady}>
       {!loadingDismissed ? (
         <LoadingScreen
           active={!loadingDismissed}

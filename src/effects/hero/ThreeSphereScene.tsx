@@ -29,6 +29,7 @@ type ThreeSphereSceneProps = {
   scrollPhysicsDirection?: number
   scrollPhysicsPulseId?: number
   scrollPhysicsStrength?: number
+  onReady?: () => void
 }
 
 const ribbonColors = {
@@ -36,8 +37,8 @@ const ribbonColors = {
   side: 'hsla(195, 80%, 70%, 0.78)',
   back: 'hsla(205, 50%, 30%, 0.24)',
   ice: 'hsla(195, 96%, 92%, 0.96)',
-  pink: 'hsla(345, 100%, 91%, 0.72)',
-  pinkSoft: 'hsla(345, 100%, 91%, 0.46)',
+  glow: 'hsla(196, 100%, 92%, 0.72)',
+  glowSoft: 'hsla(196, 100%, 92%, 0.46)',
 }
 
 function classifyRibbonToken(text: string, index: number) {
@@ -54,7 +55,7 @@ function classifyRibbonToken(text: string, index: number) {
   }
 
   if (text === 'AXIOS' || text === 'UNITY') {
-    return index % 3 === 0 ? ribbonColors.pinkSoft : ribbonColors.side
+    return index % 3 === 0 ? ribbonColors.glowSoft : ribbonColors.side
   }
 
   if (text === ' · ') {
@@ -88,8 +89,8 @@ function buildRibbonTokens() {
 
 const codeDebrisTokens = [...textFlowTokens, '=>', '{}', '[]', '()', 'const', 'let', 'fn', 'return', '++', '//']
 const maxImpactParticles = 28
-const activeLoopDelay = 33
-const idleLoopDelay = 120
+const activeLoopDelay = 16
+const idleLoopDelay = 16
 const idleSpinSpeed = 0.000006
 
 function pickDebrisToken(index: number) {
@@ -98,7 +99,7 @@ function pickDebrisToken(index: number) {
 
 function pickDebrisColor(token: string, index: number) {
   if (/^(const|let|return|fn)$/i.test(token)) {
-    return index % 2 === 0 ? 'hsla(195, 100%, 85%, 0.9)' : 'hsla(345, 100%, 91%, 0.82)'
+    return index % 2 === 0 ? 'hsla(195, 100%, 85%, 0.9)' : 'hsla(196, 100%, 92%, 0.82)'
   }
 
   if (/^(\{|\}|\[|\]|\(|\)|=>|\+\+)$/.test(token)) {
@@ -113,7 +114,7 @@ function pickDebrisColor(token: string, index: number) {
     'hsla(195, 100%, 85%, 0.7)',
     'hsla(195, 80%, 70%, 0.56)',
     'hsla(205, 50%, 30%, 0.16)',
-    'hsla(345, 100%, 91%, 0.52)',
+    'hsla(196, 100%, 92%, 0.52)',
     'hsla(195, 96%, 92%, 0.42)',
   ]
 
@@ -125,12 +126,14 @@ export function ThreeSphereScene({
   scrollPhysicsDirection = 1,
   scrollPhysicsPulseId = 0,
   scrollPhysicsStrength = 0,
+  onReady,
 }: ThreeSphereSceneProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const lastPhysicsPulseIdRef = useRef(scrollPhysicsPulseId)
   const scrollPhysicsPulseIdRef = useRef(scrollPhysicsPulseId)
   const scrollPhysicsDirectionRef = useRef(scrollPhysicsDirection)
   const scrollPhysicsStrengthRef = useRef(scrollPhysicsStrength)
+  const onReadyRef = useRef(onReady)
 
   useEffect(() => {
     scrollPhysicsPulseIdRef.current = scrollPhysicsPulseId
@@ -145,6 +148,10 @@ export function ThreeSphereScene({
   }, [scrollPhysicsStrength])
 
   useEffect(() => {
+    onReadyRef.current = onReady
+  }, [onReady])
+
+  useEffect(() => {
     if (!enabled) {
       return
     }
@@ -155,6 +162,7 @@ export function ThreeSphereScene({
     }
 
     let disposed = false
+    let readyNotified = false
     let tickTimerId: number | null = null
     let observer: ResizeObserver | null = null
     let renderer: InstanceType<ThreeModule['WebGLRenderer']> | null = null
@@ -193,7 +201,7 @@ export function ThreeSphereScene({
         alpha: true,
         antialias: true,
       })
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
       renderer.outputColorSpace = THREE.SRGBColorSpace
       renderer.setClearColor(0x000000, 0)
 
@@ -258,7 +266,7 @@ export function ThreeSphereScene({
               ribbonTextureContext.shadowColor = 'hsla(195, 100%, 85%, 0.28)'
               ribbonTextureContext.shadowBlur = 14
             } else if (token.text === 'VUE' || token.text === 'PYTHON' || token.text === 'BLENDER') {
-              ribbonTextureContext.shadowColor = 'hsla(345, 100%, 91%, 0.18)'
+              ribbonTextureContext.shadowColor = 'hsla(196, 100%, 92%, 0.18)'
               ribbonTextureContext.shadowBlur = 10
             } else {
               ribbonTextureContext.shadowColor = 'transparent'
@@ -497,6 +505,10 @@ export function ThreeSphereScene({
       })
       observer.observe(canvas)
       resize()
+      if (!readyNotified) {
+        readyNotified = true
+        onReadyRef.current?.()
+      }
 
       const scheduleTick = (delay: number) => {
         if (disposed) {

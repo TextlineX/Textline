@@ -10,6 +10,7 @@ import './ExperienceTimeline.less'
 
 type ExperienceTimelineProps = {
   sectionIndex: number
+  enabled?: boolean
 }
 
 type TimelineEntry = {
@@ -78,7 +79,7 @@ function smoothstep(edge0: number, edge1: number, value: number) {
   return x * x * (3 - 2 * x)
 }
 
-export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
+export function ExperienceTimeline({ sectionIndex, enabled = true }: ExperienceTimelineProps) {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const pathRef = useRef<SVGPathElement | null>(null)
   const turbulenceRef = useRef<SVGFETurbulenceElement | null>(null)
@@ -94,10 +95,10 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
   const pointerRef = useRef({ x: 0.5, y: 0.5, energy: 0 })
   const stageRectRef = useRef({ left: 0, top: 0, width: 1, height: 1 })
   const pointerFrameRef = useRef<number | null>(null)
-  const { activeIndex, experienceRevealProgress, scrollOffset, viewportHeight } = useAppShellScroll()
+  const { activeIndex, experienceRevealProgress, scrollOffset, sectionStep } = useAppShellScroll()
 
-  const sectionStart = sectionIndex * viewportHeight
-  const sectionScrollProgress = viewportHeight <= 0 ? 0 : clamp((scrollOffset - sectionStart) / viewportHeight, 0, 1)
+  const sectionStart = sectionIndex * sectionStep
+  const sectionScrollProgress = sectionStep <= 0 ? 0 : clamp((scrollOffset - sectionStart) / sectionStep, 0, 1)
   const sectionProgress = activeIndex === sectionIndex ? clamp(experienceRevealProgress, 0, 1) : sectionScrollProgress
 
   const isEngaged = sectionProgress >= -0.35 && sectionProgress <= 0.85
@@ -120,7 +121,7 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
     const root = rootRef.current
     const path = pathRef.current
 
-    if (!root || !path || !isEngaged) {
+    if (!root || !path || !isEngaged || !enabled) {
       return
     }
 
@@ -398,7 +399,7 @@ export function ExperienceTimeline({ sectionIndex }: ExperienceTimelineProps) {
       nodeRefs.current = []
       tetherRefs.current = []
     }
-  }, [isEngaged])
+  }, [enabled, isEngaged])
 
   useEffect(() => {
     const root = rootRef.current

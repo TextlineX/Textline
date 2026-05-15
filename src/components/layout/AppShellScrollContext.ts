@@ -4,6 +4,7 @@ export type AppShellScrollContextValue = {
   scrollOffset: number
   scrollProgress: number
   viewportHeight: number
+  sectionStep: number
   maxOffset: number
   activeIndex: number
   playgroundRevealProgress: number

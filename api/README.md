@@ -19,6 +19,8 @@ npm run dev
 
 - `GET /health`
 - `GET /api`
+- `GET /ai/test`
+- `GET /api/ai/test`
 - `GET /api/profile`
 - `GET /api/skills`
 - `GET /api/projects`

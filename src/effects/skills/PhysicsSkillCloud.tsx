@@ -11,6 +11,7 @@ type PhysicsSkillCloudProps = {
   items: SkillCloudItem[]
   limit?: number
   sectionIndex: number
+  enabled?: boolean
 }
 
 type MatterBody = {
@@ -130,7 +131,7 @@ function resolveStackSlots(stageWidth: number, stageHeight: number, cellSize: nu
   return slots
 }
 
-export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSkillCloudProps) {
+export function PhysicsSkillCloud({ items, limit = 14, sectionIndex, enabled = true }: PhysicsSkillCloudProps) {
   const stageRef = useRef<HTMLDivElement | null>(null)
   const chipRefs = useRef<Array<HTMLDivElement | null>>([])
   const bodyRefs = useRef<Array<ChipBody | null>>([])
@@ -146,7 +147,14 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
     offsetX: 0,
     offsetY: 0,
   })
-  const { activeIndex, scrollOffset, scrollPhysicsDirection, scrollPhysicsPulseId, scrollPhysicsStrength } = useAppShellScroll()
+  const {
+    activeIndex,
+    scrollOffset,
+    sectionStep,
+    scrollPhysicsDirection,
+    scrollPhysicsPulseId,
+    scrollPhysicsStrength,
+  } = useAppShellScroll()
   const viewport = useViewportSize()
   const [isRunning, setIsRunning] = useState(false)
 
@@ -155,15 +163,16 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
   const itemSignature = visibleItems.map((item) => item.label).join('|')
 
   useEffect(() => {
-    const sectionProgress = viewport.height > 0 ? scrollOffset / viewport.height - sectionIndex : 0
+    const sectionProgress = sectionStep > 0 ? scrollOffset / sectionStep - sectionIndex : 0
     const nextRunning = sectionProgress >= -2.15 && sectionProgress <= 1.05
     setIsRunning((current) => (current === nextRunning ? current : nextRunning))
-  }, [scrollOffset, sectionIndex, viewport.height])
+  }, [scrollOffset, sectionIndex, sectionStep])
 
   useEffect(() => {
     const stage = stageRef.current
     const activeItems = items.slice(0, visibleLimit)
-    if (!stage || activeItems.length === 0 || !isRunning) {
+    const shouldRun = enabled && isRunning
+    if (!stage || activeItems.length === 0 || !shouldRun) {
       return
     }
 
@@ -245,6 +254,16 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
 
       bodyRefs.current = chipEntries.map((entry) => entry.body)
 
+      chipEntries.forEach((entry, index) => {
+        const node = chipRefs.current[index]
+        if (!node) {
+          return
+        }
+
+        node.style.width = `${entry.size}px`
+        node.style.height = `${entry.size}px`
+      })
+
       Matter.World.add(engine.world, [...walls, ...chipEntries.map((entry) => entry.body)])
 
       burstRef.current = ({ direction, emphasis = 1, strength }) => {
@@ -294,8 +313,6 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
             return
           }
 
-          node.style.width = `${entry.size}px`
-          node.style.height = `${entry.size}px`
           node.style.transform = `translate3d(${entry.body.position.x - entry.size / 2}px, ${entry.body.position.y - entry.size / 2}px, 0) rotate(${entry.body.angle}rad)`
         })
 
@@ -322,7 +339,7 @@ export function PhysicsSkillCloud({ items, limit = 14, sectionIndex }: PhysicsSk
         matter.Engine.clear(engine)
       }
     }
-  }, [itemSignature, items, isRunning, viewport.height, viewport.width, visibleLimit])
+  }, [enabled, itemSignature, items, isRunning, viewport.height, viewport.width, visibleLimit])
 
   useEffect(() => {
     if (!burstRef.current) {

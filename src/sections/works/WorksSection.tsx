@@ -5,12 +5,15 @@ import { useAppShellScroll } from '../../components/layout/AppShellScrollContext
 import { StickyMagneticTitle } from '../../components/shared/StickyMagneticTitle'
 import { CodeTunnel } from './CodeTunnel'
 import { WorksModePanel } from './WorksModePanel'
+import { useSectionWindow } from '../../hooks/useSectionWindow'
 import './WorksSection.less'
 
 export function WorksSection() {
-  const { scrollOffset, viewportHeight, worksRevealProgress, worksScrollImpulse } = useAppShellScroll()
-  const sectionProgress = viewportHeight > 0 ? scrollOffset / viewportHeight - 3 : 0
+  const { scrollOffset, sectionStep, worksRevealProgress, worksScrollImpulse } = useAppShellScroll()
+  const sectionProgress = sectionStep > 0 ? scrollOffset / sectionStep - 3 : 0
   const engaged = sectionProgress >= -0.35 && sectionProgress <= 0.85
+  const { isPreloaded } = useSectionWindow({ sectionIndex: 3, preloadBefore: 3, preloadAfter: 2 })
+  const stageEnabled = engaged || isPreloaded
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('works-tunnel-cursor-state', { detail: { active: engaged } }))
@@ -25,11 +28,11 @@ export function WorksSection() {
       <section className={`works-showcase${engaged ? ' works-showcase--engaged' : ''}`} aria-labelledby="works-showcase-title">
         <div className="works-showcase__frame">
           <div className="works-showcase__tunnel">
-            <CodeTunnel engaged={engaged} revealProgress={worksRevealProgress} motionImpulse={worksScrollImpulse} />
+            <CodeTunnel engaged={stageEnabled} revealProgress={worksRevealProgress} motionImpulse={worksScrollImpulse} />
           </div>
 
           <div className="works-showcase__mode">
-            <WorksModePanel engaged={engaged} revealProgress={worksRevealProgress} motionImpulse={worksScrollImpulse} />
+            <WorksModePanel engaged={stageEnabled} revealProgress={worksRevealProgress} motionImpulse={worksScrollImpulse} />
           </div>
 
           <div className="works-showcase__header-layer">

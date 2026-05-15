@@ -4,7 +4,6 @@ import { BootContext, type BootContextValue } from './BootContext'
 
 type BootProviderProps = PropsWithChildren<BootContextValue>
 
-export function BootProvider({ bootComplete, children }: BootProviderProps) {
-  return <BootContext.Provider value={{ bootComplete }}>{children}</BootContext.Provider>
+export function BootProvider({ bootComplete, interactiveReady, children }: BootProviderProps) {
+  return <BootContext.Provider value={{ bootComplete, interactiveReady }}>{children}</BootContext.Provider>
 }
-

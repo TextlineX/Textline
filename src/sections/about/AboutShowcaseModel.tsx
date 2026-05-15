@@ -11,6 +11,7 @@ type AboutShowcaseModelProps = {
   onCommand?: (command: AboutShowcaseCommand) => void
   screenTextureSource?: HTMLCanvasElement | null
   scrollDirection?: 1 | -1
+  enabled?: boolean
 }
 
 type AboutShowcaseCommand = 'rotate-left' | 'rotate-right' | 'tilt-up' | 'tilt-down' | 'focus-screen' | 'btn-a' | 'btn-b'
@@ -45,11 +46,11 @@ export function AboutShowcaseModel({
   onCommand,
   screenTextureSource,
   scrollDirection,
+  enabled = true,
 }: AboutShowcaseModelProps) {
-  const { scrollOffset, viewportHeight } = useAppShellScroll()
+  const { scrollOffset, sectionStep } = useAppShellScroll()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const scrollOffsetRef = useRef(scrollOffset)
-  const viewportHeightRef = useRef(viewportHeight)
   const onCommandRef = useRef(onCommand)
   const screenTextureSourceRef = useRef<HTMLCanvasElement | null>(screenTextureSource ?? null)
   const scrollDirectionRef = useRef(scrollDirection ?? 1)
@@ -60,10 +61,6 @@ export function AboutShowcaseModel({
   useEffect(() => {
     scrollOffsetRef.current = scrollOffset
   }, [scrollOffset])
-
-  useEffect(() => {
-    viewportHeightRef.current = viewportHeight
-  }, [viewportHeight])
 
   useEffect(() => {
     onCommandRef.current = onCommand
@@ -80,6 +77,10 @@ export function AboutShowcaseModel({
   }, [scrollDirection])
 
   useEffect(() => {
+    if (!enabled) {
+      return
+    }
+
     const canvas = canvasRef.current
     if (!canvas) {
       return
@@ -367,9 +368,8 @@ export function AboutShowcaseModel({
 
         const tick = (_time: number) => {
           if (!disposed && renderer && scene && camera && rootGroup && loadedModel) {
-            const currentViewportHeight = viewportHeightRef.current
             const currentScrollOffset = scrollOffsetRef.current
-            const sectionProgress = currentViewportHeight > 0 ? currentScrollOffset / currentViewportHeight - 1 : 0
+            const sectionProgress = sectionStep > 0 ? currentScrollOffset / sectionStep - 1 : 0
             const visibility = sectionProgress <= -1.1
               ? 0
               : sectionProgress < 0
@@ -529,7 +529,7 @@ export function AboutShowcaseModel({
       screenTexture?.dispose()
       renderer?.dispose()
     }
-  }, [modelUrl])
+  }, [enabled, modelUrl, sectionStep])
 
   return (
     <div className={`about-showcase-model${ready ? ' about-showcase-model--ready' : ''}${failed ? ' about-showcase-model--failed' : ''}`}>

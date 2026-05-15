@@ -5,14 +5,17 @@ import { SectionShell } from '../../components/shared/SectionShell'
 import { StickyMagneticTitle } from '../../components/shared/StickyMagneticTitle'
 import { GameCanvasScene } from '../../pages/game/components/GameCanvasScene'
 import { useGameMachine } from '../../pages/game/useGameMachine'
+import { useSectionWindow } from '../../hooks/useSectionWindow'
 import { AboutShowcaseModel } from './AboutShowcaseModel'
 
 import './AboutSection.less'
 
 export function AboutSection() {
-  const { scrollOffset, viewportHeight, scrollDirection } = useAppShellScroll()
-  const sectionProgress = viewportHeight > 0 ? scrollOffset / viewportHeight - 1 : 0
+  const { scrollOffset, sectionStep, scrollDirection } = useAppShellScroll()
+  const sectionProgress = sectionStep > 0 ? scrollOffset / sectionStep - 1 : 0
   const engaged = sectionProgress >= -1.1 && sectionProgress <= 0.85
+  const { isPreloaded } = useSectionWindow({ sectionIndex: 1, preloadBefore: 3, preloadAfter: 2 })
+  const modelEnabled = engaged || isPreloaded
   const [screenLinked, setScreenLinked] = useState(false)
   const [screenTextureSource, setScreenTextureSource] = useState<HTMLCanvasElement | null>(null)
   const screenOpenTimerRef = useRef<number | null>(null)
@@ -56,12 +59,6 @@ export function AboutSection() {
       }
     }
   }, [engaged])
-
-  useEffect(() => {
-    if (!screenLinked) {
-      setScreenTextureSource(null)
-    }
-  }, [screenLinked])
 
   const sendGameKey = (key: 'up' | 'down' | 'left' | 'right' | 'a' | 'b') => {
     window.dispatchEvent(
@@ -141,6 +138,7 @@ export function AboutSection() {
                 onCommand={handleModelCommand}
                 screenTextureSource={screenTextureSource}
                 scrollDirection={scrollDirection}
+                enabled={modelEnabled}
               />
               {screenLinked ? (
                 <div className="about-showcase__screen-source-shell" aria-hidden="true">

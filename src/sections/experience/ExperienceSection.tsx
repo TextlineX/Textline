@@ -1,15 +1,18 @@
 import { SectionShell } from '../../components/shared/SectionShell'
 import { StickyMagneticTitle } from '../../components/shared/StickyMagneticTitle'
 import { ExperienceTimeline } from './ExperienceTimeline'
+import { useSectionWindow } from '../../hooks/useSectionWindow'
 import './ExperienceSection.less'
 
 export function ExperienceSection() {
+  const { isPreloaded } = useSectionWindow({ sectionIndex: 4, preloadBefore: 3, preloadAfter: 2 })
+
   return (
     <SectionShell id="experience">
       <section className="experience-showcase" aria-labelledby="experience-showcase-title">
         <div className="experience-showcase__frame">
           <div className="experience-showcase__timeline">
-            <ExperienceTimeline sectionIndex={4} />
+            <ExperienceTimeline sectionIndex={4} enabled={isPreloaded} />
           </div>
 
           <div className="experience-showcase__header">

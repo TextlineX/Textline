@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react'
 
 type BootContextValue = {
   bootComplete: boolean
+  interactiveReady: boolean
 }
 
 const BootContext = createContext<BootContextValue | null>(null)
@@ -18,4 +19,3 @@ export function useBootContext() {
 
 export { BootContext }
 export type { BootContextValue }
-

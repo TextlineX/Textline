@@ -268,7 +268,8 @@ export function GameCanvasScene({
   useEffect(() => {
     onCanvasReady?.(canvasRef.current)
     return () => {
-      onCanvasReady?.(null)
+      // Keep the last rendered canvas available as a frozen texture source
+      // when the scene unmounts. The parent will replace it on the next mount.
     }
   }, [onCanvasReady])
 

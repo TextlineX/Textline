@@ -32,7 +32,7 @@ type Size = {
 }
 
 const glyphs = ' .,:;i1tftL0X#'
-const accentColor = 'rgba(255, 90, 90, 0.92)'
+const accentColor = 'rgba(168, 230, 255, 0.92)'
 const mutedColor = 'rgba(232, 232, 232, 0.34)'
 const textColor = 'rgba(242, 242, 242, 0.62)'
 function pickGlyph(intensity: number) {

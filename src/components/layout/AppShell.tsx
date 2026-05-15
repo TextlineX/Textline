@@ -4,9 +4,12 @@ import { CornerIcon } from '../../effects/CornerIcon'
 import { LogoMark } from '../shared/LogoMark'
 import { SideDrawer } from '../shared/SideDrawer'
 import { navItems } from '../../data/siteData'
+import { useBootContext } from './BootContext'
 import { useCooldownGate } from '../../hooks/useCooldownGate'
+import { useMagneticCursor } from '../../hooks/cursor/useMagneticCursor'
 import { useViewportSize } from '../../hooks/useViewportSize'
 import { useViewportVars } from '../../hooks/useViewportVars'
+import { MagneticCursor } from '../../effects/cursor/MagneticCursor'
 import { AppShellScrollProvider } from './AppShellScroll'
 import { SectionBridge } from '../../effects/transition/SectionBridge'
 import './AppShell.less'
@@ -17,10 +20,14 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
 }
 
+const sectionStrideFactor = 1.8
+
 export function AppShell({ children }: AppShellProps) {
+  const { interactiveReady } = useBootContext()
   const viewport = useViewportSize()
-  useViewportVars()
+  useViewportVars({ width: viewport.width, height: viewport.height })
   const sections = useMemo(() => Children.toArray(children), [children])
+  const { position, locked, size, mode } = useMagneticCursor({ enabled: interactiveReady })
   const [currentOffset, setCurrentOffset] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrollPhysicsDirection, setScrollPhysicsDirection] = useState(1)
@@ -39,6 +46,9 @@ export function AppShell({ children }: AppShellProps) {
   const worksRecedeFrameRef = useRef<number | undefined>(undefined)
   const targetOffsetRef = useRef(0)
   const currentOffsetRef = useRef(0)
+  const publishedOffsetRef = useRef(0)
+  const publishedWorksScrollImpulseRef = useRef(0)
+  const publishAtRef = useRef(0)
   const frameRef = useRef<number | undefined>(undefined)
   const {
     ready: scrollPhysicsReady,
@@ -48,7 +58,8 @@ export function AppShell({ children }: AppShellProps) {
     reset: resetScrollPhysics,
   } = useCooldownGate({ delayMs: 180 })
 
-  const maxOffset = Math.max(0, (sections.length - 1) * viewport.height)
+  const sectionStep = Math.max(1, viewport.height * sectionStrideFactor)
+  const maxOffset = Math.max(0, (sections.length - 1) * sectionStep)
 
   const clampOffset = useCallback(
     (value: number) => {
@@ -68,9 +79,9 @@ export function AppShell({ children }: AppShellProps) {
       return 0
     }
 
-    const nextIndex = Math.round(currentOffset / viewport.height)
+    const nextIndex = Math.round(currentOffset / sectionStep)
     return Math.max(0, Math.min(navItems.length - 1, nextIndex))
-  }, [currentOffset, sections.length, viewport.height])
+  }, [currentOffset, sectionStep, sections.length])
 
   const scrollProgress = useMemo(() => {
     if (maxOffset <= 0) {
@@ -93,6 +104,9 @@ export function AppShell({ children }: AppShellProps) {
       const next = clampOffset(value)
       targetOffsetRef.current = next
       currentOffsetRef.current = next
+      publishedOffsetRef.current = next
+      publishAtRef.current = performance.now()
+      document.documentElement.style.setProperty('--app-scroll-offset', `${next}px`)
       setCurrentOffset(next)
     },
     [clampOffset],
@@ -108,14 +122,20 @@ export function AppShell({ children }: AppShellProps) {
   }, [armScrollPhysics, resetScrollPhysics])
 
   useEffect(() => {
-    document.documentElement.style.setProperty('--app-scroll-offset', `${currentOffset}px`)
-    document.documentElement.style.setProperty('--app-scroll-progress', String(scrollProgress))
-
     return () => {
       document.documentElement.style.removeProperty('--app-scroll-offset')
       document.documentElement.style.removeProperty('--app-scroll-progress')
+      document.documentElement.style.removeProperty('--section-step')
     }
-  }, [currentOffset, scrollProgress])
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--section-step', `${sectionStep}px`)
+
+    return () => {
+      document.documentElement.style.removeProperty('--section-step')
+    }
+  }, [sectionStep])
 
   useEffect(() => {
     document.documentElement.dataset.menuOpen = menuOpen ? 'true' : 'false'
@@ -223,6 +243,7 @@ export function AppShell({ children }: AppShellProps) {
 
   useEffect(() => {
     const tick = () => {
+      const now = performance.now()
       const target = targetOffsetRef.current
       const current = currentOffsetRef.current
       const next = current + (target - current) * 0.085
@@ -230,13 +251,29 @@ export function AppShell({ children }: AppShellProps) {
 
       if (Math.abs(snapped - currentOffsetRef.current) > 0.5) {
         currentOffsetRef.current = snapped
-        setCurrentOffset(snapped)
       }
 
+      document.documentElement.style.setProperty('--app-scroll-offset', `${currentOffsetRef.current}px`)
+      document.documentElement.style.setProperty(
+        '--app-scroll-progress',
+        maxOffset > 0 ? String(currentOffsetRef.current / maxOffset) : '0',
+      )
       const nextWorksImpulse = worksScrollImpulseRef.current * 0.9
       if (Math.abs(nextWorksImpulse - worksScrollImpulseRef.current) > 0.001) {
         worksScrollImpulseRef.current = nextWorksImpulse
-        setWorksScrollImpulse(nextWorksImpulse)
+      }
+
+      const shouldPublish =
+        now - publishAtRef.current >= 120 ||
+        Math.abs(publishedOffsetRef.current - currentOffsetRef.current) >= 4 ||
+        Math.abs(publishedWorksScrollImpulseRef.current - worksScrollImpulseRef.current) >= 0.05
+
+      if (shouldPublish) {
+        publishAtRef.current = now
+        publishedOffsetRef.current = currentOffsetRef.current
+        publishedWorksScrollImpulseRef.current = worksScrollImpulseRef.current
+        setCurrentOffset(currentOffsetRef.current)
+        setWorksScrollImpulse(worksScrollImpulseRef.current)
       }
 
       frameRef.current = window.requestAnimationFrame(tick)
@@ -249,7 +286,7 @@ export function AppShell({ children }: AppShellProps) {
         window.cancelAnimationFrame(frameRef.current)
       }
     }
-  }, [])
+  }, [maxOffset, sectionStep])
 
   useEffect(() => {
     if (sections.length <= 1 || menuOpen) {
@@ -261,19 +298,20 @@ export function AppShell({ children }: AppShellProps) {
         return
       }
 
+      const currentActiveIndex = activeIndexRef.current
       const delta =
-        event.deltaMode === 1 ? event.deltaY * 28 : event.deltaMode === 2 ? event.deltaY * viewport.height : event.deltaY
+        event.deltaMode === 1 ? event.deltaY * 28 : event.deltaMode === 2 ? event.deltaY * sectionStep : event.deltaY
 
-      if (activeIndex === 3) {
+      if (currentActiveIndex === 3) {
         const currentRevealProgress = worksRevealProgressRef.current
-        const stageOffset = clampOffset(3 * viewport.height)
-        const revealDelta = (delta / Math.max(1, viewport.height)) * 1.2
+        const stageOffset = clampOffset(3 * sectionStep)
+        const revealDelta = (delta / Math.max(1, sectionStep)) * 1.2
         const nextRevealProgress = clamp(currentRevealProgress + revealDelta, 0, 1)
         const snappedRevealProgress =
           nextRevealProgress > 0.995 ? 1 : nextRevealProgress < 0.005 ? 0 : nextRevealProgress
 
         setWorksRevealProgress(snappedRevealProgress)
-        setWorksScrollImpulse((current) => Math.min(1, Math.max(current, Math.abs(delta) / Math.max(1, viewport.height) * 1.5)))
+        setWorksScrollImpulse((current) => Math.min(1, Math.max(current, Math.abs(delta) / Math.max(1, sectionStep) * 1.5)))
 
         if (delta > 0) {
           if (currentRevealProgress < 1) {
@@ -292,10 +330,10 @@ export function AppShell({ children }: AppShellProps) {
         }
       }
 
-      if (activeIndex === 5) {
+      if (currentActiveIndex === 5) {
         const currentRevealProgress = playgroundRevealProgressRef.current
-        const stageOffset = clampOffset(5 * viewport.height)
-        const revealDelta = delta / Math.max(1, viewport.height) * 1.8
+        const stageOffset = clampOffset(5 * sectionStep)
+        const revealDelta = delta / Math.max(1, sectionStep) * 1.8
         const nextRevealProgress = Math.max(0, Math.min(1, currentRevealProgress + revealDelta))
         const snappedRevealProgress =
           nextRevealProgress > 0.995 ? 1 : nextRevealProgress < 0.005 ? 0 : nextRevealProgress
@@ -329,10 +367,10 @@ export function AppShell({ children }: AppShellProps) {
         }
       }
 
-      if (activeIndex === 4) {
+      if (currentActiveIndex === 4) {
         const currentRevealProgress = experienceRevealProgressRef.current
-        const stageOffset = clampOffset(4 * viewport.height)
-        const revealDelta = (delta / Math.max(1, viewport.height)) * 1.6
+        const stageOffset = clampOffset(4 * sectionStep)
+        const revealDelta = (delta / Math.max(1, sectionStep)) * 1.6
         const nextRevealProgress = Math.max(0, Math.min(1, currentRevealProgress + revealDelta))
         const snappedRevealProgress =
           nextRevealProgress > 0.995 ? 1 : nextRevealProgress < 0.005 ? 0 : nextRevealProgress
@@ -379,16 +417,17 @@ export function AppShell({ children }: AppShellProps) {
     return () => {
       window.removeEventListener('wheel', handleWheel)
     }
-  }, [activeIndex, armScrollPhysics, clampOffset, menuOpen, playgroundRevealProgress, sections.length, touchScrollPhysics, viewport.height])
+  }, [armScrollPhysics, clampOffset, menuOpen, sections.length, sectionStep, touchScrollPhysics, viewport.height])
 
   return (
     <AppShellScrollProvider
       value={{
         scrollOffset: currentOffset,
         scrollProgress,
-        viewportHeight: viewport.height,
-        maxOffset,
-        activeIndex,
+      viewportHeight: viewport.height,
+      sectionStep,
+      maxOffset,
+      activeIndex,
         playgroundRevealProgress,
         experienceRevealProgress,
         worksRevealProgress,
@@ -410,18 +449,32 @@ export function AppShell({ children }: AppShellProps) {
           open={menuOpen}
           onClose={() => setMenuOpen(false)}
         />
+        {interactiveReady ? (
+          <MagneticCursor
+            x={position.x}
+            y={position.y}
+            locked={locked}
+            width={size.width}
+            height={size.height}
+            mode={mode}
+          />
+        ) : null}
         <main className="app-shell__main">
-          <div
-            className="app-shell__viewport"
-            style={{ transform: `translate3d(0, -${currentOffset}px, 0)` }}
-          >
+          <div className="app-shell__viewport">
             {sections.map((section, index) => {
               const sectionId = navItems[index]?.id ?? `section-${index}`
               const sectionDistance = Math.abs(activeIndex - index)
               const sectionZIndex = sectionDistance === 0 ? 3 : sectionDistance === 1 ? 2 : 1
 
               return (
-                <div className="app-shell__section" key={sectionId} style={{ zIndex: sectionZIndex }}>
+                <div
+                  className="app-shell__section"
+                  key={sectionId}
+                  style={{
+                    zIndex: sectionZIndex,
+                    height: `${sectionStep}px`,
+                  }}
+                >
                   <SectionBridge sectionId={sectionId} sectionIndex={index}>
                     {section}
                   </SectionBridge>

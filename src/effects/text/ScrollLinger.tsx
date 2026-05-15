@@ -56,17 +56,17 @@ export function ScrollLinger({
   followDelayVh = 0,
   followEase = 1,
 }: ScrollLingerProps) {
-  const { scrollOffset, viewportHeight } = useAppShellScroll()
+  const { scrollOffset, sectionStep } = useAppShellScroll()
 
-  const stickTop = Math.max(12, viewportHeight * stickTopVh)
-  const anchorOffset = viewportHeight * anchorVh
-  const sectionStart = sectionIndex * viewportHeight
-  const lingerDistance = Math.max(viewportHeight * lingerVh, stickTop * 1.25)
-  const releaseDistance = Math.max(viewportHeight * releaseVh, stickTop)
-  const fadeDistance = Math.max(viewportHeight * fadeVh, stickTop * 1.2)
-  const blurDelayDistance = viewportHeight * blurDelayVh
-  const blurSpanDistance = Math.max(viewportHeight * blurSpanVh, 1)
-  const followDelayDistance = viewportHeight * followDelayVh
+  const stickTop = Math.max(12, sectionStep * stickTopVh)
+  const anchorOffset = sectionStep * anchorVh
+  const sectionStart = sectionIndex * sectionStep
+  const lingerDistance = Math.max(sectionStep * lingerVh, stickTop * 1.25)
+  const releaseDistance = Math.max(sectionStep * releaseVh, stickTop)
+  const fadeDistance = Math.max(sectionStep * fadeVh, stickTop * 1.2)
+  const blurDelayDistance = sectionStep * blurDelayVh
+  const blurSpanDistance = Math.max(sectionStep * blurSpanVh, 1)
+  const followDelayDistance = sectionStep * followDelayVh
   const followEaseClamped = clamp(followEase, 0.02, 1)
 
   const pinStart = sectionStart + anchorOffset - stickTop

@@ -4,6 +4,7 @@ import * as Matter from 'matter-js'
 import { useAppShellScroll } from '../../components/layout/AppShellScrollContext'
 import { SectionShell } from '../../components/shared/SectionShell'
 import { StickyMagneticTitle } from '../../components/shared/StickyMagneticTitle'
+import { useSectionWindow } from '../../hooks/useSectionWindow'
 import './ContactSection.less'
 
 type ContactRig = {
@@ -78,6 +79,8 @@ export function ContactSection() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const contactRigRef = useRef<ContactRig | null>(null)
   const { requestHome } = useAppShellScroll()
+  const { isPreloaded } = useSectionWindow({ sectionIndex: 6, preloadBefore: 3, preloadAfter: 1 })
+  const enabled = isPreloaded
   const frameRef = useRef<number | null>(null)
   const imageRef = useRef<HTMLImageElement | null>(null)
   const dragStateRef = useRef<{
@@ -107,6 +110,10 @@ export function ContactSection() {
   })
 
   useEffect(() => {
+    if (!enabled) {
+      return
+    }
+
     const section = sectionRef.current
     const rigStage = rigStageRef.current
     const canvas = canvasRef.current
@@ -469,7 +476,7 @@ export function ContactSection() {
       contactRigRef.current = null
       imageRef.current = null
     }
-  }, [])
+  }, [enabled])
 
   const handleWheelCapture = (event: WheelEvent<HTMLElement>) => {
     const rig = contactRigRef.current

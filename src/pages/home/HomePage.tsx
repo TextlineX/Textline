@@ -1,6 +1,7 @@
 import { HeroSection } from '../../sections/hero/HeroSection'
 import { AboutSection } from '../../sections/about'
 import { SkillsSection } from '../../sections/skills'
+import { WorksSection } from '../../sections/works'
 import { FloatingBar } from '../../components/shared/FloatingBar'
 import './HomePage.less'
 
@@ -19,6 +20,7 @@ export function HomePage({ isBootComplete }: HomePageProps) {
       </section>
       <AboutSection />
       <SkillsSection />
+      <WorksSection />
     </main>
   )
 }

@@ -1,39 +1,89 @@
+@font-face {
+  font-family: 'Quinn';
+  src:
+    url('/font/Quinn-Bold.otf') format('opentype'),
+    url('/font/Quinn-Bold.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 :root {
-  --abyssal-bg: #0d1117;
-  --abyssal-surface: #111826;
-  --abyssal-surface-2: #162131;
-  --abyssal-text: #f5f7fa;
-  --abyssal-text-strong: #ffffff;
-  --abyssal-text-muted: rgba(245, 247, 250, 0.66);
-  --abyssal-border: rgba(168, 230, 255, 0.14);
-  --abyssal-border-strong: rgba(168, 230, 255, 0.24);
-  --abyssal-border-soft: rgba(168, 230, 255, 0.08);
-  --abyssal-ash: #243244;
-  --abyssal-ember: #a8e6ff;
-  --abyssal-violet: #5ba4d6;
-  --abyssal-cyan: #ffd1dc;
-
-  --color-bg: var(--abyssal-bg);
-  --color-surface: var(--abyssal-surface);
-  --color-surface-strong: var(--abyssal-surface-2);
-  --color-text: var(--abyssal-text);
-  --color-text-strong: var(--abyssal-text-strong);
-  --color-muted: var(--abyssal-text-muted);
-  --color-border: var(--abyssal-border);
-  --color-border-strong: var(--abyssal-border-strong);
-  --color-border-soft: var(--abyssal-border-soft);
-  --color-accent: var(--abyssal-ember);
-  --color-accent-strong: #5ba4d6;
-  --color-accent-glow: rgba(168, 230, 255, 0.3);
-  --color-accent-soft: rgba(168, 230, 255, 0.12);
-  --color-accent-faint: rgba(168, 230, 255, 0.05);
-  --color-cyan-glow: rgba(91, 164, 214, 0.2);
-  --color-violet-glow: rgba(255, 209, 220, 0.16);
-  --color-pink: #ffd1dc;
-  --color-pink-glow: rgba(255, 209, 220, 0.22);
-
+  color-scheme: light;
+  --color-page-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-strong: #eef2f7;
+  --color-surface-muted: #e5eaf2;
+  --color-text: #0f172a;
+  --color-text-strong: #020617;
+  --color-text-muted: rgba(15, 23, 42, 0.66);
+  --color-border: rgba(15, 23, 42, 0.12);
+  --color-border-strong: rgba(15, 23, 42, 0.2);
+  --color-accent: #2563eb;
+  --color-accent-strong: #1d4ed8;
+  --color-accent-glow: rgba(37, 99, 235, 0.18);
+  --color-page-shadow: rgba(15, 23, 42, 0.08);
+  --color-selection-bg: rgba(37, 99, 235, 0.18);
+  --color-selection-text: #0f172a;
   --font-sans: system-ui, sans-serif;
-  --font-display: var(--font-sans);
+  --font-display: 'Quinn', var(--font-sans);
+  --hero-layer-a-1: #d4dbe3;
+  --hero-layer-a-2: #b8c2cf;
+  --hero-layer-a-3: #8c99ab;
+  --hero-layer-a-4: #5b687b;
+  --hero-pink-soft: rgba(244, 180, 208, 0.36);
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --color-page-bg: #070b14;
+  --color-surface: #0f172a;
+  --color-surface-strong: #162131;
+  --color-surface-muted: #1e293b;
+  --color-text: #e5edf7;
+  --color-text-strong: #ffffff;
+  --color-text-muted: rgba(229, 237, 247, 0.68);
+  --color-border: rgba(168, 230, 255, 0.14);
+  --color-border-strong: rgba(168, 230, 255, 0.24);
+  --color-accent: #a8e6ff;
+  --color-accent-strong: #5ba4d6;
+  --color-accent-glow: rgba(168, 230, 255, 0.28);
+  --color-page-shadow: rgba(0, 0, 0, 0.3);
+  --color-selection-bg: rgba(168, 230, 255, 0.22);
+  --color-selection-text: #f8fafc;
+  --font-display: 'Quinn', var(--font-sans);
+  --hero-layer-a-1: #233042;
+  --hero-layer-a-2: #1a2535;
+  --hero-layer-a-3: #121b29;
+  --hero-layer-a-4: #0b1320;
+  --hero-pink-soft: rgba(233, 149, 191, 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --color-page-bg: #070b14;
+    --color-surface: #0f172a;
+    --color-surface-strong: #162131;
+    --color-surface-muted: #1e293b;
+    --color-text: #e5edf7;
+    --color-text-strong: #ffffff;
+    --color-text-muted: rgba(229, 237, 247, 0.68);
+    --color-border: rgba(168, 230, 255, 0.14);
+    --color-border-strong: rgba(168, 230, 255, 0.24);
+    --color-accent: #a8e6ff;
+    --color-accent-strong: #5ba4d6;
+    --color-accent-glow: rgba(168, 230, 255, 0.28);
+    --color-page-shadow: rgba(0, 0, 0, 0.3);
+    --color-selection-bg: rgba(168, 230, 255, 0.22);
+    --color-selection-text: #f8fafc;
+    --font-display: 'Quinn', var(--font-sans);
+    --hero-layer-a-1: #233042;
+    --hero-layer-a-2: #1a2535;
+    --hero-layer-a-3: #121b29;
+    --hero-layer-a-4: #0b1320;
+    --hero-pink-soft: rgba(233, 149, 191, 0.28);
+  }
 }
 
 *,
@@ -47,37 +97,24 @@ body,
 #root {
   width: 100%;
   min-height: 100%;
-  overflow: hidden;
 }
 
 html {
-  color-scheme: dark;
-  -webkit-user-select: none;
-  user-select: none;
+  background: var(--color-page-bg);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 50% 20%, var(--color-accent-faint), transparent 30%),
-    radial-gradient(circle at 78% 14%, rgba(91, 164, 214, 0.08), transparent 22%),
-    radial-gradient(circle at 16% 82%, rgba(255, 209, 220, 0.04), transparent 24%),
-    var(--color-bg);
+  background: var(--color-page-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
-  overscroll-behavior: none;
-  cursor: none;
-  -webkit-user-select: none;
-  user-select: none;
 }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
+::selection {
+  background: var(--color-selection-bg);
+  color: var(--color-selection-text);
 }
 
 a {
@@ -85,33 +122,9 @@ a {
   text-decoration: none;
 }
 
-::selection {
-  background: transparent;
-}
-
-:where(.magnetic-target--active, [data-magnetic-active='true']) {
-  color: var(--color-accent);
-  text-shadow:
-    0 0 16px rgba(168, 230, 255, 0.56),
-    0 0 34px rgba(168, 230, 255, 0.26),
-    0 0 64px rgba(91, 164, 214, 0.14);
-}
-
 button,
-a,
 input,
 textarea,
-select,
-label {
-  cursor: none;
-}
-
-img,
-svg {
-  display: block;
-}
-
-#root {
-  width: 100%;
-  height: 100vh;
+select {
+  font: inherit;
 }

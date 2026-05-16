@@ -1,170 +1,121 @@
-import { useEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef } from 'react'
+import gsap from 'gsap'
 
-import { useAppShellScroll } from '../../components/layout/AppShellScrollContext'
-import { SectionShell } from '../../components/shared/SectionShell'
-import { StickyMagneticTitle } from '../../components/shared/StickyMagneticTitle'
-import { GameCanvasScene } from '../../pages/game/components/GameCanvasScene'
-import { useGameMachine } from '../../pages/game/useGameMachine'
-import { AboutShowcaseModel } from './AboutShowcaseModel'
-
+import { useScrollScope } from '../../hooks/scroll'
 import './AboutSection.less'
 
 export function AboutSection() {
-  const { scrollOffset, viewportHeight, scrollDirection } = useAppShellScroll()
-  const sectionProgress = viewportHeight > 0 ? scrollOffset / viewportHeight - 1 : 0
-  const engaged = sectionProgress >= -1.1 && sectionProgress <= 0.85
-  const [screenLinked, setScreenLinked] = useState(false)
-  const [screenTextureSource, setScreenTextureSource] = useState<HTMLCanvasElement | null>(null)
-  const screenOpenTimerRef = useRef<number | null>(null)
-  const screenCloseTimerRef = useRef<number | null>(null)
+  const sectionRef = useRef<HTMLDivElement | null>(null)
+  const titleBackRef = useRef<HTMLHeadingElement | null>(null)
+  const titleFrontRef = useRef<HTMLHeadingElement | null>(null)
+  const markRef = useRef<HTMLDivElement | null>(null)
+  const textLine1Ref = useRef<HTMLDivElement | null>(null)
+  const textLine2Ref = useRef<HTMLDivElement | null>(null)
+  const textLine3Ref = useRef<HTMLDivElement | null>(null)
+  const textLine4Ref = useRef<HTMLDivElement | null>(null)
+  const textLine5Ref = useRef<HTMLDivElement | null>(null)
+  const textLine6Ref = useRef<HTMLDivElement | null>(null)
+  const introTimelineRef = useRef<gsap.core.Timeline | null>(null)
+  const scrollTimelineRef = useRef<gsap.core.Timeline | null>(null)
 
-  const { activeCard, activeCardIndex, phase } = useGameMachine({
-    embed: true,
-    simulate: true,
+  const { ref: scrollRef } = useScrollScope({
+    id: 'home-about',
+    enabled: true,
+    touchEnabled: true,
+    sensitivity: 0.0025,
+    damping: 0.12,
+    clamp: [0, 1] as [number, number],
+    activationRatio: 0.25,
+    onProgress: (value: number) => {
+      if (introTimelineRef.current) {
+        introTimelineRef.current.progress(value)
+      }
+      if (scrollTimelineRef.current) {
+        scrollTimelineRef.current.progress(value)
+      }
+    },
   })
 
-  useEffect(() => {
-    if (screenOpenTimerRef.current !== null) {
-      window.clearTimeout(screenOpenTimerRef.current)
-      screenOpenTimerRef.current = null
-    }
+  useLayoutEffect(() => {
+    const targets = [
+      titleBackRef.current,
+      titleFrontRef.current,
+      markRef.current,
+      textLine1Ref.current,
+      textLine2Ref.current,
+      textLine3Ref.current,
+      textLine4Ref.current,
+      textLine5Ref.current,
+      textLine6Ref.current,
+    ]
+    targets.forEach((el) => {
+      if (el) gsap.set(el, { x: 1.6, yPercent: 100 })
+    })
 
-    if (screenCloseTimerRef.current !== null) {
-      window.clearTimeout(screenCloseTimerRef.current)
-      screenCloseTimerRef.current = null
-    }
+    const introTl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+    introTl
+      .to(titleBackRef.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0)
+      .to(titleFrontRef.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.04)
+      .to(markRef.current, { x: 1.6, yPercent: 0, duration: 0.82 }, 0.12)
+      .to(textLine1Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.2)
+      .to(textLine2Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.26)
+      .to(textLine3Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.32)
+      .to(textLine4Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.38)
+      .to(textLine5Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.44)
+      .to(textLine6Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.5)
 
-    if (engaged) {
-      screenOpenTimerRef.current = window.setTimeout(() => {
-        setScreenLinked(true)
-      }, 220)
-    } else {
-      screenCloseTimerRef.current = window.setTimeout(() => {
-        setScreenLinked(false)
-      }, 500)
+    introTimelineRef.current = introTl
+
+    const allText = [textLine1Ref.current, textLine2Ref.current, textLine3Ref.current, textLine4Ref.current, textLine5Ref.current, textLine6Ref.current]
+    if (allText.every((el) => el !== null)) {
+      const scrollTl = gsap.timeline({ defaults: { ease: 'none' } })
+      scrollTl.fromTo(allText, { opacity: 1 }, { opacity: 0.4, duration: 1 }, 0)
+      scrollTimelineRef.current = scrollTl
     }
 
     return () => {
-      if (screenOpenTimerRef.current !== null) {
-        window.clearTimeout(screenOpenTimerRef.current)
-        screenOpenTimerRef.current = null
-      }
-
-      if (screenCloseTimerRef.current !== null) {
-        window.clearTimeout(screenCloseTimerRef.current)
-        screenCloseTimerRef.current = null
-      }
+      introTl.kill()
     }
-  }, [engaged])
-
-  useEffect(() => {
-    if (!screenLinked) {
-      setScreenTextureSource(null)
-    }
-  }, [screenLinked])
-
-  const sendGameKey = (key: 'up' | 'down' | 'left' | 'right' | 'a' | 'b') => {
-    window.dispatchEvent(
-      new CustomEvent('game-control', {
-        detail: {
-          key,
-          pressed: true,
-        },
-      }),
-    )
-  }
-
-  const handleModelCommand = (command: 'rotate-left' | 'rotate-right' | 'tilt-up' | 'tilt-down' | 'focus-screen' | 'btn-a' | 'btn-b') => {
-    if (command === 'rotate-left') {
-      sendGameKey('left')
-      return
-    }
-
-    if (command === 'rotate-right') {
-      sendGameKey('right')
-      return
-    }
-
-    if (command === 'tilt-up') {
-      sendGameKey('up')
-      return
-    }
-
-    if (command === 'tilt-down') {
-      sendGameKey('down')
-      return
-    }
-
-    if (command === 'btn-a') {
-      sendGameKey('a')
-      return
-    }
-
-    if (command === 'btn-b') {
-      sendGameKey('b')
-      return
-    }
-
-    setScreenLinked(true)
-  }
+  }, [])
 
   return (
-    <SectionShell id="about">
-      <section className="about-showcase" aria-labelledby="about-showcase-title">
-        <div className="about-showcase__layout">
-          <header className="about-showcase__header">
-            <StickyMagneticTitle
-              as="h2"
-              id="about-showcase-title"
-              className="about-showcase__title-linger"
-              sectionIndex={1}
-              anchorVh={0.1}
-              blurDelayVh={0.1}
-              blurSpanVh={0.14}
-              blurMaxPx={5}
-              followDelayVh={0.02}
-              followEase={0.88}
-              targetClassName="about-showcase__title"
-              stickTopVh={0.08}
-              lingerVh={0.24}
-              releaseVh={0.16}
-              fadeVh={0.2}
-            >
-              <span>About</span>
-            </StickyMagneticTitle>
-          </header>
-
-          <aside className="about-showcase__visual" aria-label="about three.js showcase">
-            <div className="about-showcase__visual-frame">
-              <AboutShowcaseModel
-                modelUrl="/models/GB.glb"
-                onCommand={handleModelCommand}
-                screenTextureSource={screenTextureSource}
-                scrollDirection={scrollDirection}
-              />
-              {screenLinked ? (
-                <div className="about-showcase__screen-source-shell" aria-hidden="true">
-                  <GameCanvasScene
-                    phase={phase}
-                    activeCardIndex={activeCardIndex}
-                    activeCard={activeCard}
-                    className="about-showcase__screen-source"
-                    onCanvasReady={setScreenTextureSource}
-                    rotateForTexture
-                    renderMode="texture"
-                  />
-                </div>
-              ) : null}
-              {!engaged ? (
-                <div className="about-showcase-model__overlay" aria-hidden="true">
-                  <div className="about-showcase-model__overlay-title">SCROLL TO ACTIVATE</div>
-                  <div className="about-showcase-model__overlay-copy">GB 模型只在该窗口可见时运行。</div>
-                </div>
-              ) : null}
-            </div>
-          </aside>
+    <section ref={scrollRef} className="about-section" aria-labelledby="about-section-title">
+      <div ref={sectionRef} className="about-section__inner">
+        <div className="about-section__title-stack" aria-hidden="true">
+          <h1 ref={titleBackRef} className="about-section__title about-section__title--back" id="about-section-title">
+            ABOUT
+          </h1>
+          <h1 ref={titleFrontRef} className="about-section__title about-section__title--front">
+            ABOUT
+          </h1>
         </div>
-      </section>
-    </SectionShell>
+
+        <div ref={markRef} className="about-section__mark" aria-hidden="true">
+          <div className="about-section__ring about-section__ring--outer" />
+          <div className="about-section__ring about-section__ring--inner" />
+        </div>
+
+        <div className="about-section__text-layer" aria-hidden="true">
+          <div ref={textLine1Ref} className="about-section__text about-section__text--left about-section__text--hand">
+            我是Textline
+          </div>
+          <div ref={textLine2Ref} className="about-section__text about-section__text--left">
+            一个持续学习、
+          </div>
+          <div ref={textLine3Ref} className="about-section__text about-section__text--left">
+            前端、后端、自动化、
+          </div>
+          <div ref={textLine4Ref} className="about-section__text about-section__text--right">
+            持续创作的开发者
+          </div>
+          <div ref={textLine5Ref} className="about-section__text about-section__text--right">
+            3D、工具化都在做
+          </div>
+          <div ref={textLine6Ref} className="about-section__text about-section__text--center">
+            我做的不是单一作品，而是可持续演化的系统
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }

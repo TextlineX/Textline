@@ -1,0 +1,102 @@
+.floating-bar {
+  position: fixed;
+  inset: 1rem 1rem auto;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.floating-bar__actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.floating-bar__brand,
+.floating-bar__menu,
+.floating-bar__contact {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.15rem 0.45rem;
+  color: var(--color-text-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.floating-bar__brand {
+  gap: 0.5rem;
+}
+
+.floating-bar__menu {
+  gap: 0.45rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.floating-bar__menu-lines {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.floating-bar__menu-lines span {
+  display: block;
+  width: 0.95rem;
+  height: 1px;
+  background: currentColor;
+}
+
+.floating-bar__brand:hover,
+.floating-bar__menu:hover,
+.floating-bar__contact:hover {
+  opacity: 0.7;
+  transform: translateY(-1px);
+}
+
+.floating-bar__brand_logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  flex: 0 0 auto;
+  background-color: currentColor;
+  -webkit-mask: url('/favicon/textline-icon-black.svg') center / contain no-repeat;
+  mask: url('/favicon/textline-icon-black.svg') center / contain no-repeat;
+}
+
+.floating-bar__brand {
+  margin-right: auto;
+}
+
+.floating-bar__contact {
+  margin-left: 0;
+}
+
+@media (max-width: 640px) {
+  .floating-bar {
+    inset: 0.75rem 0.75rem auto;
+  }
+
+  .floating-bar__brand,
+  .floating-bar__menu,
+  .floating-bar__contact {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+  }
+
+  .floating-bar__brand_logo {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+}

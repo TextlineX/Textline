@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 
-import { ScrollEngineProvider } from './hooks/scroll'
 import { AppRouter } from './router'
 import { LoadingScreen } from './components/shared'
+import { useDampingScroll } from './hooks/useDampingScroll'
 import './App.less'
 
 export function App() {
   const [isLoading, setIsLoading] = useState(true)
+
+  useDampingScroll(0.08)
 
   useEffect(() => {
     let alive = true
@@ -38,9 +40,9 @@ export function App() {
   }, [])
 
   return (
-    <ScrollEngineProvider>
+    <>
       <AppRouter isBootComplete={!isLoading} />
       <LoadingScreen visible={isLoading} />
-    </ScrollEngineProvider>
+    </>
   )
 }

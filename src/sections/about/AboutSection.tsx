@@ -1,11 +1,11 @@
 import { useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-import { useScrollScope } from '../../hooks/scroll'
 import './AboutSection.less'
 
 export function AboutSection() {
-  const sectionRef = useRef<HTMLDivElement | null>(null)
+  const sectionRef = useRef<HTMLElement | null>(null)
   const titleBackRef = useRef<HTMLHeadingElement | null>(null)
   const titleFrontRef = useRef<HTMLHeadingElement | null>(null)
   const markRef = useRef<HTMLDivElement | null>(null)
@@ -15,28 +15,11 @@ export function AboutSection() {
   const textLine4Ref = useRef<HTMLDivElement | null>(null)
   const textLine5Ref = useRef<HTMLDivElement | null>(null)
   const textLine6Ref = useRef<HTMLDivElement | null>(null)
-  const introTimelineRef = useRef<gsap.core.Timeline | null>(null)
-  const scrollTimelineRef = useRef<gsap.core.Timeline | null>(null)
-
-  const { ref: scrollRef } = useScrollScope({
-    id: 'home-about',
-    enabled: true,
-    touchEnabled: true,
-    sensitivity: 0.0025,
-    damping: 0.12,
-    clamp: [0, 1] as [number, number],
-    activationRatio: 0.25,
-    onProgress: (value: number) => {
-      if (introTimelineRef.current) {
-        introTimelineRef.current.progress(value)
-      }
-      if (scrollTimelineRef.current) {
-        scrollTimelineRef.current.progress(value)
-      }
-    },
-  })
 
   useLayoutEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+
     const targets = [
       titleBackRef.current,
       titleFrontRef.current,
@@ -47,40 +30,90 @@ export function AboutSection() {
       textLine4Ref.current,
       textLine5Ref.current,
       textLine6Ref.current,
-    ]
-    targets.forEach((el) => {
-      if (el) gsap.set(el, { x: 1.6, yPercent: 100 })
+    ].filter(Boolean)
+
+    gsap.set(targets, { x: 1.6, yPercent: 100 })
+
+    // 入场动画
+    const introTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: 'top 70%',
+        end: 'top 20%',
+        toggleActions: 'play none none reverse',
+      },
     })
 
-    const introTl = gsap.timeline({ defaults: { ease: 'power3.out' } })
     introTl
-      .to(titleBackRef.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0)
-      .to(titleFrontRef.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.04)
-      .to(markRef.current, { x: 1.6, yPercent: 0, duration: 0.82 }, 0.12)
-      .to(textLine1Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.2)
-      .to(textLine2Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.26)
-      .to(textLine3Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.32)
-      .to(textLine4Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.38)
-      .to(textLine5Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.44)
-      .to(textLine6Ref.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.5)
+      .to(titleBackRef.current, { x: 1.6, yPercent: 0, duration: 0.72, ease: 'power3.out' }, 0)
+      .to(titleFrontRef.current, { x: 1.6, yPercent: 0, duration: 0.72, ease: 'power3.out' }, 0.04)
+      .to(markRef.current, { x: 1.6, yPercent: 0, duration: 0.82, ease: 'power3.out' }, 0.12)
+      .to(textLine1Ref.current, { x: 1.6, yPercent: 0, duration: 0.72, ease: 'power3.out' }, 0.2)
+      .to(textLine2Ref.current, { x: 1.6, yPercent: 0, duration: 0.72, ease: 'power3.out' }, 0.26)
+      .to(textLine3Ref.current, { x: 1.6, yPercent: 0, duration: 0.72, ease: 'power3.out' }, 0.32)
+      .to(textLine4Ref.current, { x: 1.6, yPercent: 0, duration: 0.72, ease: 'power3.out' }, 0.38)
+      .to(textLine5Ref.current, { x: 1.6, yPercent: 0, duration: 0.72, ease: 'power3.out' }, 0.44)
+      .to(textLine6Ref.current, { x: 1.6, yPercent: 0, duration: 0.72, ease: 'power3.out' }, 0.5)
 
-    introTimelineRef.current = introTl
+    // 滚动淡出效果
+    const textLines = [
+      textLine1Ref.current,
+      textLine2Ref.current,
+      textLine3Ref.current,
+      textLine4Ref.current,
+      textLine5Ref.current,
+      textLine6Ref.current,
+    ].filter(Boolean)
 
-    const allText = [textLine1Ref.current, textLine2Ref.current, textLine3Ref.current, textLine4Ref.current, textLine5Ref.current, textLine6Ref.current]
-    if (allText.every((el) => el !== null)) {
-      const scrollTl = gsap.timeline({ defaults: { ease: 'none' } })
-      scrollTl.fromTo(allText, { opacity: 1 }, { opacity: 0.4, duration: 1 }, 0)
-      scrollTimelineRef.current = scrollTl
-    }
+    gsap.to(textLines, {
+      opacity: 0.3,
+      y: (i) => -30 - i * 15,
+      stagger: 0.1,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: section,
+        start: 'center center',
+        end: 'bottom top',
+        scrub: 1.5,
+      },
+    })
+
+    // 标题滚动淡出
+    gsap.to([titleBackRef.current, titleFrontRef.current].filter(Boolean), {
+      y: -100,
+      opacity: 0,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: section,
+        start: 'top top',
+        end: 'center top',
+        scrub: 1,
+      },
+    })
+
+    // Mark 旋转动画
+    gsap.to(markRef.current, {
+      rotation: '+=360',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: section,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 2,
+      },
+    })
 
     return () => {
       introTl.kill()
+      ScrollTrigger.getAll().forEach((st) => {
+        if (st.vars.trigger === section) st.kill()
+      })
     }
   }, [])
 
   return (
-    <section ref={scrollRef} className="about-section" aria-labelledby="about-section-title">
-      <div ref={sectionRef} className="about-section__inner">
+    <section ref={sectionRef} className="about-section" aria-labelledby="about-section-title">
+      <div className="about-section__inner">
         <div className="about-section__title-stack" aria-hidden="true">
           <h1 ref={titleBackRef} className="about-section__title about-section__title--back" id="about-section-title">
             ABOUT

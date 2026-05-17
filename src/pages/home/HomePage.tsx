@@ -2,8 +2,12 @@ import { HeroSection } from '../../sections/hero/HeroSection'
 import { AboutSection } from '../../sections/about'
 import { SkillsSection } from '../../sections/skills'
 import { WorksSection } from '../../sections/works'
+import { Catalog } from '../../sections/catalog'
+import { ContactSection } from '../../sections/contact/ContactSection'
 import { FloatingBar } from '../../components/shared/FloatingBar'
 import './HomePage.less'
+
+
 
 type HomePageProps = {
   isBootComplete: boolean
@@ -21,6 +25,8 @@ export function HomePage({ isBootComplete }: HomePageProps) {
       <AboutSection />
       <SkillsSection />
       <WorksSection />
+      <Catalog />
+      <ContactSection />
     </main>
   )
 }

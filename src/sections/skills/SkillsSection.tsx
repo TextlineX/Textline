@@ -1,31 +1,88 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
-
-import { useScrollScope } from '../../hooks/scroll'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import './SkillsSection.less'
 
+gsap.registerPlugin(ScrollTrigger)
+
 export function SkillsSection() {
-  const sectionRef = useRef<HTMLDivElement | null>(null)
+  const sectionRef = useRef<HTMLElement | null>(null)
   const titleBackRef = useRef<HTMLHeadingElement | null>(null)
   const titleFrontRef = useRef<HTMLHeadingElement | null>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
-  const introTimelineRef = useRef<gsap.core.Timeline | null>(null)
-  const scrollTimelineRef = useRef<gsap.core.Timeline | null>(null)
   const [cardOrder, setCardOrder] = useState<number[]>([1, 2, 0, 3, 4])
 
-  const { ref: scrollRef } = useScrollScope({
-    id: 'home-skills',
-    enabled: true,
-    touchEnabled: true,
-    sensitivity: 0.0025,
-    damping: 0.12,
-    clamp: [0, 1] as [number, number],
-    activationRatio: 0.25,
-    onProgress: (value: number) => {
-      if (introTimelineRef.current) introTimelineRef.current.progress(value)
-      if (scrollTimelineRef.current) scrollTimelineRef.current.progress(value)
-    },
-  })
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+
+
+    gsap.set([titleBackRef.current, titleFrontRef.current].filter(Boolean), { x: 1.6, yPercent: 100 })
+
+
+
+
+    // 标题入场动画（scrub 模式，前进后退都生效）
+    const titleTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: 'top 70%',
+        end: 'bottom top',
+        scrub: 1.5,
+      },
+    })
+
+    titleTl
+      .to(titleBackRef.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0)
+      .to(titleFrontRef.current, { x: 1.6, yPercent: 0, duration: 0.72 }, 0.04)
+
+    // 卡片入场动画（单独触发，scrub 模式）
+    const cardTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: 'top 50%',
+        end: 'bottom top',
+        scrub: 1,
+      },
+    })
+    cardTl.to(cardRefs.current.filter(Boolean), { y: 0, opacity: 1, duration: 0.6, stagger: 0.15 })
+
+    // 滚动驱动卡片旋转
+    const cards = cardRefs.current.filter(Boolean)
+    cards.forEach((card, i) => {
+      gsap.to(card, {
+        rotation: `+=${i % 2 === 0 ? 15 : -15}`,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 70%',
+          end: 'bottom top',
+          scrub: 2,
+        },
+      })
+    })
+
+    // 标题淡出
+    gsap.to([titleBackRef.current, titleFrontRef.current].filter(Boolean), {
+      yPercent: -50,
+      opacity: 0.5,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: section,
+        start: 'center top',
+        end: 'bottom top',
+        scrub: 1,
+      },
+    })
+
+    return () => {
+      titleTl.kill()
+      cardTl.kill()
+      ScrollTrigger.getAll().forEach((st) => {
+        if (st.vars.trigger === section) st.kill()
+      })
+    }
+  }, [])
 
   const getTransform = (slotIndex: number) => {
     const offset = slotIndex - 2
@@ -69,8 +126,8 @@ export function SkillsSection() {
   }
 
   return (
-    <section ref={scrollRef} className="skills-section" aria-labelledby="skills-section-title">
-      <div ref={sectionRef} className="skills-section__inner">
+    <section ref={sectionRef} className="skills-section" aria-labelledby="skills-section-title">
+      <div className="skills-section__inner">
         <div className="skills-section__title-stack" aria-hidden="true">
           <h1 ref={titleBackRef} className="skills-section__title skills-section__title--back" id="skills-section-title">
             SKILLS

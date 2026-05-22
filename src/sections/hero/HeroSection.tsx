@@ -77,8 +77,8 @@ export function HeroSection({ introReady }: HeroSectionProps) {
 
     if (!visual || !topBackground || !title) return
 
-    gsap.set(visual, { height: '47.95%' })
-    gsap.set(topBackground, { opacity: 0, scale: 1.06, yPercent: 0 })
+    gsap.set(visual, { clipPath: 'inset(0 0 52.05% 0)' })
+    gsap.set(topBackground, { opacity: 0, yPercent: 0 })
     gsap.set(title, { opacity: 0, y: 18 })
     gsap.set(wordShellNodes, { opacity: 0, y: 24 })
     gsap.set(wordActiveNodes, { clipPath: 'inset(100% 0 0 0)' })
@@ -132,8 +132,8 @@ export function HeroSection({ introReady }: HeroSectionProps) {
           invalidateOnRefresh: true,
         },
       })
-        .fromTo(visual, { height: '47.95%' }, { height: '100%', ease: 'none' }, 0)
-        .fromTo(topBackground, { yPercent: 0, scale: 1.06 }, { yPercent: -10, scale: 1.12, ease: 'none' }, 0)
+        .fromTo(visual, { clipPath: 'inset(0 0 52.05% 0)' }, { clipPath: 'inset(0 0 0 0)', ease: 'none' }, 0)
+        .fromTo(topBackground, { yPercent: 0 }, { yPercent: -10, ease: 'none' }, 0)
         .fromTo(title, { y: 0 }, { y: -180, ease: 'none' }, 0.14)
         .fromTo(wordShellNodes, { y: 0 }, { y: -120, stagger: 0.02, ease: 'none' }, 0.14)
 

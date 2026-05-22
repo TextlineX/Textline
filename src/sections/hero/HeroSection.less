@@ -29,39 +29,50 @@
 
 .hero-section__background {
   position: absolute;
-  inset: -1px -2px -16px -2px;
-  width: calc(100% + 4px);
-  height: calc(100% + 18px);
+  inset: 0 -2% -12% -2%;
+  width: 104%;
+  height: 112%;
   opacity: 0;
-  background:
-    radial-gradient(circle at 18% 18%, rgba(244, 180, 208, 0.28) 0%, rgba(244, 180, 208, 0.14) 22%, rgba(244, 180, 208, 0) 58%),
-    radial-gradient(circle at 84% 24%, rgba(213, 219, 227, 0.52) 0%, rgba(213, 219, 227, 0.18) 25%, rgba(213, 219, 227, 0) 62%),
-    radial-gradient(circle at 48% 82%, rgba(233, 149, 191, 0.22) 0%, rgba(233, 149, 191, 0.1) 20%, rgba(233, 149, 191, 0) 58%),
-    linear-gradient(
-      270deg,
-      var(--hero-layer-a-1) 0%,
-      rgba(244, 180, 208, 0.24) 16%,
-      var(--hero-layer-a-2) 33%,
-      rgba(233, 149, 191, 0.18) 50%,
-      var(--hero-layer-a-3) 72%,
-      var(--hero-layer-a-4) 100%
-    );
-  background-size: 180% 160%, 190% 150%, 200% 180%, 220% 100%;
-  background-position:
-    calc(20% + var(--hero-flow-shift-x, 0px) * 0.16) calc(10% + var(--hero-flow-drift-y, 0px) * 0.06),
-    calc(82% - var(--hero-flow-shift-x, 0px) * 0.1) calc(22% + var(--hero-flow-drift-y, 0px) * 0.08),
-    calc(48% + var(--hero-flow-shift-x, 0px) * 0.08) calc(86% - var(--hero-flow-drift-y, 0px) * 0.04),
-    calc(50% + var(--hero-flow-shift-x, 0px) * 0.18) 50%;
-  background-repeat: no-repeat;
   transform: translate3d(
-      calc(var(--hero-flow-shift-x, 0px) * 0.18 + var(--hero-flow-drift-x, 0px) * 0.14),
-      calc(var(--hero-flow-drift-y, 0px) * 0.22),
-      0
-    )
-    scale(1.08);
-  transform-origin: 50% 58%;
+    0,
+    0,
+    0
+  ) scale(1.08);
+  transform-origin: 50% 56%;
   will-change: transform, opacity;
   pointer-events: none;
+}
+
+.hero-section__background path {
+  vector-effect: non-scaling-stroke;
+}
+
+.hero-section__background-base {
+  opacity: 1;
+}
+
+.hero-section__background-wave {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  opacity: 0.92;
+  transform: translate3d(
+    calc(var(--hero-flow-shift-x, 0px) * 0.55),
+    calc(var(--hero-flow-drift-y, 0px) * 0.72),
+    0
+  );
+  will-change: transform, opacity;
+}
+
+.hero-section__background-mist {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  opacity: 0.58;
+  transform: translate3d(
+    calc(var(--hero-flow-shift-x, 0px) * -0.28),
+    calc(var(--hero-flow-drift-y, 0px) * -0.34),
+    0
+  );
+  will-change: transform, opacity;
 }
 
 .hero-section__title {
@@ -153,6 +164,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .hero-section__background {
+    transform: none;
+  }
+
+  .hero-section__background-wave,
+  .hero-section__background-mist {
     transform: none;
   }
 

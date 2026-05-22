@@ -19,6 +19,7 @@ export function HeroSection({ introReady }: HeroSectionProps) {
   const stageRef = useRef<HTMLDivElement | null>(null)
   const visualRef = useRef<HTMLDivElement | null>(null)
   const topBackgroundRef = useRef<SVGSVGElement | null>(null)
+  const backgroundGradientRef = useRef<SVGLinearGradientElement | null>(null)
   const titleRef = useRef<HTMLDivElement | null>(null)
   const wordShellRefs = useRef<(HTMLSpanElement | null)[]>([])
   const wordActiveRefs = useRef<(HTMLSpanElement | null)[]>([])
@@ -115,6 +116,35 @@ export function HeroSection({ introReady }: HeroSectionProps) {
     }
   }, [introComplete])
 
+  useLayoutEffect(() => {
+    const gradient = backgroundGradientRef.current
+
+    if (!gradient || !introComplete) return
+
+    let rafId = 0
+    const start = window.performance.now()
+
+    const tick = (now: number) => {
+      const elapsed = now - start
+      const driftX = Math.sin(elapsed * 0.00018) * 8
+      const driftY = Math.cos(elapsed * 0.00014) * 4
+      const shear = Math.sin(elapsed * 0.00011) * 3
+
+      gradient.setAttribute(
+        'gradientTransform',
+        `translate(${driftX.toFixed(2)} ${driftY.toFixed(2)}) skewX(${shear.toFixed(2)})`,
+      )
+
+      rafId = window.requestAnimationFrame(tick)
+    }
+
+    rafId = window.requestAnimationFrame(tick)
+
+    return () => {
+      window.cancelAnimationFrame(rafId)
+    }
+  }, [introComplete])
+
   return (
     <section ref={sectionRef} className="hero-section" aria-label="Hero section">
       <div ref={stageRef} className="hero-section__stage">
@@ -127,11 +157,22 @@ export function HeroSection({ introReady }: HeroSectionProps) {
             aria-hidden="true"
           >
             <defs>
-              <linearGradient id={backgroundGradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+              <linearGradient
+                ref={backgroundGradientRef}
+                id={backgroundGradientId}
+                x1="8%"
+                y1="18%"
+                x2="92%"
+                y2="82%"
+              >
                 <stop offset="0%" stopColor="var(--hero-layer-a-1)" />
-                <stop offset="30%" stopColor="var(--hero-layer-a-2)" />
-                <stop offset="58%" stopColor="var(--hero-pink-soft)" stopOpacity="0.62" />
-                <stop offset="82%" stopColor="var(--hero-layer-a-3)" />
+                <stop offset="12%" stopColor="var(--hero-layer-a-2)" stopOpacity="0.96" />
+                <stop offset="24%" stopColor="var(--hero-layer-a-2)" />
+                <stop offset="36%" stopColor="var(--hero-pink-soft)" stopOpacity="0.28" />
+                <stop offset="48%" stopColor="var(--hero-pink-soft)" stopOpacity="0.64" />
+                <stop offset="60%" stopColor="var(--hero-layer-a-3)" stopOpacity="0.92" />
+                <stop offset="72%" stopColor="var(--hero-pink-soft)" stopOpacity="0.34" />
+                <stop offset="84%" stopColor="var(--hero-layer-a-3)" />
                 <stop offset="100%" stopColor="var(--hero-layer-a-4)" />
               </linearGradient>
             </defs>

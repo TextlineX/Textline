@@ -20,6 +20,7 @@ export function HeroSection({ introReady }: HeroSectionProps) {
   const visualRef = useRef<HTMLDivElement | null>(null)
   const topBackgroundRef = useRef<SVGSVGElement | null>(null)
   const backgroundGradientRef = useRef<SVGLinearGradientElement | null>(null)
+  const backgroundStopsRef = useRef<(SVGStopElement | null)[]>([])
   const titleRef = useRef<HTMLDivElement | null>(null)
   const wordShellRefs = useRef<(HTMLSpanElement | null)[]>([])
   const wordActiveRefs = useRef<(HTMLSpanElement | null)[]>([])
@@ -118,22 +119,31 @@ export function HeroSection({ introReady }: HeroSectionProps) {
 
   useLayoutEffect(() => {
     const gradient = backgroundGradientRef.current
+    const stops = backgroundStopsRef.current.filter((stop): stop is SVGStopElement => Boolean(stop))
 
-    if (!gradient) return
+    if (!gradient || stops.length < 9) return
 
     let rafId = 0
     const start = window.performance.now()
+    const baseOffsets = [0, 12, 24, 38, 50, 62, 76, 88, 100]
 
     const tick = (now: number) => {
       const elapsed = now - start
-      const driftX = Math.sin(elapsed * 0.00018) * 8
-      const driftY = Math.cos(elapsed * 0.00014) * 4
-      const shear = Math.sin(elapsed * 0.00011) * 3
+      const driftX = Math.sin(elapsed * 0.00012) * 16
+      const driftY = Math.cos(elapsed * 0.0001) * 8
+      const shear = Math.sin(elapsed * 0.00008) * 5
+      const phase = elapsed * 0.00045
 
       gradient.setAttribute(
         'gradientTransform',
         `translate(${driftX.toFixed(2)} ${driftY.toFixed(2)}) skewX(${shear.toFixed(2)})`,
       )
+
+      stops.forEach((stop, index) => {
+        const wave = Math.sin(phase + index * 0.72) * 2.6
+        const offset = Math.min(100, Math.max(0, baseOffsets[index] + wave))
+        stop.setAttribute('offset', `${offset.toFixed(2)}%`)
+      })
 
       rafId = window.requestAnimationFrame(tick)
     }
@@ -143,7 +153,7 @@ export function HeroSection({ introReady }: HeroSectionProps) {
     return () => {
       window.cancelAnimationFrame(rafId)
     }
-  }, [introComplete])
+  }, [])
 
   return (
     <section ref={sectionRef} className="hero-section" aria-label="Hero section">
@@ -160,20 +170,20 @@ export function HeroSection({ introReady }: HeroSectionProps) {
               <linearGradient
                 ref={backgroundGradientRef}
                 id={backgroundGradientId}
-                x1="14%"
-                y1="22%"
-                x2="88%"
-                y2="74%"
+                x1="10%"
+                y1="20%"
+                x2="90%"
+                y2="78%"
               >
-                <stop offset="0%" stopColor="var(--hero-layer-a-1)" />
-                <stop offset="12%" stopColor="var(--hero-layer-a-2)" stopOpacity="0.9" />
-                <stop offset="24%" stopColor="var(--hero-layer-a-2)" />
-                <stop offset="38%" stopColor="var(--hero-pink-soft)" stopOpacity="0.18" />
-                <stop offset="50%" stopColor="var(--hero-pink-soft)" stopOpacity="0.42" />
-                <stop offset="62%" stopColor="var(--hero-layer-a-3)" stopOpacity="0.88" />
-                <stop offset="76%" stopColor="var(--hero-pink-soft)" stopOpacity="0.24" />
-                <stop offset="88%" stopColor="var(--hero-layer-a-3)" />
-                <stop offset="100%" stopColor="var(--hero-layer-a-4)" />
+                <stop ref={(el) => { backgroundStopsRef.current[0] = el }} offset="0%" stopColor="var(--hero-layer-a-1)" />
+                <stop ref={(el) => { backgroundStopsRef.current[1] = el }} offset="12%" stopColor="var(--hero-layer-a-2)" stopOpacity="0.9" />
+                <stop ref={(el) => { backgroundStopsRef.current[2] = el }} offset="24%" stopColor="var(--hero-layer-a-2)" />
+                <stop ref={(el) => { backgroundStopsRef.current[3] = el }} offset="38%" stopColor="var(--hero-pink-soft)" stopOpacity="0.18" />
+                <stop ref={(el) => { backgroundStopsRef.current[4] = el }} offset="50%" stopColor="var(--hero-pink-soft)" stopOpacity="0.42" />
+                <stop ref={(el) => { backgroundStopsRef.current[5] = el }} offset="62%" stopColor="var(--hero-layer-a-3)" stopOpacity="0.88" />
+                <stop ref={(el) => { backgroundStopsRef.current[6] = el }} offset="76%" stopColor="var(--hero-pink-soft)" stopOpacity="0.24" />
+                <stop ref={(el) => { backgroundStopsRef.current[7] = el }} offset="88%" stopColor="var(--hero-layer-a-3)" />
+                <stop ref={(el) => { backgroundStopsRef.current[8] = el }} offset="100%" stopColor="var(--hero-layer-a-4)" />
               </linearGradient>
             </defs>
             <path

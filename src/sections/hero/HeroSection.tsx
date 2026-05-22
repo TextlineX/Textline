@@ -7,14 +7,8 @@ import { useHeroBackgroundMotion } from './useHeroBackgroundMotion'
 import './HeroSection.less'
 
 const backgroundGradientId = 'hero-background-gradient'
-const backgroundMistGradientId = 'hero-background-mist-gradient'
-const backgroundGlowGradientId = 'hero-background-glow-gradient'
 const backgroundBasePath =
-  'M 0 0 H 1440 V 640 C 1324 628 1270 692 1168 690 C 1062 688 1010 622 906 626 C 806 630 750 710 642 706 C 534 702 480 620 382 622 C 270 626 212 704 110 696 C 54 692 22 672 0 668 Z'
-const backgroundWavePath =
-  'M 0 628 C 136 602 214 664 336 652 C 450 640 518 582 650 596 C 782 610 840 680 968 668 C 1094 656 1180 590 1298 604 C 1372 612 1410 624 1440 620 V 900 H 0 Z'
-const backgroundMistPath =
-  'M 0 564 C 160 532 244 580 366 570 C 496 560 560 520 688 532 C 812 544 868 598 992 586 C 1114 574 1204 524 1320 536 C 1376 542 1410 548 1440 546 V 900 H 0 Z'
+  'M 0 0 H 1440 V 640 C 1320 626 1272 680 1168 688 C 1064 696 1012 628 910 632 C 808 636 750 708 642 704 C 534 700 480 620 382 620 C 270 620 212 702 110 694 C 54 690 22 670 0 666 Z'
 
 type HeroSectionProps = {
   introReady: boolean
@@ -42,7 +36,7 @@ export function HeroSection({ introReady }: HeroSectionProps) {
     if (!visual || !topBackground || !title) return
 
     gsap.set(visual, { height: '47.95%' })
-    gsap.set(topBackground, { opacity: 0, scale: 1.08, yPercent: 0 })
+    gsap.set(topBackground, { opacity: 0, scale: 1.06, yPercent: 0 })
     gsap.set(title, { opacity: 0, y: 18 })
     gsap.set(wordShellNodes, { opacity: 0, y: 24 })
     gsap.set(wordActiveNodes, { clipPath: 'inset(100% 0 0 0)' })
@@ -99,7 +93,7 @@ export function HeroSection({ introReady }: HeroSectionProps) {
         },
       })
         .fromTo(visual, { height: '47.95%' }, { height: '100%', ease: 'none' }, 0)
-        .fromTo(topBackground, { yPercent: 0, scale: 1.08 }, { yPercent: -16, scale: 1.18, ease: 'none' }, 0)
+        .fromTo(topBackground, { yPercent: 0, scale: 1.06 }, { yPercent: -10, scale: 1.12, ease: 'none' }, 0)
         .fromTo(title, { y: 0 }, { y: -180, ease: 'none' }, 0.14)
         .fromTo(wordShellNodes, { y: 0 }, { y: -120, stagger: 0.02, ease: 'none' }, 0.14)
 
@@ -135,37 +129,16 @@ export function HeroSection({ introReady }: HeroSectionProps) {
             <defs>
               <linearGradient id={backgroundGradientId} x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="var(--hero-layer-a-1)" />
-                <stop offset="24%" stopColor="var(--hero-layer-a-2)" />
-                <stop offset="52%" stopColor="var(--hero-layer-a-3)" />
+                <stop offset="30%" stopColor="var(--hero-layer-a-2)" />
+                <stop offset="58%" stopColor="var(--hero-pink-soft)" stopOpacity="0.62" />
+                <stop offset="82%" stopColor="var(--hero-layer-a-3)" />
                 <stop offset="100%" stopColor="var(--hero-layer-a-4)" />
               </linearGradient>
-              <linearGradient id={backgroundMistGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="var(--hero-layer-a-1)" stopOpacity="0" />
-                <stop offset="18%" stopColor="var(--hero-pink-soft)" stopOpacity="0.7" />
-                <stop offset="46%" stopColor="var(--hero-layer-a-2)" stopOpacity="0.44" />
-                <stop offset="72%" stopColor="var(--hero-pink-soft)" stopOpacity="0.42" />
-                <stop offset="100%" stopColor="var(--hero-layer-a-1)" stopOpacity="0" />
-              </linearGradient>
-              <radialGradient id={backgroundGlowGradientId} cx="50%" cy="50%" r="72%">
-                <stop offset="0%" stopColor="var(--hero-pink-soft)" stopOpacity="0.34" />
-                <stop offset="54%" stopColor="var(--hero-layer-a-2)" stopOpacity="0.12" />
-                <stop offset="100%" stopColor="var(--hero-layer-a-1)" stopOpacity="0" />
-              </radialGradient>
             </defs>
             <path
               className="hero-section__background-base"
               d={backgroundBasePath}
               fill={`url(#${backgroundGradientId})`}
-            />
-            <path
-              className="hero-section__background-wave"
-              d={backgroundWavePath}
-              fill={`url(#${backgroundMistGradientId})`}
-            />
-            <path
-              className="hero-section__background-mist"
-              d={backgroundMistPath}
-              fill={`url(#${backgroundGlowGradientId})`}
             />
           </svg>
         </div>

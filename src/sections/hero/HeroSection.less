@@ -33,11 +33,7 @@
   width: 104%;
   height: 112%;
   opacity: 0;
-  transform: translate3d(
-    0,
-    0,
-    0
-  ) scale(1.08);
+  transform: translate3d(0, 0, 0) scale(1.06);
   transform-origin: 50% 56%;
   will-change: transform, opacity;
   pointer-events: none;
@@ -49,30 +45,6 @@
 
 .hero-section__background-base {
   opacity: 1;
-}
-
-.hero-section__background-wave {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-  opacity: 0.92;
-  transform: translate3d(
-    calc(var(--hero-flow-shift-x, 0px) * 0.55),
-    calc(var(--hero-flow-drift-y, 0px) * 0.72),
-    0
-  );
-  will-change: transform, opacity;
-}
-
-.hero-section__background-mist {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-  opacity: 0.58;
-  transform: translate3d(
-    calc(var(--hero-flow-shift-x, 0px) * -0.28),
-    calc(var(--hero-flow-drift-y, 0px) * -0.34),
-    0
-  );
-  will-change: transform, opacity;
 }
 
 .hero-section__title {
@@ -164,11 +136,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .hero-section__background {
-    transform: none;
-  }
-
-  .hero-section__background-wave,
-  .hero-section__background-mist {
     transform: none;
   }
 

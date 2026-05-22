@@ -15,14 +15,29 @@ export function useHeroBackgroundMotion({ stageRef }: UseHeroBackgroundMotionOpt
     let timeoutId: number | null = null
     let lastAppliedAt = 0
     let pendingRatio = 0.5
+    let rafId: number | null = null
+    let startTime = window.performance.now()
 
     const applyBackgroundMotion = (xRatio: number) => {
       const pushDistance = (xRatio - 0.5) * 12
       const overlayOpacity = 0.34 + xRatio * 0.08
 
-      stage.style.setProperty('--hero-flow-shift', `${pushDistance.toFixed(2)}px`)
+      stage.style.setProperty('--hero-flow-shift-x', `${pushDistance.toFixed(2)}px`)
       stage.style.setProperty('--hero-flow-x', `${(xRatio * 100).toFixed(2)}%`)
       stage.style.setProperty('--hero-flow-overlay-opacity', overlayOpacity.toFixed(3))
+    }
+
+    const tick = (now: number) => {
+      const elapsed = now - startTime
+      const driftX = Math.sin(elapsed * 0.00025) * 14
+      const driftY = Math.cos(elapsed * 0.00018) * 8
+      const overlayPulse = 0.04 * (Math.sin(elapsed * 0.00032) + 1) * 0.5
+
+      stage.style.setProperty('--hero-flow-drift-x', `${driftX.toFixed(2)}px`)
+      stage.style.setProperty('--hero-flow-drift-y', `${driftY.toFixed(2)}px`)
+      stage.style.setProperty('--hero-flow-overlay-pulse', overlayPulse.toFixed(3))
+
+      rafId = window.requestAnimationFrame(tick)
     }
 
     const scheduleBackgroundMotion = (clientX: number) => {
@@ -78,6 +93,7 @@ export function useHeroBackgroundMotion({ stageRef }: UseHeroBackgroundMotionOpt
     }
 
     resetBackgroundMotion()
+    rafId = window.requestAnimationFrame(tick)
 
     stage.addEventListener('pointerenter', handlePointerEnter)
     stage.addEventListener('pointermove', handlePointerMove)
@@ -86,6 +102,10 @@ export function useHeroBackgroundMotion({ stageRef }: UseHeroBackgroundMotionOpt
     return () => {
       if (timeoutId !== null) {
         window.clearTimeout(timeoutId)
+      }
+
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId)
       }
 
       stage.removeEventListener('pointerenter', handlePointerEnter)

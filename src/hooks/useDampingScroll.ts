@@ -6,6 +6,11 @@ export function useDampingScroll(damping = 0.08) {
   const currentY = useRef(0)
 
   useEffect(() => {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`
+    }
+
     document.body.style.overflow = 'hidden'
 
     const onWheel = (e: WheelEvent) => {
@@ -38,6 +43,7 @@ export function useDampingScroll(damping = 0.08) {
     return () => {
       document.body.style.overflow = ''
       document.body.style.height = ''
+      document.body.style.paddingRight = ''
       window.removeEventListener('wheel', onWheel)
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchmove', onTouchMove)

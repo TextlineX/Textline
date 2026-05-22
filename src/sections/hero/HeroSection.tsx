@@ -71,7 +71,7 @@ export function HeroSection({ introReady }: HeroSectionProps) {
 
     if (!section || wordNodes.length === 0) return
 
-    // 标题视差滚动
+    // 背景延伸 + 文字上浮 + mask 渐隐
     const titleTimeline = gsap.timeline({
       scrollTrigger: {
         trigger: section,
@@ -85,15 +85,33 @@ export function HeroSection({ introReady }: HeroSectionProps) {
       .fromTo(
         titleRef.current,
         { y: 0, opacity: 1 },
-        { y: -120, opacity: 0.2, ease: 'none' },
+        { y: -120, opacity: 1, ease: 'none' },
         0
       )
       .fromTo(
         wordNodes,
         { y: 0, opacity: 1 },
-        { y: -80, opacity: 0.5, stagger: 0.02, ease: 'none' },
+        { y: -80, opacity: 1, stagger: 0.02, ease: 'none' },
         0
       )
+      .fromTo(
+        topBackgroundRef.current,
+        { height: '47.9492%' },
+        { height: '100%', ease: 'none' },
+        0
+      )
+
+    // mask 渐隐：遮罩从 200% 收到 0%（完全透出背景）
+    gsap.to(titleRef.current, {
+      '-webkit-mask-size': '100% 0%',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: section,
+        start: 'top top',
+        end: 'center top',
+        scrub: 1,
+      },
+    })
 
     scrollTimelineRef.current = titleTimeline
 

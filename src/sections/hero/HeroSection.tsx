@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { type CSSProperties, useLayoutEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -62,7 +62,7 @@ export function HeroSection({ introReady }: HeroSectionProps) {
   const sectionRef = useRef<HTMLElement | null>(null)
   const stageRef = useRef<HTMLDivElement | null>(null)
   const visualRef = useRef<HTMLDivElement | null>(null)
-  const topBackgroundRef = useRef<SVGSVGElement | null>(null)
+  const backgroundFrameRef = useRef<HTMLDivElement | null>(null)
   const titleRef = useRef<HTMLDivElement | null>(null)
   const wordShellRefs = useRef<(HTMLSpanElement | null)[]>([])
   const wordActiveRefs = useRef<(HTMLSpanElement | null)[]>([])
@@ -70,15 +70,15 @@ export function HeroSection({ introReady }: HeroSectionProps) {
 
   useLayoutEffect(() => {
     const visual = visualRef.current
-    const topBackground = topBackgroundRef.current
+    const backgroundFrame = backgroundFrameRef.current
     const title = titleRef.current
     const wordShellNodes = wordShellRefs.current.filter((el): el is HTMLSpanElement => Boolean(el))
     const wordActiveNodes = wordActiveRefs.current.filter((el): el is HTMLSpanElement => Boolean(el))
 
-    if (!visual || !topBackground || !title) return
+    if (!visual || !backgroundFrame || !title) return
 
     gsap.set(visual, { height: '47.95%' })
-    gsap.set(topBackground, { opacity: 0, scale: 1.06, yPercent: 0 })
+    gsap.set(backgroundFrame, { opacity: 0, yPercent: 0 })
     gsap.set(title, { opacity: 0, y: 18 })
     gsap.set(wordShellNodes, { opacity: 0, y: 24 })
     gsap.set(wordActiveNodes, { clipPath: 'inset(100% 0 0 0)' })
@@ -86,11 +86,11 @@ export function HeroSection({ introReady }: HeroSectionProps) {
 
   useLayoutEffect(() => {
     const visual = visualRef.current
-    const topBackground = topBackgroundRef.current
+    const backgroundFrame = backgroundFrameRef.current
     const title = titleRef.current
     const wordShellNodes = wordShellRefs.current.filter((el): el is HTMLSpanElement => Boolean(el))
 
-    if (!visual || !topBackground || !title || !introReady || introComplete) return
+    if (!visual || !backgroundFrame || !title || !introReady || introComplete) return
 
     const introTimeline = gsap.timeline({
       defaults: { ease: 'power3.out' },
@@ -103,7 +103,7 @@ export function HeroSection({ introReady }: HeroSectionProps) {
     })
 
     introTimeline
-      .to(topBackground, { opacity: 1, duration: 0.45 }, 0)
+      .to(backgroundFrame, { opacity: 1, duration: 0.45 }, 0)
       .to(title, { opacity: 1, y: 0, duration: 0.35 }, 0)
       .to(wordShellNodes, { opacity: 1, y: 0, stagger: 0.06, duration: 0.62 }, 0.08)
 
@@ -115,12 +115,12 @@ export function HeroSection({ introReady }: HeroSectionProps) {
   useLayoutEffect(() => {
     const section = sectionRef.current
     const visual = visualRef.current
-    const topBackground = topBackgroundRef.current
+    const backgroundFrame = backgroundFrameRef.current
     const title = titleRef.current
     const wordShellNodes = wordShellRefs.current.filter((el): el is HTMLSpanElement => Boolean(el))
     const wordActiveNodes = wordActiveRefs.current.filter((el): el is HTMLSpanElement => Boolean(el))
 
-    if (!section || !visual || !topBackground || !title || wordShellNodes.length === 0 || wordActiveNodes.length === 0) return
+    if (!section || !visual || !backgroundFrame || !title || wordShellNodes.length === 0 || wordActiveNodes.length === 0) return
 
     const ctx = gsap.context(() => {
       const scrollTl = gsap.timeline({
@@ -133,7 +133,7 @@ export function HeroSection({ introReady }: HeroSectionProps) {
         },
       })
         .fromTo(visual, { height: '47.95%' }, { height: '100%', ease: 'none' }, 0)
-        .fromTo(topBackground, { yPercent: 0, scale: 1.06 }, { yPercent: -10, scale: 1.12, ease: 'none' }, 0)
+        .fromTo(backgroundFrame, { yPercent: 0 }, { yPercent: -10, ease: 'none' }, 0)
         .fromTo(title, { y: 0 }, { y: -180, ease: 'none' }, 0.14)
         .fromTo(wordShellNodes, { y: 0 }, { y: -120, stagger: 0.02, ease: 'none' }, 0.14)
 
@@ -160,67 +160,37 @@ export function HeroSection({ introReady }: HeroSectionProps) {
       <div ref={stageRef} className="hero-section__stage">
         <div ref={visualRef} className="hero-section__visual" aria-hidden="true">
           <svg
-            ref={topBackgroundRef}
-            className="hero-section__background"
-            viewBox="0 0 1440 900"
-            preserveAspectRatio="none"
+            className="hero-section__mask-defs"
             aria-hidden="true"
+            focusable="false"
+            width="0"
+            height="0"
+            viewBox="0 0 1440 900"
           >
             <defs>
-              <linearGradient id="hero-flow-base" x1="0%" y1="0%" x2="100%" y2="100%">
-                <animate attributeName="x1" values="0%; 18%; 0%" dur="14s" repeatCount="indefinite" />
-                <animate attributeName="y1" values="0%; 12%; 0%" dur="16s" repeatCount="indefinite" />
-                <animate attributeName="x2" values="100%; 82%; 100%" dur="14s" repeatCount="indefinite" />
-                <animate attributeName="y2" values="100%; 88%; 100%" dur="16s" repeatCount="indefinite" />
-
-                <stop offset="0%" stopColor={gradientPalette.base1} />
-                <stop offset="22%" stopColor={gradientPalette.base2} />
-                <stop offset="44%" stopColor={gradientPalette.pink} stopOpacity="0.24" />
-                <stop offset="72%" stopColor={gradientPalette.base3} />
-                <stop offset="100%" stopColor={gradientPalette.base4} />
-              </linearGradient>
-
-              <radialGradient id="hero-flow-mist" cx="42%" cy="36%" r="72%">
-                <animate attributeName="cx" values="42%; 56%; 42%" dur="18s" repeatCount="indefinite" />
-                <animate attributeName="cy" values="36%; 48%; 36%" dur="20s" repeatCount="indefinite" />
-                <animate attributeName="r" values="64%; 74%; 64%" dur="19s" repeatCount="indefinite" />
-
-                <stop offset="0%" stopColor={gradientPalette.pink} stopOpacity="0.22" />
-                <stop offset="34%" stopColor={gradientPalette.base2} stopOpacity="0.08" />
-                <stop offset="68%" stopColor={gradientPalette.pink} stopOpacity="0.14" />
-                <stop offset="100%" stopColor={gradientPalette.base1} stopOpacity="0" />
-              </radialGradient>
-
-              <linearGradient id="hero-flow-glow" x1="16%" y1="70%" x2="84%" y2="30%">
-                <animate attributeName="x1" values="16%; 26%; 16%" dur="22s" repeatCount="indefinite" />
-                <animate attributeName="y1" values="70%; 60%; 70%" dur="18s" repeatCount="indefinite" />
-                <animate attributeName="x2" values="84%; 74%; 84%" dur="22s" repeatCount="indefinite" />
-                <animate attributeName="y2" values="30%; 40%; 30%" dur="18s" repeatCount="indefinite" />
-
-                <stop offset="0%" stopColor={gradientPalette.base1} stopOpacity="0" />
-                <stop offset="34%" stopColor={gradientPalette.pink} stopOpacity="0.12">
-                  <animate attributeName="stop-opacity" values="0.08; 0.16; 0.08" dur="10s" repeatCount="indefinite" />
-                </stop>
-                <stop offset="62%" stopColor={gradientPalette.base3} stopOpacity="0.12" />
-                <stop offset="100%" stopColor={gradientPalette.base1} stopOpacity="0" />
-              </linearGradient>
+              <clipPath id="hero-liquid-mask" clipPathUnits="userSpaceOnUse">
+                <path d={backgroundBasePath} />
+              </clipPath>
             </defs>
-            <path
-              className="hero-section__background-base"
-              d={backgroundBasePath}
-              fill="url(#hero-flow-base)"
-            />
-            <path
-              className="hero-section__background-mist"
-              d={backgroundBasePath}
-              fill="url(#hero-flow-mist)"
-            />
-            <path
-              className="hero-section__background-glow"
-              d={backgroundBasePath}
-              fill="url(#hero-flow-glow)"
-            />
           </svg>
+          <div
+            ref={backgroundFrameRef}
+            className="hero-section__background"
+            aria-hidden="true"
+            style={
+              {
+                '--hero-base-1': gradientPalette.base1,
+                '--hero-base-2': gradientPalette.base2,
+                '--hero-base-3': gradientPalette.base3,
+                '--hero-base-4': gradientPalette.base4,
+                '--hero-pink': gradientPalette.pink,
+              } as CSSProperties
+            }
+          >
+            <span className="hero-section__background-layer hero-section__background-layer--base" />
+            <span className="hero-section__background-layer hero-section__background-layer--mist" />
+            <span className="hero-section__background-layer hero-section__background-layer--glow" />
+          </div>
         </div>
         <HeroTitle
           titleRef={titleRef}

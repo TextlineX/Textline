@@ -28,9 +28,8 @@
     var(--hero-layer-a-4) 100%
   );
   background-size: 220% 100%;
-  transform: translate3d(calc(var(--hero-flow-shift, 0px) * -0.18), 0, 0);
   transition: transform 460ms cubic-bezier(0.22, 1, 0.36, 1), opacity 280ms ease-out;
-  will-change: transform;
+  will-change: height;
   z-index: 0;
   pointer-events: none;
 }
@@ -52,7 +51,6 @@
   background-size: 180% 100%;
   background-position: var(--hero-flow-x, 50%) 50%;
   opacity: var(--hero-flow-overlay-opacity, 0.48);
-  transform: translate3d(calc(var(--hero-flow-shift, 0px) * 0.32), 0, 0);
   transition: transform 460ms cubic-bezier(0.22, 1, 0.36, 1), opacity 460ms ease-out, background-position 460ms ease-out;
   pointer-events: none;
 }
@@ -67,6 +65,15 @@
   padding: clamp(1.25rem, 3vw, 2.75rem) clamp(1rem, 4vw, 3rem) clamp(1.5rem, 4vw, 3.25rem);
   box-sizing: border-box;
   z-index: 2;
+  -webkit-mask-image: linear-gradient(
+    to top,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,0) 60%
+  );
+  -webkit-mask-size: 100% 200%;
+  -webkit-mask-position: bottom;
+  -webkit-mask-repeat: no-repeat;
+  will-change: -webkit-mask-size, transform;
 }
 
 .hero-section__row {

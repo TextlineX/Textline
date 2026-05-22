@@ -4,19 +4,28 @@ import { heroWordRows } from './heroContent'
 
 type HeroTitleProps = {
   titleRef: RefObject<HTMLDivElement | null>
+  wordShellRefs: RefObject<(HTMLSpanElement | null)[]>
+  wordActiveRefs: RefObject<(HTMLSpanElement | null)[]>
 }
 
-export function HeroTitle({ titleRef }: HeroTitleProps) {
-  const rows = heroWordRows
+export function HeroTitle({ titleRef, wordShellRefs, wordActiveRefs }: HeroTitleProps) {
+  let flatIndex = 0
 
   return (
     <div ref={titleRef} className="hero-section__title" aria-label="Hero title">
-      {rows.map((row, rowIndex) => (
+      {heroWordRows.map((row, rowIndex) => (
         <div key={`row-${rowIndex}`} className={`hero-section__row hero-section__row--${rowIndex + 1}`}>
-          {row.map((word) => (
-            <div key={word.id} className="hero-section__word-box" data-word={word.id}>
+          {row.map((word) => {
+            const index = flatIndex++
+
+            return (
               <span
-                className={`hero-section__word ${word.colorClass} ${word.weightClass}${word.id === 'render' ? ' hero-section__word--render' : ''}`}
+                key={word.id}
+                ref={(el) => {
+                  wordShellRefs.current[index] = el
+                }}
+                className="hero-section__word-shell"
+                data-word-shell={word.id}
                 style={
                   {
                     fontSize: `${word.fontSize}px`,
@@ -25,10 +34,28 @@ export function HeroTitle({ titleRef }: HeroTitleProps) {
                   } as CSSProperties
                 }
               >
-                {word.label}
+                <span
+                  className={`hero-section__word hero-section__word--base ${word.colorClass} ${word.weightClass}${word.id === 'render' ? ' hero-section__word--render' : ''}`}
+                >
+                  {word.label}
+                </span>
+                <span
+                  ref={(el) => {
+                    wordActiveRefs.current[index] = el
+                  }}
+                  className={`hero-section__word hero-section__word--active ${word.weightClass}${word.id === 'render' ? ' hero-section__word--render-active' : ''}`}
+                  aria-hidden="true"
+                  style={
+                    {
+                      '--hero-word-active-color': word.activeColor,
+                    } as CSSProperties
+                  }
+                >
+                  {word.label}
+                </span>
               </span>
-            </div>
-          ))}
+            )
+          })}
         </div>
       ))}
     </div>

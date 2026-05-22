@@ -2,6 +2,7 @@ export type HeroWord = {
   id: string
   label: string
   colorClass: string
+  activeColor: string
   weightClass: string
   fontSize: number
   lineHeight: number
@@ -13,6 +14,7 @@ export const heroWords = [
     id: 'parse',
     label: 'PARSE',
     colorClass: 'hero-section__word--dark',
+    activeColor: 'var(--color-accent-strong)',
     weightClass: 'hero-section__word--bold',
     fontSize: 200,
     lineHeight: 136,
@@ -22,6 +24,7 @@ export const heroWords = [
     id: 'the-a',
     label: 'THE',
     colorClass: 'hero-section__word--dark',
+    activeColor: 'var(--color-accent-strong)',
     weightClass: 'hero-section__word--regular',
     fontSize: 160,
     lineHeight: 104,
@@ -31,6 +34,7 @@ export const heroWords = [
     id: 'unknown',
     label: 'UNKNOWN',
     colorClass: 'hero-section__word--dark',
+    activeColor: 'var(--color-accent-strong)',
     weightClass: 'hero-section__word--regular',
     fontSize: 180,
     lineHeight: 106,
@@ -40,6 +44,7 @@ export const heroWords = [
     id: 'render',
     label: 'RENDER',
     colorClass: 'hero-section__word--light',
+    activeColor: '#ffffff',
     weightClass: 'hero-section__word--bold',
     fontSize: 180,
     lineHeight: 172,
@@ -49,6 +54,7 @@ export const heroWords = [
     id: 'the-b',
     label: 'THE',
     colorClass: 'hero-section__word--dark',
+    activeColor: 'var(--color-accent-strong)',
     weightClass: 'hero-section__word--regular',
     fontSize: 160,
     lineHeight: 104,
@@ -58,6 +64,7 @@ export const heroWords = [
     id: 'feature',
     label: 'FEATURE',
     colorClass: 'hero-section__word--dark',
+    activeColor: 'var(--color-accent-strong)',
     weightClass: 'hero-section__word--bold',
     fontSize: 220,
     lineHeight: 136,

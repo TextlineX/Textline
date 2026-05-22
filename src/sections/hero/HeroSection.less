@@ -21,7 +21,7 @@
   position: absolute;
   inset: 0 0 auto;
   height: 47.95%;
-  overflow: hidden;
+  overflow: visible;
   z-index: 0;
   pointer-events: none;
   will-change: height;
@@ -29,48 +29,46 @@
 
 .hero-section__background {
   position: absolute;
-  inset: 0;
-  height: 100%;
-  background: linear-gradient(
-    270deg,
-    var(--hero-layer-a-1) 0%,
-    rgba(244, 180, 208, 0.48) 16%,
-    var(--hero-layer-a-2) 32%,
-    rgba(230, 112, 166, 0.34) 50%,
-    var(--hero-layer-a-3) 72%,
-    var(--hero-layer-a-4) 100%
-  );
-  background-size: 240% 120%;
+  inset: 0 -2% -12% -2%;
+  width: 104%;
+  height: 112%;
   opacity: 0;
   transform: translate3d(0, 0, 0) scale(1.08);
+  transform-origin: 50% 56%;
   will-change: transform, opacity;
   pointer-events: none;
 }
 
-.hero-section__background::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    110deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.02) 22%,
-    rgba(255, 255, 255, 0.15) 31%,
-    rgba(255, 214, 229, 0.18) 38%,
-    rgba(244, 180, 208, 0.26) 46%,
-    rgba(255, 214, 229, 0.14) 54%,
-    transparent 70%
-  );
-  background-size: 180% 100%;
-  background-position: var(--hero-flow-x, 50%) 50%;
-  opacity: calc(var(--hero-flow-overlay-opacity, 0.48) + var(--hero-flow-overlay-pulse, 0));
+.hero-section__background path {
+  vector-effect: non-scaling-stroke;
+}
+
+.hero-section__background-base {
+  opacity: 1;
+}
+
+.hero-section__background-wave {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  opacity: calc(0.94 + var(--hero-flow-overlay-pulse, 0));
   transform: translate3d(
-    calc(var(--hero-flow-shift-x, 0px) + var(--hero-flow-drift-x, 0px)),
-    var(--hero-flow-drift-y, 0px),
+    calc(var(--hero-flow-shift-x, 0px) * 0.6),
+    calc(var(--hero-flow-drift-y, 0px) * 0.8),
     0
   );
-  will-change: transform, opacity, background-position;
-  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.hero-section__background-sheen {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  opacity: calc(0.14 + var(--hero-flow-overlay-pulse, 0) * 0.8);
+  transform: translate3d(
+    calc(var(--hero-flow-shift-x, 0px) * -0.35),
+    calc(var(--hero-flow-drift-y, 0px) * -0.45),
+    0
+  );
+  will-change: transform, opacity;
 }
 
 .hero-section__title {
@@ -162,10 +160,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .hero-section__background {
-    transform: none;
-  }
-
-  .hero-section__background::after {
     transform: none;
   }
 

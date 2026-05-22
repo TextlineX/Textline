@@ -119,7 +119,7 @@ export function HeroSection({ introReady }: HeroSectionProps) {
   useLayoutEffect(() => {
     const gradient = backgroundGradientRef.current
 
-    if (!gradient || !introComplete) return
+    if (!gradient) return
 
     let rafId = 0
     const start = window.performance.now()
@@ -160,19 +160,19 @@ export function HeroSection({ introReady }: HeroSectionProps) {
               <linearGradient
                 ref={backgroundGradientRef}
                 id={backgroundGradientId}
-                x1="8%"
-                y1="18%"
-                x2="92%"
-                y2="82%"
+                x1="14%"
+                y1="22%"
+                x2="88%"
+                y2="74%"
               >
                 <stop offset="0%" stopColor="var(--hero-layer-a-1)" />
-                <stop offset="12%" stopColor="var(--hero-layer-a-2)" stopOpacity="0.96" />
+                <stop offset="12%" stopColor="var(--hero-layer-a-2)" stopOpacity="0.9" />
                 <stop offset="24%" stopColor="var(--hero-layer-a-2)" />
-                <stop offset="36%" stopColor="var(--hero-pink-soft)" stopOpacity="0.28" />
-                <stop offset="48%" stopColor="var(--hero-pink-soft)" stopOpacity="0.64" />
-                <stop offset="60%" stopColor="var(--hero-layer-a-3)" stopOpacity="0.92" />
-                <stop offset="72%" stopColor="var(--hero-pink-soft)" stopOpacity="0.34" />
-                <stop offset="84%" stopColor="var(--hero-layer-a-3)" />
+                <stop offset="38%" stopColor="var(--hero-pink-soft)" stopOpacity="0.18" />
+                <stop offset="50%" stopColor="var(--hero-pink-soft)" stopOpacity="0.42" />
+                <stop offset="62%" stopColor="var(--hero-layer-a-3)" stopOpacity="0.88" />
+                <stop offset="76%" stopColor="var(--hero-pink-soft)" stopOpacity="0.24" />
+                <stop offset="88%" stopColor="var(--hero-layer-a-3)" />
                 <stop offset="100%" stopColor="var(--hero-layer-a-4)" />
               </linearGradient>
             </defs>

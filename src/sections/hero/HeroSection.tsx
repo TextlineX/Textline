@@ -7,6 +7,8 @@ import { useHeroBackgroundMotion } from './useHeroBackgroundMotion'
 import './HeroSection.less'
 
 const backgroundGradientId = 'hero-background-gradient'
+const backgroundMistGradientId = 'hero-background-mist-gradient'
+const backgroundGlowGradientId = 'hero-background-glow-gradient'
 const backgroundBasePath =
   'M 0 0 H 1440 V 640 C 1320 626 1272 680 1168 688 C 1064 696 1012 628 910 632 C 808 636 750 708 642 704 C 534 700 480 620 382 620 C 270 620 212 702 110 694 C 54 690 22 670 0 666 Z'
 
@@ -20,7 +22,8 @@ export function HeroSection({ introReady }: HeroSectionProps) {
   const visualRef = useRef<HTMLDivElement | null>(null)
   const topBackgroundRef = useRef<SVGSVGElement | null>(null)
   const backgroundGradientRef = useRef<SVGLinearGradientElement | null>(null)
-  const backgroundStopsRef = useRef<(SVGStopElement | null)[]>([])
+  const backgroundMistGradientRef = useRef<SVGRadialGradientElement | null>(null)
+  const backgroundGlowGradientRef = useRef<SVGLinearGradientElement | null>(null)
   const titleRef = useRef<HTMLDivElement | null>(null)
   const wordShellRefs = useRef<(HTMLSpanElement | null)[]>([])
   const wordActiveRefs = useRef<(HTMLSpanElement | null)[]>([])
@@ -119,31 +122,41 @@ export function HeroSection({ introReady }: HeroSectionProps) {
 
   useLayoutEffect(() => {
     const gradient = backgroundGradientRef.current
-    const stops = backgroundStopsRef.current.filter((stop): stop is SVGStopElement => Boolean(stop))
+    const mistGradient = backgroundMistGradientRef.current
+    const glowGradient = backgroundGlowGradientRef.current
 
-    if (!gradient || stops.length < 9) return
+    if (!gradient || !mistGradient || !glowGradient) return
 
     let rafId = 0
     const start = window.performance.now()
-    const baseOffsets = [0, 12, 24, 38, 50, 62, 76, 88, 100]
 
     const tick = (now: number) => {
       const elapsed = now - start
-      const driftX = Math.sin(elapsed * 0.00012) * 16
-      const driftY = Math.cos(elapsed * 0.0001) * 8
-      const shear = Math.sin(elapsed * 0.00008) * 5
-      const phase = elapsed * 0.00045
+      const baseX = Math.sin(elapsed * 0.00008) * 10
+      const baseY = Math.cos(elapsed * 0.00007) * 6
+      const mistX = Math.sin(elapsed * 0.00011 + 1.8) * 18
+      const mistY = Math.cos(elapsed * 0.00009 + 0.6) * 8
+      const glowX = Math.sin(elapsed * 0.00013 + 3.1) * 14
+      const glowY = Math.cos(elapsed * 0.0001 + 1.4) * 7
+      const baseShear = Math.sin(elapsed * 0.00005) * 3
+      const mistShear = Math.cos(elapsed * 0.00006) * 4
+      const glowShear = Math.sin(elapsed * 0.00004 + 0.9) * 2
+      const baseScale = 1.01 + Math.sin(elapsed * 0.00003) * 0.01
+      const mistScale = 1.08 + Math.cos(elapsed * 0.00004) * 0.015
+      const glowScale = 1.04 + Math.sin(elapsed * 0.000035 + 0.8) * 0.012
 
       gradient.setAttribute(
         'gradientTransform',
-        `translate(${driftX.toFixed(2)} ${driftY.toFixed(2)}) skewX(${shear.toFixed(2)})`,
+        `translate(${baseX.toFixed(2)} ${baseY.toFixed(2)}) skewX(${baseShear.toFixed(2)}) scale(${baseScale.toFixed(4)})`,
       )
-
-      stops.forEach((stop, index) => {
-        const wave = Math.sin(phase + index * 0.72) * 2.6
-        const offset = Math.min(100, Math.max(0, baseOffsets[index] + wave))
-        stop.setAttribute('offset', `${offset.toFixed(2)}%`)
-      })
+      mistGradient.setAttribute(
+        'gradientTransform',
+        `translate(${mistX.toFixed(2)} ${mistY.toFixed(2)}) skewX(${mistShear.toFixed(2)}) scale(${mistScale.toFixed(4)})`,
+      )
+      glowGradient.setAttribute(
+        'gradientTransform',
+        `translate(${glowX.toFixed(2)} ${glowY.toFixed(2)}) skewX(${glowShear.toFixed(2)}) scale(${glowScale.toFixed(4)})`,
+      )
 
       rafId = window.requestAnimationFrame(tick)
     }
@@ -170,26 +183,57 @@ export function HeroSection({ introReady }: HeroSectionProps) {
               <linearGradient
                 ref={backgroundGradientRef}
                 id={backgroundGradientId}
-                x1="10%"
-                y1="20%"
-                x2="90%"
-                y2="78%"
+                x1="8%"
+                y1="16%"
+                x2="88%"
+                y2="74%"
               >
-                <stop ref={(el) => { backgroundStopsRef.current[0] = el }} offset="0%" stopColor="var(--hero-layer-a-1)" />
-                <stop ref={(el) => { backgroundStopsRef.current[1] = el }} offset="12%" stopColor="var(--hero-layer-a-2)" stopOpacity="0.9" />
-                <stop ref={(el) => { backgroundStopsRef.current[2] = el }} offset="24%" stopColor="var(--hero-layer-a-2)" />
-                <stop ref={(el) => { backgroundStopsRef.current[3] = el }} offset="38%" stopColor="var(--hero-pink-soft)" stopOpacity="0.18" />
-                <stop ref={(el) => { backgroundStopsRef.current[4] = el }} offset="50%" stopColor="var(--hero-pink-soft)" stopOpacity="0.42" />
-                <stop ref={(el) => { backgroundStopsRef.current[5] = el }} offset="62%" stopColor="var(--hero-layer-a-3)" stopOpacity="0.88" />
-                <stop ref={(el) => { backgroundStopsRef.current[6] = el }} offset="76%" stopColor="var(--hero-pink-soft)" stopOpacity="0.24" />
-                <stop ref={(el) => { backgroundStopsRef.current[7] = el }} offset="88%" stopColor="var(--hero-layer-a-3)" />
-                <stop ref={(el) => { backgroundStopsRef.current[8] = el }} offset="100%" stopColor="var(--hero-layer-a-4)" />
+                <stop offset="0%" stopColor="var(--hero-layer-a-1)" />
+                <stop offset="18%" stopColor="var(--hero-layer-a-2)" />
+                <stop offset="42%" stopColor="var(--hero-pink-soft)" stopOpacity="0.26" />
+                <stop offset="66%" stopColor="var(--hero-layer-a-3)" />
+                <stop offset="100%" stopColor="var(--hero-layer-a-4)" />
+              </linearGradient>
+              <radialGradient
+                ref={backgroundMistGradientRef}
+                id={backgroundMistGradientId}
+                cx="42%"
+                cy="38%"
+                r="72%"
+              >
+                <stop offset="0%" stopColor="var(--hero-pink-soft)" stopOpacity="0.24" />
+                <stop offset="36%" stopColor="var(--hero-layer-a-2)" stopOpacity="0.08" />
+                <stop offset="68%" stopColor="var(--hero-pink-soft)" stopOpacity="0.14" />
+                <stop offset="100%" stopColor="var(--hero-layer-a-1)" stopOpacity="0" />
+              </radialGradient>
+              <linearGradient
+                ref={backgroundGlowGradientRef}
+                id={backgroundGlowGradientId}
+                x1="16%"
+                y1="70%"
+                x2="84%"
+                y2="34%"
+              >
+                <stop offset="0%" stopColor="var(--hero-layer-a-1)" stopOpacity="0" />
+                <stop offset="28%" stopColor="var(--hero-pink-soft)" stopOpacity="0.12" />
+                <stop offset="56%" stopColor="var(--hero-layer-a-3)" stopOpacity="0.12" />
+                <stop offset="100%" stopColor="var(--hero-layer-a-1)" stopOpacity="0" />
               </linearGradient>
             </defs>
             <path
               className="hero-section__background-base"
               d={backgroundBasePath}
               fill={`url(#${backgroundGradientId})`}
+            />
+            <path
+              className="hero-section__background-mist"
+              d={backgroundBasePath}
+              fill={`url(#${backgroundMistGradientId})`}
+            />
+            <path
+              className="hero-section__background-glow"
+              d={backgroundBasePath}
+              fill={`url(#${backgroundGlowGradientId})`}
             />
           </svg>
         </div>

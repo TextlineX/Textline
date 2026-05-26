@@ -23,6 +23,14 @@
   transform: translate(-50%, -50%);
   width: clamp(140px, 22vw, 260px);
   height: clamp(140px, 22vw, 260px);
+  pointer-events: none;
+  will-change: opacity, transform;
+  z-index: 1;
+}
+
+.about-svg-layer {
+  position: absolute;
+  inset: 0;
   z-index: 1;
   pointer-events: none;
 }
@@ -34,25 +42,35 @@
 
 .about-text-layer {
   position: relative;
-  z-index: 2;
   width: 100%;
   height: 100%;
+  z-index: 2;
+}
+
+.about-text-group {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
   pointer-events: none;
+}
+
+.about-text-group--active {
+  opacity: 1;
 }
 
 .about-text {
   position: absolute;
   font-family: 'DynaPuff', var(--font-sans);
-  font-size: clamp(1.25rem, 2.5vw, 2.5rem);
+  font-size: clamp(1.25rem, 2.5vw, 2.25rem);
   font-weight: 400;
   line-height: 1.4;
-  text-transform: uppercase;
   color: var(--color-text-strong);
   will-change: transform, opacity;
+  white-space: nowrap;
 }
 
 .about-text--left {
-  left: 5%;
+  left: 8%;
 }
 
 .about-text--center {
@@ -61,7 +79,7 @@
 }
 
 .about-text--right {
-  right: 5%;
+  right: 8%;
 }
 
 .about-text--hand {

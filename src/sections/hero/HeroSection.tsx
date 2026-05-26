@@ -167,30 +167,55 @@ export function HeroSection({ introReady }: HeroSectionProps) {
             aria-hidden="true"
           >
             <defs>
+              {/* 第一层：基础渐变 - 颜色循环 + 坐标动画 */}
               <linearGradient id="hero-flow-base" x1="0%" y1="0%" x2="100%" y2="100%">
                 <animate attributeName="x1" values="0%; 18%; 0%" dur="14s" repeatCount="indefinite" />
                 <animate attributeName="y1" values="0%; 12%; 0%" dur="16s" repeatCount="indefinite" />
                 <animate attributeName="x2" values="100%; 82%; 100%" dur="14s" repeatCount="indefinite" />
                 <animate attributeName="y2" values="100%; 88%; 100%" dur="16s" repeatCount="indefinite" />
 
-                <stop offset="0%" stopColor={gradientPalette.base1} />
-                <stop offset="22%" stopColor={gradientPalette.base2} />
-                <stop offset="44%" stopColor={gradientPalette.pink} stopOpacity="0.24" />
-                <stop offset="72%" stopColor={gradientPalette.base3} />
-                <stop offset="100%" stopColor={gradientPalette.base4} />
+                <stop offset="0%" stopColor={gradientPalette.base1}>
+                  <animate attributeName="stop-color" values={`${gradientPalette.base1};${gradientPalette.pink};${gradientPalette.base2};${gradientPalette.base1}`} dur="6s" repeatCount="indefinite" />
+                </stop>
+                <stop offset="22%" stopColor={gradientPalette.base2}>
+                  <animate attributeName="stop-color" values={`${gradientPalette.base2};${gradientPalette.base3};${gradientPalette.pink};${gradientPalette.base2}`} dur="7s" repeatCount="indefinite" />
+                </stop>
+                <stop offset="44%" stopColor={gradientPalette.pink} stopOpacity="0.24">
+                  <animate attributeName="stop-color" values={`${gradientPalette.pink};${gradientPalette.base1};${gradientPalette.base4};${gradientPalette.pink}`} dur="5s" repeatCount="indefinite" />
+                  <animate attributeName="stop-opacity" values="0.18; 0.32; 0.18" dur="4s" repeatCount="indefinite" />
+                </stop>
+                <stop offset="72%" stopColor={gradientPalette.base3}>
+                  <animate attributeName="stop-color" values={`${gradientPalette.base3};${gradientPalette.pink};${gradientPalette.base4};${gradientPalette.base3}`} dur="8s" repeatCount="indefinite" />
+                </stop>
+                <stop offset="100%" stopColor={gradientPalette.base4}>
+                  <animate attributeName="stop-color" values={`${gradientPalette.base4};${gradientPalette.base3};${gradientPalette.base2};${gradientPalette.base4}`} dur="9s" repeatCount="indefinite" />
+                </stop>
               </linearGradient>
 
+              {/* 第二层：径向雾气 - 颜色循环 + 透明度脉动 + 坐标动画 */}
               <radialGradient id="hero-flow-mist" cx="42%" cy="36%" r="72%">
                 <animate attributeName="cx" values="42%; 56%; 42%" dur="18s" repeatCount="indefinite" />
                 <animate attributeName="cy" values="36%; 48%; 36%" dur="20s" repeatCount="indefinite" />
                 <animate attributeName="r" values="64%; 74%; 64%" dur="19s" repeatCount="indefinite" />
 
-                <stop offset="0%" stopColor={gradientPalette.pink} stopOpacity="0.22" />
-                <stop offset="34%" stopColor={gradientPalette.base2} stopOpacity="0.08" />
-                <stop offset="68%" stopColor={gradientPalette.pink} stopOpacity="0.14" />
-                <stop offset="100%" stopColor={gradientPalette.base1} stopOpacity="0" />
+                <stop offset="0%" stopColor={gradientPalette.pink} stopOpacity="0.22">
+                  <animate attributeName="stop-color" values={`${gradientPalette.pink};${gradientPalette.base2};${gradientPalette.pink}`} dur="4s" repeatCount="indefinite" />
+                  <animate attributeName="stop-opacity" values="0.18; 0.28; 0.18" dur="3s" repeatCount="indefinite" />
+                </stop>
+                <stop offset="34%" stopColor={gradientPalette.base2} stopOpacity="0.08">
+                  <animate attributeName="stop-color" values={`${gradientPalette.base2};${gradientPalette.pink};${gradientPalette.base2}`} dur="5s" repeatCount="indefinite" />
+                  <animate attributeName="stop-opacity" values="0.05; 0.14; 0.05" dur="4s" repeatCount="indefinite" />
+                </stop>
+                <stop offset="68%" stopColor={gradientPalette.pink} stopOpacity="0.14">
+                  <animate attributeName="stop-color" values={`${gradientPalette.pink};${gradientPalette.base3};${gradientPalette.pink}`} dur="4.5s" repeatCount="indefinite" />
+                  <animate attributeName="stop-opacity" values="0.1; 0.2; 0.1" dur="3.5s" repeatCount="indefinite" />
+                </stop>
+                <stop offset="100%" stopColor={gradientPalette.base1} stopOpacity="0">
+                  <animate attributeName="stop-opacity" values="0; 0.06; 0" dur="6s" repeatCount="indefinite" />
+                </stop>
               </radialGradient>
 
+              {/* 第三层：发光渐变 - 透明度脉动 + 坐标动画 */}
               <linearGradient id="hero-flow-glow" x1="16%" y1="70%" x2="84%" y2="30%">
                 <animate attributeName="x1" values="16%; 26%; 16%" dur="22s" repeatCount="indefinite" />
                 <animate attributeName="y1" values="70%; 60%; 70%" dur="18s" repeatCount="indefinite" />
@@ -199,9 +224,11 @@ export function HeroSection({ introReady }: HeroSectionProps) {
 
                 <stop offset="0%" stopColor={gradientPalette.base1} stopOpacity="0" />
                 <stop offset="34%" stopColor={gradientPalette.pink} stopOpacity="0.12">
-                  <animate attributeName="stop-opacity" values="0.08; 0.16; 0.08" dur="10s" repeatCount="indefinite" />
+                  <animate attributeName="stop-opacity" values="0.06; 0.18; 0.06" dur="3s" repeatCount="indefinite" />
                 </stop>
-                <stop offset="62%" stopColor={gradientPalette.base3} stopOpacity="0.12" />
+                <stop offset="62%" stopColor={gradientPalette.base3} stopOpacity="0.12">
+                  <animate attributeName="stop-opacity" values="0.06; 0.16; 0.06" dur="4s" repeatCount="indefinite" />
+                </stop>
                 <stop offset="100%" stopColor={gradientPalette.base1} stopOpacity="0" />
               </linearGradient>
             </defs>

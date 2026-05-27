@@ -16,6 +16,7 @@ const works = [
     summary: '基于 Flutter 的学习平台客户端，支持 AES-CBC 登录认证、断点续传、多平台主题定制。',
     tech: ['Flutter', 'Dart', 'AES-CBC', 'HTTP'],
     highlights: ['多平台支持', '断点续传', '主题定制'],
+    image: '/images/chaocingrc.png',
   },
   {
     id: 'bot-connect',
@@ -24,6 +25,7 @@ const works = [
     summary: '基于 WebSocket 的主从机器人控制系统，支持语音交互、视觉识别、ROS2 联动控制。',
     tech: ['WebSocket', 'ROS2', 'Python', 'YOLO'],
     highlights: ['主从通信', 'ASR/TTS', '视觉识别'],
+    image: '/images/bot_connect.png',
   },
   {
     id: 'ttab',
@@ -32,6 +34,25 @@ const works = [
     summary: '浏览器书签仪表板扩展，支持磁贴布局、词云展示、拖拽排序和国际化。',
     tech: ['React', 'TypeScript', 'Chrome Extension', 'i18n'],
     highlights: ['磁贴布局', '词云展示', '主题定制'],
+    image: '/images/ttab.png',
+  },
+  {
+    id: 'gobili-ticket',
+    name: 'GoBiliTicket',
+    type: '抢票工具',
+    summary: '基于 Go + Gin 重构 B 站抢票流程，提供命令行与 Web 管理双入口，支持扫码登录、项目检索、抢票执行和历史管理。',
+    tech: ['Go', 'Gin', 'Cobra', 'Web UI'],
+    highlights: ['扫码登录', '项目检索', '轻量部署'],
+    image: '/images/biliticket.png',
+  },
+  {
+    id: 'talktalk',
+    name: 'TalkTalk',
+    type: '开源交流社区',
+    summary: '基于 Vue 3、Ant Design Vue、Express.js 与 PostgreSQL 开发的前后端分离社区论坛，覆盖内容发布、互动和用户管理链路。',
+    tech: ['Vue 3', 'Ant Design Vue', 'Express.js', 'PostgreSQL'],
+    highlights: ['内容发布', '互动闭环', '线上部署'],
+    image: '/images/talktalk.png',
   },
 ]
 
@@ -253,7 +274,7 @@ export function WorksSection() {
           trigger: section,
           start: 'top 80%',
           end: 'bottom 20%',
-          scrub: 1,
+          scrub: 2,
         }
       })
 
@@ -314,7 +335,7 @@ export function WorksSection() {
               className={`works-item works-item--${i % 2 === 0 ? 'left' : 'right'}`}
             >
               <div className="works-item__image">
-                <div className="works-item__placeholder">{work.name}</div>
+                <img src={work.image} alt={work.name} />
               </div>
               <div className="works-item__content">
                 <div className="works-item__header">

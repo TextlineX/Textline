@@ -410,21 +410,22 @@ export function ContactSection() {
       const rig = contactRigRef.current
       if (rig) {
         const intensity = clamp(Math.abs(e.deltaY) / 1000, 0.08, 1)
+        const direction = e.deltaY >= 0 ? 1 : -1
 
         Matter.Body.applyForce(rig.payload, rig.payload.position, {
           x: 0,
-          y: -intensity * 0.00012,
+          y: direction * intensity * 0.00012,
         })
 
         Matter.Body.setVelocity(rig.payload, {
           x: clamp(rig.payload.velocity.x * 0.4, -0.35, 0.35),
-          y: clamp(rig.payload.velocity.y - intensity * 0.24, -1.8, 1.8),
+          y: clamp(rig.payload.velocity.y + direction * intensity * 0.24, -1.8, 1.8),
         })
 
         rig.rope.forEach((body, index) => {
           Matter.Body.applyForce(body, body.position, {
             x: 0,
-            y: -intensity * 0.00004 * (1 - index * 0.12),
+            y: direction * intensity * 0.00004 * (1 - index * 0.12),
           })
         })
       }

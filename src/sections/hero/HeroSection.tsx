@@ -53,6 +53,11 @@ function getHeroGradientPalette(): HeroGradientPalette {
     : heroGradientPalettes.light
 }
 
+function getHeroVisualHeight(section: HTMLElement) {
+  const value = window.getComputedStyle(section).getPropertyValue('--hero-visual-height').trim()
+  return value || '47.95%'
+}
+
 type HeroSectionProps = {
   introReady: boolean
 }
@@ -69,15 +74,18 @@ export function HeroSection({ introReady }: HeroSectionProps) {
   const [introComplete, setIntroComplete] = useState(false)
 
   useLayoutEffect(() => {
+    const section = sectionRef.current
     const visual = visualRef.current
     const topBackground = topBackgroundRef.current
     const title = titleRef.current
     const wordShellNodes = wordShellRefs.current.filter((el): el is HTMLSpanElement => Boolean(el))
     const wordActiveNodes = wordActiveRefs.current.filter((el): el is HTMLSpanElement => Boolean(el))
 
-    if (!visual || !topBackground || !title) return
+    if (!section || !visual || !topBackground || !title) return
 
-    gsap.set(visual, { height: '47.95%' })
+    const visualHeight = getHeroVisualHeight(section)
+
+    gsap.set(visual, { height: visualHeight })
     gsap.set(topBackground, { opacity: 0, scale: 1.06, yPercent: 0 })
     gsap.set(title, { opacity: 0, y: 18 })
     gsap.set(wordShellNodes, { opacity: 0, y: 24 })
@@ -122,6 +130,8 @@ export function HeroSection({ introReady }: HeroSectionProps) {
 
     if (!section || !visual || !topBackground || !title || wordShellNodes.length === 0 || wordActiveNodes.length === 0) return
 
+    const visualHeight = getHeroVisualHeight(section)
+
     const ctx = gsap.context(() => {
       const scrollTl = gsap.timeline({
         scrollTrigger: {
@@ -132,7 +142,7 @@ export function HeroSection({ introReady }: HeroSectionProps) {
           invalidateOnRefresh: true,
         },
       })
-        .fromTo(visual, { height: '47.95%' }, { height: '100%', ease: 'none' }, 0)
+        .fromTo(visual, { height: visualHeight }, { height: '100%', ease: 'none' }, 0)
         .fromTo(topBackground, { yPercent: 0, scale: 1.06 }, { yPercent: -10, scale: 1.12, ease: 'none' }, 0)
         .fromTo(title, { y: 0 }, { y: -180, ease: 'none' }, 0.14)
         .fromTo(wordShellNodes, { y: 0 }, { y: -120, stagger: 0.02, ease: 'none' }, 0.14)

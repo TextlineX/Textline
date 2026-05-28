@@ -28,9 +28,9 @@ export function HeroTitle({ titleRef, wordShellRefs, wordActiveRefs }: HeroTitle
                 data-word-shell={word.id}
                 style={
                   {
-                    fontSize: `${word.fontSize}px`,
-                    lineHeight: `${word.lineHeight}px`,
-                    letterSpacing: word.letterSpacing,
+                    '--hero-word-font-size': `${word.fontSize}px`,
+                    '--hero-word-line-height': `${word.lineHeight}px`,
+                    '--hero-word-letter-spacing': word.letterSpacing,
                   } as CSSProperties
                 }
               >

@@ -22,7 +22,7 @@ export function useDampingScroll(damping = 0.08) {
       lastTouchY = e.touches[0].clientY
     }
     const onTouchMove = (e: TouchEvent) => {
-      const delta = (e.touches[0].clientY - lastTouchY) * 1.5
+      const delta = (lastTouchY - e.touches[0].clientY) * 1.5
       targetY.current += delta
       lastTouchY = e.touches[0].clientY
     }

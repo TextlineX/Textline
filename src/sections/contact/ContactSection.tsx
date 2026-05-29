@@ -74,7 +74,8 @@ const SEGMENT_RADIUS = 5
 
 export function ContactSection() {
   const sectionRef = useRef<HTMLElement | null>(null)
-  const titleRef = useRef<HTMLHeadingElement | null>(null)
+  const titleShellRef = useRef<HTMLDivElement | null>(null)
+  const anchorPointRef = useRef<HTMLSpanElement | null>(null)
   const rigStageRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const contactRigRef = useRef<ContactRig | null>(null)
@@ -98,10 +99,11 @@ export function ContactSection() {
 
   useLayoutEffect(() => {
     const section = sectionRef.current
+    const titleShell = titleShellRef.current
     const rigStage = rigStageRef.current
     const canvas = canvasRef.current
 
-    if (!section || !rigStage || !canvas) return
+    if (!section || !titleShell || !rigStage || !canvas) return
 
     const ctx = canvas.getContext('2d')
     if (!ctx) return
@@ -113,19 +115,19 @@ export function ContactSection() {
 
     const getAnchorPoint = () => {
       const rigRect = rigStage.getBoundingClientRect()
-      const titleEl = titleRef.current
+      const anchorEl = anchorPointRef.current
 
-      if (titleEl) {
-        const titleRect = titleEl.getBoundingClientRect()
+      if (anchorEl) {
+        const anchorRect = anchorEl.getBoundingClientRect()
         return {
-          x: titleRect.right - 10 - rigRect.left,
-          y: titleRect.bottom - 20 - rigRect.top,
+          x: anchorRect.left + anchorRect.width / 2 - rigRect.left,
+          y: anchorRect.top + anchorRect.height / 2 - rigRect.top,
         }
       }
 
       return {
-        x: rigRect.width / 2,
-        y: rigRect.height * 0.35,
+        x: rigRect.width * 0.5,
+        y: rigRect.height * 0.34,
       }
     }
 
@@ -375,7 +377,17 @@ export function ContactSection() {
       resizeCanvas()
       recenterRig()
     })
+    const titleResizeObserver = new ResizeObserver(() => {
+      recenterRig()
+    })
     resizeObserver.observe(rigStage)
+    titleResizeObserver.observe(titleShell)
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        recenterRig()
+      })
+    }
 
     const tick = () => {
       const rig = contactRigRef.current
@@ -454,6 +466,7 @@ export function ContactSection() {
       canvas.removeEventListener('pointercancel', handlePointerEnd)
       canvas.removeEventListener('wheel', handleWheel)
       resizeObserver.disconnect()
+      titleResizeObserver.disconnect()
       cancelAnimationFrame(frameRef.current)
       Matter.Composite.clear(engine.world, false, true)
       Matter.Engine.clear(engine)
@@ -467,15 +480,23 @@ export function ContactSection() {
   }, [])
 
   return (
-    <section ref={sectionRef} className="contact-section" aria-labelledby="contact-section-title">
+    <section
+      ref={sectionRef}
+      className="contact-section notranslate"
+      aria-labelledby="contact-section-title"
+      translate="no"
+    >
       <div ref={rigStageRef} className="contact-section__rig">
         <canvas ref={canvasRef} className="contact-section__canvas" />
       </div>
 
-      <div className="contact-section__content">
-        <h1 ref={titleRef} className="contact-section__title" id="contact-section-title">
-          CONTACT
-        </h1>
+      <div className="contact-section__content" translate="no">
+        <div ref={titleShellRef} className="contact-section__title-shell" translate="no">
+          <h1 className="contact-section__title" id="contact-section-title" translate="no">
+            CONTACT
+          </h1>
+          <span ref={anchorPointRef} className="contact-section__anchor-point" aria-hidden="true" />
+        </div>
 
         <footer className="contact-section__footer">
           {contactLinks.map((link, i) => (

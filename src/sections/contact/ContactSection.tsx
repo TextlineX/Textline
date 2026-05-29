@@ -472,25 +472,27 @@ export function ContactSection() {
         <canvas ref={canvasRef} className="contact-section__canvas" />
       </div>
 
-      <h1 ref={titleRef} className="contact-section__title" id="contact-section-title">
-        CONTACT
-      </h1>
+      <div className="contact-section__content">
+        <h1 ref={titleRef} className="contact-section__title" id="contact-section-title">
+          CONTACT
+        </h1>
 
-      <footer className="contact-section__footer">
-        {contactLinks.map((link, i) => (
-          <a
-            key={link.label}
-            ref={(el) => { linkRefs.current[i] = el }}
-            href={link.href}
-            className="contact-section__link"
-            target={link.href.startsWith('http') ? '_blank' : undefined}
-            rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-          >
-            <span className="contact-section__link-label">{link.label}</span>
-            <span>{link.value}</span>
-          </a>
-        ))}
-      </footer>
+        <footer className="contact-section__footer">
+          {contactLinks.map((link, i) => (
+            <a
+              key={link.label}
+              ref={(el) => { linkRefs.current[i] = el }}
+              href={link.href}
+              className="contact-section__link"
+              target={link.href.startsWith('http') ? '_blank' : undefined}
+              rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+            >
+              <span className="contact-section__link-label">{link.label}</span>
+              <span>{link.value}</span>
+            </a>
+          ))}
+        </footer>
+      </div>
     </section>
   )
 }

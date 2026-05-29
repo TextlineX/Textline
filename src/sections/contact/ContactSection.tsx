@@ -115,7 +115,7 @@ export function ContactSection() {
 
       return {
         x: rigRect.width * 0.5,
-        y: clamp(rigRect.height * 0.12, 28, 72),
+        y: clamp(rigRect.height * 0.025, 8, 18),
       }
     }
 

@@ -17,7 +17,8 @@
 
 .floating-bar__brand,
 .floating-bar__menu,
-.floating-bar__contact {
+.floating-bar__contact,
+.floating-bar__github {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
@@ -30,6 +31,16 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.floating-bar__github {
+  gap: 0.35rem;
+  text-decoration: none;
+}
+
+.floating-bar__github-icon {
+  width: 1rem;
+  height: 1rem;
 }
 
 .floating-bar__brand {
@@ -58,7 +69,8 @@
 
 .floating-bar__brand:hover,
 .floating-bar__menu:hover,
-.floating-bar__contact:hover {
+.floating-bar__contact:hover,
+.floating-bar__github:hover {
   opacity: 0.7;
   transform: translateY(-1px);
 }
@@ -90,7 +102,8 @@
 
   .floating-bar__brand,
   .floating-bar__menu,
-  .floating-bar__contact {
+  .floating-bar__contact,
+  .floating-bar__github {
     font-size: 0.7rem;
     letter-spacing: 0.12em;
   }
@@ -98,5 +111,10 @@
   .floating-bar__brand_logo {
     width: 1.3rem;
     height: 1.3rem;
+  }
+
+  .floating-bar__github-icon {
+    width: 0.9rem;
+    height: 0.9rem;
   }
 }

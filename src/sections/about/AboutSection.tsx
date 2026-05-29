@@ -1,64 +1,98 @@
-import { useLayoutEffect, useRef } from 'react'
+import {useLayoutEffect, useRef, useState} from 'react'
 import gsap from 'gsap'
+import {MorphSVGPlugin} from 'gsap/MorphSVGPlugin'
 
-import { aboutTextGroups, type SvgType } from '../../data/aboutData'
+import {aboutTextGroups, getRandomColors, type SvgType} from '../../data/aboutData'
 import './AboutSection.less'
 
-const SvgRings = () => (
-  <svg className="about-svg" viewBox="0 0 200 200">
-    <circle className="about-svg-ring about-svg-ring--outer" cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="8" />
-    <circle className="about-svg-ring about-svg-ring--inner" cx="100" cy="100" r="40" fill="none" stroke="currentColor" strokeWidth="6" />
+gsap.registerPlugin(MorphSVGPlugin)
+
+// 各 SVG 路径定义（需要点数一致才能正确变形）
+const shapePaths: Record<SvgType, { outer: string; inner: string }> = {
+    rings: {
+        outer: 'M100,20 A80,80 0 1,1 99.99,20 Z',
+        inner: 'M100,60 A40,40 0 1,1 99.99,60 Z',
+    },
+    diamond: {
+        outer: 'M32,8 L56,20 L56,44 L32,56 L8,44 L8,20 Z',
+        inner: 'M56,20 L32,32 L8,20 M32,32 L32,56',
+    },
+    wave: {
+        outer: 'M10,100 Q55,50 100,100 T190,100',
+        inner: 'M10,120 Q55,70 100,120 T190,120',
+    },
+    particles: {
+        outer: 'M50,50 L150,50 L100,100 L30,150 L170,140 L80,170 L140,180 L50,50 Z',
+        inner: 'M50,50 L50,50 L50,50 L50,50 L50,50 L50,50 L50,50 L50,50 Z',
+    },
+}
+
+// 代码 SVG 组件
+const CodeSvg = ({color, id}: { color: string; id: number }) => (
+    <svg className="about-svg" viewBox="0 0 220 220">
+        <defs>
+            <linearGradient id={`codeGrad-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={color}/>
+                <stop offset="100%" stopColor={color} stopOpacity="0.5"/>
+            </linearGradient>
+        </defs>
+        <text
+            x="110"
+            y="115"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize="100"
+            fontFamily="Arial, Helvetica, sans-serif"
+            fontWeight="700"
+            fill={`url(#codeGrad-${id})`}
+        >
+            {'</>'}
+        </text>
   </svg>
 )
 
-const SvgSpiral = () => (
-  <svg className="about-svg" viewBox="0 0 200 200">
-    <path
-      d="M100,100 m0,-80 a80,80 0 0,1 0,160 a70,70 0 0,1 0,-140 a60,60 0 0,1 0,120 a50,50 0 0,1 0,-100 a40,40 0 0,1 0,80 a30,30 0 0,1 0,-60 a20,20 0 0,1 0,40"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-    />
-  </svg>
-)
+// 普通变形 SVG 组件
+const MorphSvg = ({type, color, id}: { type: SvgType; color: string; id: number }) => {
+    const viewBox = type === 'diamond' ? '0 0 64 64' : '0 0 200 200'
+    const strokeWidth = type === 'diamond' ? 2.5 : 6
+    const innerStrokeWidth = type === 'diamond' ? 2 : 4
 
-const SvgWave = () => (
-  <svg className="about-svg" viewBox="0 0 200 200">
-    <path d="M10,100 Q50,50 100,100 T190,100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-    <path d="M10,120 Q50,70 100,120 T190,120" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity="0.6" />
-  </svg>
-)
-
-const SvgParticles = () => (
-  <svg className="about-svg" viewBox="0 0 200 200">
-    <circle cx="50" cy="50" r="8" fill="currentColor" />
-    <circle cx="150" cy="50" r="6" fill="currentColor" opacity="0.8" />
-    <circle cx="100" cy="100" r="12" fill="currentColor" />
-    <circle cx="30" cy="150" r="5" fill="currentColor" opacity="0.6" />
-    <circle cx="170" cy="140" r="7" fill="currentColor" opacity="0.7" />
-    <circle cx="80" cy="170" r="4" fill="currentColor" opacity="0.5" />
-    <circle cx="140" cy="180" r="6" fill="currentColor" opacity="0.8" />
-  </svg>
-)
-
-function renderSvg(type: SvgType) {
-  switch (type) {
-    case 'rings':
-      return <SvgRings />
-    case 'spiral':
-      return <SvgSpiral />
-    case 'wave':
-      return <SvgWave />
-    case 'particles':
-      return <SvgParticles />
-  }
+    return (
+        <svg className="about-svg" viewBox={viewBox}>
+            <defs>
+                <linearGradient id={`morphGrad-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor={color}/>
+                    <stop offset="100%" stopColor={color} stopOpacity="0.4"/>
+                </linearGradient>
+            </defs>
+            <g>
+                <path
+                    className="morph-outer"
+                    d={shapePaths[type].outer}
+                    fill="none"
+                    stroke={`url(#morphGrad-${id})`}
+                    strokeWidth={strokeWidth}
+                    strokeLinecap="round"
+                />
+                <path
+                    className="morph-inner"
+                    d={shapePaths[type].inner}
+                    fill="none"
+                    stroke={`url(#morphGrad-${id})`}
+                    strokeWidth={innerStrokeWidth}
+                    strokeLinecap="round"
+                    opacity="0.7"
+                />
+            </g>
+        </svg>
+    )
 }
 
 export function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const textLayerRef = useRef<HTMLDivElement>(null)
   const svgLayerRef = useRef<HTMLDivElement>(null)
+  const [randomColors] = useState(() => aboutTextGroups.map((group) => getRandomColors(group.texts.length)))
 
   useLayoutEffect(() => {
     const section = sectionRef.current
@@ -70,12 +104,16 @@ export function AboutSection() {
     const ctx = gsap.context(() => {
       const textGroups = gsap.utils.toArray<HTMLElement>('.about-text-group')
       const svgEls = gsap.utils.toArray<HTMLElement>('.about-svg-canvas')
+        const outerPaths = gsap.utils.toArray<SVGPathElement>('.morph-outer')
+        const innerPaths = gsap.utils.toArray<SVGPathElement>('.morph-inner')
       const groupCount = Math.min(textGroups.length, svgEls.length)
 
-      // 初始：所有组常驻 DOM，但隐藏在入场前状态，避免 scrub 中途重渲染替换节点。
+        // 初始状态
       gsap.set(textGroups, { autoAlpha: 0 })
       gsap.set('.about-text', { x: '120%', opacity: 0 })
       gsap.set(svgEls, { opacity: 0, scale: 0.8 })
+        gsap.set(outerPaths, {scale: 0.8, transformOrigin: '100px 100px'})
+        gsap.set(innerPaths, {scale: 0.8, transformOrigin: '100px 100px'})
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -90,28 +128,48 @@ export function AboutSection() {
         const textGroup = textGroups[i]
         const textEls = textGroup.querySelectorAll('.about-text')
         const svgEl = svgEls[i]
+          const outerPath = outerPaths[i]
+          const innerPath = innerPaths[i]
         const groupLabel = `about-group-${i}`
 
+          // 淡入
         tl.set(textGroup, { autoAlpha: 1 }, groupLabel)
-        tl.to(svgEl, { opacity: 1, scale: 1, duration: 0.5, ease: 'power2.out' }, groupLabel)
-        tl.to(textEls, {
-          x: '0%',
-          opacity: 1,
-          duration: 0.8,
-          ease: 'power3.out',
-        }, groupLabel)
+          tl.to(svgEl, {opacity: 1, scale: 1, duration: 0.3, ease: 'power2.out'}, groupLabel)
 
-        // 等待停留
-        tl.to({}, { duration: 0.5 })
+          // 如果是普通变形 SVG，应用缩放动画
+          if (outerPath && innerPath) {
+              tl.to([outerPath, innerPath], {scale: 1, duration: 0.3, ease: 'back.out(1.7)'}, groupLabel)
+          }
 
-        tl.to(textEls, {
-          x: '-120%',
-          opacity: 0,
-          duration: 0.5,
-          ease: 'power2.in',
-        })
+          // 文字入场
+          tl.to(
+              textEls,
+              {
+                  x: '0%',
+                  opacity: 1,
+                  duration: 0.5,
+                  ease: 'power3.out',
+                  stagger: 0.08,
+              },
+              '>-0.1'
+          )
 
-        tl.to(svgEl, { opacity: 0, scale: 0.8, duration: 0.3 }, '+=0')
+          // 停留
+          tl.to({}, {duration: 0.3})
+
+          // 文字出场
+          tl.to(
+              textEls,
+              {
+                  x: '-120%',
+                  opacity: 0,
+                  duration: 0.4,
+                  ease: 'power2.in',
+              }
+          )
+
+          // SVG 淡出
+          tl.to(svgEl, {opacity: 0, scale: 0.8, duration: 0.2}, '>-0.2')
         tl.set(textGroup, { autoAlpha: 0 })
       }
     }, section)
@@ -125,19 +183,26 @@ export function AboutSection() {
         <div ref={svgLayerRef} className="about-svg-layer">
           {aboutTextGroups.map((group) => (
             <div key={group.id} className="about-svg-canvas" style={{ color: group.svgColor }}>
-              {renderSvg(group.svgType)}
+                {group.svgType === 'rings' ? (
+                    <CodeSvg color={group.svgColor} id={group.id}/>
+                ) : (
+                    <MorphSvg type={group.svgType} color={group.svgColor} id={group.id}/>
+                )}
             </div>
           ))}
         </div>
 
         <div ref={textLayerRef} className="about-text-layer">
-          {aboutTextGroups.map((group) => (
+            {aboutTextGroups.map((group, groupIndex) => (
             <div key={group.id} className="about-text-group">
               {group.texts.map((text, i) => (
                 <div
                   key={`${group.id}-${i}`}
                   className={`about-text about-text--${text.position} ${text.fontClass === 'hand' ? 'about-text--hand' : ''}`}
-                  style={{ top: `${25 + i * 10}%` }}
+                  style={{
+                      top: `${25 + i * 10}%`,
+                      color: text.color || randomColors[groupIndex][i],
+                  }}
                 >
                   {text.content}
                 </div>

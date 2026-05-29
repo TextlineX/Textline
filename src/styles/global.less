@@ -8,6 +8,31 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Francy';
+  src: url('/font/Francy.otf') format('opentype'),
+  url('/font/Francy.ttf') format('truetype');
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FiraCode';
+  src: url('/font/FiraCode-Bold.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'YanSaXie';
+  src: url('/font/YanSaXie.ttf') format('truetype');
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
   --color-page-bg: #f8fafc;
@@ -27,6 +52,8 @@
   --color-selection-text: #0f172a;
   --font-sans: system-ui, sans-serif;
   --font-display: 'Quinn', var(--font-sans);
+  --font-about: 'YanSaXie', var(--font-sans);
+  --font-hand: 'Francy', var(--font-sans);
 }
 
 html[data-theme='dark'] {
@@ -47,6 +74,8 @@ html[data-theme='dark'] {
   --color-selection-bg: rgba(168, 230, 255, 0.22);
   --color-selection-text: #f8fafc;
   --font-display: 'Quinn', var(--font-sans);
+  --font-about: 'YanSaXie', var(--font-sans);
+  --font-hand: 'Francy', var(--font-sans);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -68,6 +97,8 @@ html[data-theme='dark'] {
     --color-selection-bg: rgba(168, 230, 255, 0.22);
     --color-selection-text: #f8fafc;
     --font-display: 'Quinn', var(--font-sans);
+    --font-about: 'YanSaXie', var(--font-sans);
+    --font-hand: 'Francy', var(--font-sans);
   }
 }
 

@@ -1,16 +1,35 @@
-import { useEffect, useRef, useState } from 'react'
+import {useEffect, useRef, useState} from 'react'
 import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import {ScrollTrigger} from 'gsap/ScrollTrigger'
+import {Atom, Box, Code2, Gem, Server} from 'lucide-react'
 import './SkillsSection.less'
 
 gsap.registerPlugin(ScrollTrigger)
+
+type PointerListener = {
+  rotator: HTMLDivElement
+  handlePointerMove: (event: PointerEvent) => void
+  handlePointerLeave: () => void
+}
+
+const skills = [
+    {id: 1, name: 'Flutter', category: '跨平台开发', color: '#02569B', Icon: Code2},
+    {id: 2, name: 'React', category: '前端框架', color: '#61DAFB', Icon: Atom},
+    {id: 3, name: 'Node.js', category: '后端运行时', color: '#339933', Icon: Server},
+    {id: 4, name: 'Python', category: '全栈开发', color: '#3776AB', Icon: Gem},
+    {id: 5, name: 'Three.js', category: '3D 可视化', color: '#49D0C7', Icon: Box},
+]
+
+const initialCardOrder = [1, 2, 0, 3, 4]
 
 export function SkillsSection() {
   const sectionRef = useRef<HTMLElement | null>(null)
   const titleBackRef = useRef<HTMLHeadingElement | null>(null)
   const titleFrontRef = useRef<HTMLHeadingElement | null>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
-  const [cardOrder, setCardOrder] = useState<number[]>([1, 2, 0, 3, 4])
+  const rotatorRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [cardOrder, setCardOrder] = useState<number[]>(initialCardOrder)
+  const [activeIndex, setActiveIndex] = useState(initialCardOrder[2])
 
   useEffect(() => {
     const section = sectionRef.current
@@ -75,9 +94,56 @@ export function SkillsSection() {
       },
     })
 
+      // 卡片交互效果
+      const rotators = rotatorRefs.current.filter((rotator): rotator is HTMLDivElement => rotator !== null)
+      const listeners: PointerListener[] = []
+
+      rotators.forEach((rotator, i) => {
+          const card = rotator.closest('.skills-card')
+          if (!card) return
+
+          // 设置技能颜色 CSS 变量
+          const skill = skills[i]
+          if (skill?.color) {
+              rotator.style.setProperty('--card-color', skill.color)
+          }
+
+          const handlePointerMove = (e: PointerEvent) => {
+              const rect = card.getBoundingClientRect()
+              const pointerX = ((e.clientX - rect.left) / rect.width) * 100
+              const pointerY = ((e.clientY - rect.top) / rect.height) * 100
+              const centerX = pointerX - 50
+              const centerY = pointerY - 50
+
+              rotator.style.setProperty('--pointer-x', `${pointerX}%`)
+              rotator.style.setProperty('--pointer-y', `${pointerY}%`)
+              rotator.style.setProperty('--tilt-x', `${-centerY / 3.5}deg`)
+              rotator.style.setProperty('--tilt-y', `${centerX / 3.5}deg`)
+              rotator.style.setProperty('--effect-intensity', '1')
+          }
+
+          const handlePointerLeave = () => {
+              rotator.style.setProperty('--pointer-x', '50%')
+              rotator.style.setProperty('--pointer-y', '50%')
+              rotator.style.setProperty('--tilt-x', '0deg')
+              rotator.style.setProperty('--tilt-y', '0deg')
+              rotator.style.setProperty('--effect-intensity', '0')
+          }
+
+          rotator.addEventListener('pointermove', handlePointerMove)
+          rotator.addEventListener('pointerleave', handlePointerLeave)
+          rotator.addEventListener('pointercancel', handlePointerLeave)
+          listeners.push({rotator, handlePointerMove, handlePointerLeave})
+      })
+
     return () => {
       titleTl.kill()
       cardTl.kill()
+      listeners.forEach(({rotator, handlePointerMove, handlePointerLeave}) => {
+        rotator.removeEventListener('pointermove', handlePointerMove)
+        rotator.removeEventListener('pointerleave', handlePointerLeave)
+        rotator.removeEventListener('pointercancel', handlePointerLeave)
+      })
       ScrollTrigger.getAll().forEach((st) => {
         if (st.vars.trigger === section) st.kill()
       })
@@ -115,6 +181,7 @@ export function SkillsSection() {
     newOrder.push(first)
     animateToOrder(newOrder)
     setCardOrder(newOrder)
+    setActiveIndex(newOrder[2])
   }
 
   const goPrev = () => {
@@ -123,6 +190,7 @@ export function SkillsSection() {
     newOrder.unshift(last)
     animateToOrder(newOrder)
     setCardOrder(newOrder)
+    setActiveIndex(newOrder[2])
   }
 
   return (
@@ -148,8 +216,29 @@ export function SkillsSection() {
                 className="skills-card"
                 style={{ transform: `rotate(${rotate}deg) translateX(${x}px) translateY(${y}px) scale(${scale})`, zIndex }}
               >
-                <div className="skills-card__inner">
-                  <span className="skills-card__num">{cardIndex + 1}</span>
+                  <div
+                      ref={(el) => {
+                          rotatorRefs.current[cardIndex] = el
+                      }}
+                      className="skills-card__rotator"
+                      style={{'--card-color': skills[cardIndex].color} as React.CSSProperties}
+                  >
+                      <div className="skills-card__inner">
+                          <div style={{color: skills[cardIndex].color}}>
+                              {(() => {
+                                  const Icon = skills[cardIndex].Icon
+                                  return <Icon size={48} strokeWidth={2}/>
+                              })()}
+                          </div>
+                          <div className="skills-card__placeholder">
+                              <div style={{color: skills[cardIndex].color}}>{skills[cardIndex].name}</div>
+                              <div style={{
+                                  fontSize: '0.75rem',
+                                  marginTop: '0.5rem',
+                                  color: 'rgba(45,55,72,0.7)'
+                              }}>{skills[cardIndex].category}</div>
+                          </div>
+                      </div>
                 </div>
               </div>
             )
@@ -161,10 +250,10 @@ export function SkillsSection() {
             ‹
           </button>
           <div className="skills-section__dots" aria-label="Card navigation">
-            {cardOrder.map((cardIndex, i) => (
+            {skills.map((_, i) => (
               <div
-                key={cardIndex}
-                className={`skills-section__dot${i === 0 ? ' skills-section__dot--active' : ''}`}
+                key={i}
+                className={`skills-section__dot${i === activeIndex ? ' skills-section__dot--active' : ''}`}
               />
             ))}
           </div>

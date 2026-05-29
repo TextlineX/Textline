@@ -2,9 +2,24 @@ export type TextItem = {
   content: string
   position: 'left' | 'center' | 'right'
   fontClass?: 'hand' | 'normal'
+  color?: string
 }
 
-export type SvgType = 'rings' | 'spiral' | 'wave' | 'particles'
+// 预定义的彩色调色板
+const colorPalette = [
+  '#9b59b6', '#e91e63', '#3498db', '#2ecc71',
+  '#f39c12', '#1abc9c', '#e74c3c', '#00bcd4',
+  '#ff6b6b', '#4ecdc4', '#ff9ff3', '#54a0ff',
+  '#5f27cd', '#ff6348', '#2ed573', '#ffa502',
+]
+
+// 获取随机颜色
+export function getRandomColors(count: number): string[] {
+  const shuffled = [...colorPalette].sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, count)
+}
+
+export type SvgType = 'rings' | 'diamond' | 'wave' | 'particles'
 
 export type TextGroup = {
   id: number
@@ -33,13 +48,13 @@ export const aboutTextGroups: TextGroup[] = [
     texts: [
       { content: '代码即创作', position: 'left' },
       { content: '设计即思考', position: 'left' },
-      { content: '技术驱动创新', position: 'center' },
+      {content: '技术驱动创新', position: 'left'},
       { content: '追求极致的体验', position: 'right' },
       { content: '从构想到实现', position: 'right' },
       { content: '让想法落地', position: 'center' },
       { content: '持续进化的作品', position: 'center' },
     ],
-    svgType: 'spiral',
+    svgType: 'diamond',
     svgColor: '#e91e63',
   },
   {
@@ -47,7 +62,7 @@ export const aboutTextGroups: TextGroup[] = [
     texts: [
       { content: '全栈开发者', position: 'left' },
       { content: '创意工程师', position: 'left' },
-      { content: '热爱新技术', position: 'center' },
+      {content: '热爱新技术', position: 'right'},
       { content: '探索无限可能', position: 'right' },
       { content: '用代码改变世界', position: 'right' },
       { content: '构建美好未来', position: 'center' },
@@ -58,11 +73,11 @@ export const aboutTextGroups: TextGroup[] = [
   },
 ]
 
-export const svgTypes: SvgType[] = ['rings', 'spiral', 'wave', 'particles']
+export const svgTypes: SvgType[] = ['rings', 'diamond', 'wave', 'particles']
 
 export const svgColors: Record<SvgType, string> = {
   rings: '#9b59b6',
-  spiral: '#e91e63',
+  diamond: '#e91e63',
   wave: '#3498db',
   particles: '#2ecc71',
 }

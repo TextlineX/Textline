@@ -123,7 +123,7 @@
 }
 
 .wgrid__item:hover .wgrid__name {
-  color: var(--signal);
+  color: var(--hot);
 }
 
 .wgrid__type {
@@ -158,4 +158,11 @@
   .windex__chips--tech .chip {
     flex: none;
   }
+}
+
+/* Chinese glyphs are about twice as wide as Quinn's condensed capitals, so the title
+   gets its own size and never breaks mid-word. */
+:lang(zh) .windex__title {
+  font-size: clamp(56px, 9vw, 150px);
+  white-space: nowrap;
 }

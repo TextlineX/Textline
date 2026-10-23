@@ -22,7 +22,15 @@
   --line: rgba(18, 19, 43, 0.18);
   --hero-bg: #2b2cf0;
   --hero-ink: #eceef3;
-  --signal: #ff4f1f;
+  /* Two accent roles:
+     --signal: on the blue / deep-indigo surfaces (hero, contact, 404, curtain)
+     --hot:    on paper surfaces (hover, focus, active states)
+     Lemon on ultramarine is 5.9:1; ultramarine on paper is 6.7:1. */
+  --signal: #ffe14d;
+  --on-signal: #12132b;
+  --hot: #2b2cf0;
+  --on-hot: #ffffff;
+  --focus: var(--hot);
 
   --font-display: 'Quinn', 'Impact', 'Arial Narrow', sans-serif;
   --font-body: 'Bricolage Grotesque Variable', system-ui, 'PingFang SC', 'Hiragino Sans GB',
@@ -41,7 +49,9 @@
   --line: rgba(232, 233, 255, 0.2);
   --hero-bg: #15175e;
   --hero-ink: #e8e9ff;
-  --signal: #ff6a3d;
+  --signal: #ffe14d;
+  --hot: #ffe14d;
+  --on-hot: #12132b;
 }
 
 *,
@@ -101,7 +111,16 @@ img {
 
 ::selection {
   background: var(--signal);
-  color: #fff;
+  color: var(--on-signal);
+}
+
+/* On the blue surfaces focus rings switch to the signal colour so they stay visible. */
+.hero,
+.contact,
+.nf,
+.curtain,
+.header:not(.header--solid) {
+  --focus: var(--signal);
 }
 
 main:focus {
@@ -109,7 +128,7 @@ main:focus {
 }
 
 :focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -143,7 +162,7 @@ main:focus {
 }
 
 .more-link:hover {
-  color: var(--signal);
+  color: var(--hot);
   padding-left: 0.6em;
 }
 

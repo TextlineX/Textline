@@ -89,7 +89,7 @@
   .row:hover .row__name,
   .row:focus-visible .row__name {
     transform: translateX(0.12em);
-    color: var(--signal);
+    color: var(--hot);
   }
 
   .works__preview {

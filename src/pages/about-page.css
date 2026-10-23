@@ -105,7 +105,7 @@
 }
 
 .areas__item:hover .areas__name {
-  color: var(--signal);
+  color: var(--hot);
 }
 
 /* Technology × project matrix */
@@ -157,7 +157,7 @@
 
 .matrix__work a:hover,
 .matrix__tech a:hover {
-  color: var(--signal);
+  color: var(--hot);
 }
 
 .matrix__tech {
@@ -185,16 +185,12 @@
   width: 14px;
   height: 14px;
   vertical-align: middle;
-  background: var(--hero-bg);
-}
-
-:root[data-theme='dark'] .matrix__dot {
-  background: var(--ink);
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
 }
 
 .matrix tbody tr:hover .matrix__dot,
 .matrix .is-hot .matrix__dot {
-  background: var(--signal);
+  background: var(--hot);
 }
 
 @media (max-width: 860px) {

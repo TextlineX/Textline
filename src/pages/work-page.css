@@ -10,7 +10,7 @@
 }
 
 .work__back:hover {
-  color: var(--signal);
+  color: var(--hot);
 }
 
 .work__name {
@@ -93,7 +93,7 @@
 }
 
 .work__facts a:hover {
-  color: var(--signal);
+  color: var(--hot);
 }
 
 .work__pager {
@@ -123,7 +123,7 @@
 }
 
 .work__prev:hover .work__prev-name {
-  color: var(--signal);
+  color: var(--hot);
 }
 
 .work__position {
@@ -168,7 +168,7 @@
 }
 
 .work__next:hover .work__next-name {
-  color: var(--signal);
+  color: var(--hot);
   transform: translateX(0.1em);
 }
 

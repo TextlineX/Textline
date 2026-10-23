@@ -70,7 +70,13 @@
 .header__tool:hover {
   background: var(--signal);
   border-color: var(--signal);
-  color: #fff;
+  color: var(--on-signal);
+}
+
+.header--solid .header__tool:hover {
+  background: var(--hot);
+  border-color: var(--hot);
+  color: var(--on-hot);
 }
 
 @media (max-width: 560px) {
@@ -125,7 +131,8 @@
   z-index: 60;
   padding: 10px 16px;
   background: var(--signal);
-  color: #fff;
+  color: var(--on-signal);
+  border: 2px solid var(--on-signal);
   font-weight: 700;
   border-radius: 999px;
   transform: translateY(-160%);

@@ -1,0 +1,193 @@
+@font-face {
+  font-family: 'Quinn';
+  src: url('/font/Quinn-Bold.otf') format('opentype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Francy';
+  src: url('/font/Francy.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  --bg: #eceef3;
+  --ink: #12132b;
+  --muted: rgba(18, 19, 43, 0.64);
+  --line: rgba(18, 19, 43, 0.18);
+  --hero-bg: #2b2cf0;
+  --hero-ink: #eceef3;
+  --signal: #ff4f1f;
+
+  --font-display: 'Quinn', 'Impact', 'Arial Narrow', sans-serif;
+  --font-body: 'Bricolage Grotesque Variable', system-ui, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --font-hand: 'Francy', cursive;
+
+  --pad: clamp(18px, 3.4vw, 52px);
+  --header-h: 64px;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0b0c1f;
+  --ink: #e8e9ff;
+  --muted: rgba(232, 233, 255, 0.66);
+  --line: rgba(232, 233, 255, 0.2);
+  --hero-bg: #15175e;
+  --hero-ink: #e8e9ff;
+  --signal: #ff6a3d;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--header-h);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Quinn ships decorative ligatures (e.g. "ITI") that read as lowercase i. */
+.hero__title,
+.works__title,
+.row__name,
+.contact__mail,
+.work__name,
+.work__next-name {
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'clig' 0;
+}
+
+::selection {
+  background: var(--signal);
+  color: #fff;
+}
+
+main:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* "See all" style link used at the end of home sections. */
+.more-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-top: clamp(20px, 3vw, 36px);
+  padding: 14px 0;
+  font-size: clamp(18px, 1.8vw, 24px);
+  font-weight: 700;
+  border-bottom: 2px solid currentColor;
+  transition: color 0.2s, padding 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.more-link:hover {
+  color: var(--signal);
+  padding-left: 0.6em;
+}
+
+.more-link__count {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* Filter / toggle buttons shared by the index pages. */
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.chip:hover {
+  border-color: var(--ink);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+.chip__n {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.chip:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.chip:disabled:hover {
+  border-color: var(--line);
+}

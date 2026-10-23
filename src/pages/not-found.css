@@ -1,0 +1,88 @@
+.nf {
+  min-height: 100svh;
+  padding: calc(var(--header-h) + 24px) var(--pad) clamp(28px, 5vh, 56px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  background: var(--hero-bg);
+  color: var(--hero-ink);
+}
+
+.nf__title {
+  margin: auto 0;
+  font-family: var(--font-display);
+  font-size: clamp(72px, 15vw, 260px);
+  line-height: 0.86;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0;
+}
+
+.nf__line {
+  display: block;
+}
+
+/* The second line never finished rendering: wireframe only. */
+.nf__line--raw {
+  color: transparent;
+  -webkit-text-stroke: 0.016em var(--signal);
+}
+
+.nf__caret {
+  display: inline-block;
+  width: 0.11em;
+  height: 0.7em;
+  margin-left: 0.12em;
+  background: var(--signal);
+  animation: caret 1.05s steps(1) infinite;
+}
+
+.nf__foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px 40px;
+}
+
+.nf__foot p {
+  margin: 0;
+  max-width: 30em;
+  font-size: clamp(16px, 1.5vw, 20px);
+}
+
+.nf__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.nf__btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nf__btn:hover {
+  background: var(--hero-ink);
+  color: var(--hero-bg);
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf__caret {
+    animation: none;
+  }
+}

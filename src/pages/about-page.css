@@ -1,0 +1,248 @@
+.apage {
+  padding: calc(var(--header-h) + clamp(28px, 5vw, 72px)) var(--pad) clamp(80px, 10vw, 140px);
+}
+
+.apage__title {
+  margin: 0 0 clamp(28px, 4vw, 56px);
+  font-family: var(--font-display);
+  font-size: clamp(64px, 13vw, 210px);
+  line-height: 0.85;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.apage__intro {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  gap: 24px clamp(32px, 6vw, 96px);
+  align-items: end;
+}
+
+.apage__lead {
+  margin: 0;
+  font-size: clamp(28px, 4.4vw, 64px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.apage__body {
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(16px, 1.35vw, 19px);
+}
+
+.apage__block {
+  margin-top: clamp(64px, 9vw, 130px);
+}
+
+.apage__blockhead {
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 26em);
+  gap: 12px 48px;
+  align-items: end;
+  margin-bottom: 24px;
+}
+
+.apage__blockhead p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.apage__h2 {
+  margin: 0 0 24px;
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.apage__blockhead .apage__h2 {
+  margin: 0;
+}
+
+/* Areas: four columns that read as a row of definitions. */
+.areas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 2px solid var(--ink);
+}
+
+.areas li + li {
+  border-left: 1px solid var(--line);
+}
+
+.areas__item {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  height: 100%;
+  padding: 18px 20px 24px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.areas li:first-child .areas__item {
+  padding-left: 0;
+}
+
+.areas__name {
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: 700;
+}
+
+.areas__note {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.areas__n {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.areas__item:hover .areas__name {
+  color: var(--signal);
+}
+
+/* Technology × project matrix */
+.matrix-wrap {
+  overflow-x: auto;
+  margin: 0 calc(var(--pad) * -1);
+  padding: 0 var(--pad);
+}
+
+.matrix {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.matrix th,
+.matrix td {
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+  transition: background-color 0.15s;
+}
+
+.matrix__corner {
+  width: 30%;
+}
+
+.matrix__work {
+  height: 150px;
+  vertical-align: bottom;
+  border-bottom: 2px solid var(--ink) !important;
+}
+
+.matrix__work a {
+  display: block;
+  padding: 0 0 12px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  margin: 0 auto;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0;
+  white-space: nowrap;
+}
+
+.matrix__work a:hover,
+.matrix__tech a:hover {
+  color: var(--signal);
+}
+
+.matrix__tech {
+  text-align: left;
+  font-weight: 600;
+}
+
+.matrix__tech a {
+  display: block;
+  padding: 9px 12px 9px 0;
+}
+
+.matrix td {
+  text-align: center;
+}
+
+.matrix tbody tr:hover th,
+.matrix tbody tr:hover td,
+.matrix .is-hot {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.matrix__dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+  background: var(--hero-bg);
+}
+
+:root[data-theme='dark'] .matrix__dot {
+  background: var(--ink);
+}
+
+.matrix tbody tr:hover .matrix__dot,
+.matrix .is-hot .matrix__dot {
+  background: var(--signal);
+}
+
+@media (max-width: 860px) {
+  .apage__intro,
+  .apage__blockhead {
+    grid-template-columns: 1fr;
+  }
+  .areas {
+    grid-template-columns: 1fr 1fr;
+  }
+  .areas li:nth-child(3) {
+    border-left: 0;
+  }
+  .areas li:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+  .areas li:nth-child(3) .areas__item {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .areas {
+    grid-template-columns: 1fr;
+  }
+  .areas li + li {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .areas__item {
+    padding-left: 0;
+  }
+  /* Five columns fit at phone width, so no sideways scrolling is needed. */
+  .matrix {
+    min-width: 0;
+    font-size: 14px;
+  }
+  .matrix__corner {
+    width: 34%;
+  }
+  .matrix__work {
+    height: 130px;
+  }
+  .matrix__work a {
+    font-size: 19px;
+  }
+  .matrix__dot {
+    width: 12px;
+    height: 12px;
+  }
+}

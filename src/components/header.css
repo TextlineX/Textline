@@ -1,0 +1,136 @@
+.header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 20;
+  height: var(--header-h);
+  padding: 0 var(--pad);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--hero-ink);
+  transition: background-color 0.25s, color 0.25s, border-color 0.25s;
+  border-bottom: 1px solid transparent;
+}
+
+.header--solid {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom-color: var(--line);
+}
+
+.header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.header__logo {
+  width: 26px;
+  height: 26px;
+  background: currentColor;
+  -webkit-mask: url('/favicon/textline-icon-black.svg') center / contain no-repeat;
+  mask: url('/favicon/textline-icon-black.svg') center / contain no-repeat;
+}
+
+.header__nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2.4vw, 32px);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.header__nav a {
+  padding: 6px 0;
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1.5px no-repeat;
+  transition: background-size 0.25s;
+}
+
+.header__nav a.active,
+.header__nav a:hover {
+  background-size: 100% 1.5px;
+}
+
+.header__tool {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.header__tool:hover {
+  background: var(--signal);
+  border-color: var(--signal);
+  color: #fff;
+}
+
+@media (max-width: 560px) {
+  .header__word {
+    display: none;
+  }
+  .header__nav {
+    gap: 12px;
+    font-size: 14px;
+  }
+  .header__tool {
+    min-width: 32px;
+    height: 32px;
+  }
+}
+
+/* Search button grows into a pill with a "/" hint on wide screens. */
+.header__search {
+  gap: 8px;
+}
+
+.header__kbd {
+  display: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+@media (min-width: 900px) {
+  .header__search {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    border-radius: 999px;
+  }
+  .header__kbd {
+    display: inline;
+  }
+}
+
+@media (max-width: 400px) {
+  .header__contact {
+    display: none;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--pad);
+  top: 8px;
+  z-index: 60;
+  padding: 10px 16px;
+  background: var(--signal);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 999px;
+  transform: translateY(-160%);
+}
+
+.skip-link:focus {
+  transform: none;
+}

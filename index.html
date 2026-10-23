@@ -1,44 +1,78 @@
 <!doctype html>
-<html lang="zh-CN" translate="no">
+<html lang="zh-CN" translate="no" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8fafc" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#070b14" />
-    <link rel="icon" href="/favicon/textline-icon-black.svg" type="image/svg+xml" />
-    <link
-      rel="icon"
-      href="/favicon/textline-icon-black-favicon-32x32.png"
-      sizes="32x32"
-      type="image/png"
-      media="(prefers-color-scheme: light)"
-    />
-    <link
-      rel="icon"
-      href="/favicon/textline-icon-white-favicon-32x32.png"
-      sizes="32x32"
-      type="image/png"
-      media="(prefers-color-scheme: dark)"
-    />
-    <link
-      rel="icon"
-      href="/favicon/textline-icon-black-favicon-16x16.png"
-      sizes="16x16"
-      type="image/png"
-      media="(prefers-color-scheme: light)"
-    />
-    <link
-      rel="icon"
-      href="/favicon/textline-icon-white-favicon-16x16.png"
-      sizes="16x16"
-      type="image/png"
-      media="(prefers-color-scheme: dark)"
-    />
-    <link rel="apple-touch-icon" href="/favicon/textline-icon-black-apple-touch-icon.png" />
+    <meta name="theme-color" content="#2b2cf0" />
+    <script>
+      // Set theme + language before first paint to avoid a flash.
+      (function () {
+        try {
+          var t = localStorage.getItem('tl-theme')
+          if (t !== 'light' && t !== 'dark') {
+            t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          }
+          document.documentElement.dataset.theme = t
+          if (t === 'dark') document.querySelector('meta[name="theme-color"]').content = '#15175e'
+          var l = localStorage.getItem('tl-lang')
+          if (l !== 'zh' && l !== 'en') l = /^zh/i.test(navigator.language) ? 'zh' : 'en'
+          document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en'
+        } catch (e) {}
+      })()
+    </script>
+
     <title>Textline</title>
+    <meta
+      name="description"
+      content="我是 Textline，全栈开发者。做客户端、后端、机器人和小工具，从界面一路做到服务端。"
+    />
+
+    <!-- Share cards. Set VITE_SITE_URL at build time so these become absolute URLs. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Textline" />
+    <meta property="og:title" content="Textline" />
+    <meta
+      property="og:description"
+      content="我是 Textline，全栈开发者。做客户端、后端、机器人和小工具，从界面一路做到服务端。"
+    />
+    <meta property="og:url" content="%SITE_URL%/" />
+    <meta property="og:image" content="%SITE_URL%/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Textline" />
+    <meta
+      name="twitter:description"
+      content="我是 Textline，全栈开发者。做客户端、后端、机器人和小工具，从界面一路做到服务端。"
+    />
+    <meta name="twitter:image" content="%SITE_URL%/og.png" />
+
+    <link rel="icon" href="/favicon/textline-icon-black.svg" type="image/svg+xml" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="/favicon/textline-icon-white.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)" />
+    <link rel="apple-touch-icon" href="/favicon/textline-icon-black-apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preload" href="/font/Quinn-Bold.otf" as="font" type="font/otf" crossorigin />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Textline",
+        "jobTitle": "Full-stack developer",
+        "email": "mailto:textlinex@qq.com",
+        "url": "%SITE_URL%/",
+        "sameAs": ["https://github.com/TextlineX"],
+        "knowsAbout": ["React", "TypeScript", "Flutter", "Go", "Node.js", "Python", "ROS2", "Three.js"]
+      }
+    </script>
   </head>
   <body>
+    <noscript>
+      <p style="font: 18px/1.6 system-ui, sans-serif; padding: 24px">
+        Textline — full-stack developer. Email: textlinex@qq.com · GitHub: github.com/TextlineX
+      </p>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

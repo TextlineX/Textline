@@ -1,0 +1,107 @@
+.hero {
+  --hero-fs: min(12.4vw, 26svh);
+  position: relative;
+  min-height: 100svh;
+  padding: calc(var(--header-h) + 24px) var(--pad) clamp(28px, 5vh, 56px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  background: var(--hero-bg);
+  color: var(--hero-ink);
+  overflow: hidden;
+}
+
+.hero__title {
+  margin: auto 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--hero-fs);
+  line-height: 0.88;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.hero__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.24em;
+}
+
+.hero__phrase {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.24em;
+  white-space: nowrap;
+}
+
+.hero__word {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.hero__word--small {
+  font-size: 0.74em;
+}
+
+/* One glyph, two states: wireframe (raw) and rendered (fill). The cursor lens pulls
+   glyphs back to wireframe in signal colour. */
+.ch {
+  --raw: 1;
+  --lens: 0;
+  --fill: calc(1 - max(var(--raw), var(--lens)));
+  display: inline-block;
+  color: color-mix(in srgb, var(--hero-ink) calc(var(--fill) * 100%), transparent);
+  -webkit-text-stroke: 0.016em color-mix(in srgb, var(--signal) calc(var(--lens) * 100%), var(--hero-ink));
+  transform: translateY(calc(var(--lens) * -0.03em)) skewX(calc(var(--lens) * -7deg));
+  will-change: transform;
+}
+
+.hero__caret {
+  display: inline-block;
+  width: 0.11em;
+  height: 0.7em;
+  margin-left: 0.12em;
+  background: var(--signal);
+  opacity: 0;
+}
+
+.hero.is-ready .hero__caret {
+  opacity: 1;
+  animation: caret 1.05s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.hero__tagline {
+  margin: 0;
+  max-width: 34em;
+  font-size: clamp(16px, 1.5vw, 20px);
+  line-height: 1.55;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--hero-ink) 88%, transparent);
+}
+
+@media (max-width: 760px) {
+  .hero {
+    --hero-fs: min(17vw, 14svh);
+  }
+  .hero__row {
+    flex-wrap: wrap;
+    row-gap: 0.06em;
+  }
+  .hero__row + .hero__row {
+    margin-top: 0.1em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero.is-ready .hero__caret {
+    animation: none;
+  }
+}

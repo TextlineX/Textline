@@ -1,0 +1,161 @@
+.windex {
+  padding: calc(var(--header-h) + clamp(28px, 5vw, 72px)) var(--pad) clamp(80px, 10vw, 140px);
+  min-height: 100svh;
+}
+
+.windex__head {
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 26em);
+  align-items: end;
+  gap: 20px 48px;
+}
+
+.windex__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(64px, 13vw, 210px);
+  line-height: 0.85;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0;
+}
+
+.windex__intro p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.windex__intro .windex__count {
+  margin-top: 6px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.windex__filters {
+  display: grid;
+  gap: 14px;
+  margin: clamp(32px, 5vw, 64px) 0 clamp(24px, 3vw, 40px);
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.windex__group {
+  display: grid;
+  grid-template-columns: 7em 1fr;
+  align-items: start;
+  gap: 8px 16px;
+}
+
+.windex__label {
+  padding-top: 7px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.windex__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.windex__empty {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  padding: 48px 0;
+  font-size: 20px;
+}
+
+.windex__empty p {
+  margin: 0;
+}
+
+/* Grid view: image first, no card chrome. */
+.wgrid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  gap: clamp(36px, 4vw, 56px) clamp(20px, 2.4vw, 36px);
+}
+
+.wgrid__item {
+  display: grid;
+  gap: 6px;
+}
+
+.wgrid__shot {
+  display: block;
+  aspect-ratio: 16 / 10;
+  margin-bottom: 10px;
+  overflow: hidden;
+  background: var(--hero-bg);
+}
+
+.wgrid__shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.wgrid__shot.is-portrait img {
+  object-fit: contain;
+}
+
+.wgrid__item:hover .wgrid__shot img {
+  transform: scale(1.04);
+}
+
+.wgrid__name {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 3.6vw, 56px);
+  line-height: 0.95;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0;
+  overflow-wrap: anywhere;
+  transition: color 0.2s;
+}
+
+.wgrid__item:hover .wgrid__name {
+  color: var(--signal);
+}
+
+.wgrid__type {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.wgrid__summary {
+  color: var(--muted);
+  font-size: 15px;
+  max-width: 34em;
+}
+
+@media (max-width: 760px) {
+  .windex__head {
+    grid-template-columns: 1fr;
+  }
+  .windex__group {
+    grid-template-columns: 1fr;
+  }
+  .windex__label {
+    padding-top: 0;
+  }
+  /* Long tech list scrolls sideways on phones instead of taking half the screen. */
+  .windex__chips--tech {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 calc(var(--pad) * -1);
+    padding: 2px var(--pad) 6px;
+    scrollbar-width: none;
+  }
+  .windex__chips--tech .chip {
+    flex: none;
+  }
+}
